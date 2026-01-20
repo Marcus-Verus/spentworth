@@ -25,17 +25,33 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	}
 
 	const body = await request.json();
-	const { rawTransactionIds, patch } = body as {
+	const { rawTransactionIds, patch, applyToAllWithMerchant } = body as {
 		rawTransactionIds: string[];
 		patch: OverridePatch;
+		applyToAllWithMerchant?: string;
 	};
 
 	if (!rawTransactionIds || rawTransactionIds.length === 0) {
 		throw error(400, 'No transaction IDs provided');
 	}
 
+	// If applyToAllWithMerchant is set, find ALL rows with that merchant in the batch
+	let idsToUpdate = rawTransactionIds;
+	if (applyToAllWithMerchant) {
+		const { data: merchantRows } = await locals.supabase
+			.from('raw_transactions')
+			.select('id')
+			.eq('batch_id', batchId)
+			.eq('user_id', user.id)
+			.eq('merchant_norm', applyToAllWithMerchant);
+		
+		if (merchantRows && merchantRows.length > 0) {
+			idsToUpdate = merchantRows.map(r => r.id);
+		}
+	}
+
 	// Upsert overrides for each row
-	for (const rawId of rawTransactionIds) {
+	for (const rawId of idsToUpdate) {
 		// Check if override exists
 		const { data: existing } = await locals.supabase
 			.from('transaction_overrides')

@@ -315,7 +315,7 @@ export const CATEGORIES = [
 	'Personal Care',
 	'Education',
 	'Gifts',
-	'Uncategorised'
+	'Uncategorized'
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];

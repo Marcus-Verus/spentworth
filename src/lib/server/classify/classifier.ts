@@ -333,7 +333,7 @@ export function classifyTransaction(
 		result.kind = 'purchase';
 		result.kindReason = 'Purchase';
 		result.includedInSpend = true;
-		result.category = determineCategory(merchantNorm, descriptionRaw) || 'Uncategorised';
+		result.category = determineCategory(merchantNorm, descriptionRaw) || 'Uncategorized';
 		return result;
 	}
 

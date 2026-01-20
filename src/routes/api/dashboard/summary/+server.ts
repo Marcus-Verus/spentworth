@@ -78,7 +78,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	for (const tx of transactions || []) {
 		const amount = tx.amount || 0;
 		const future = tx.future_value || amount;
-		const category = tx.category || 'Uncategorised';
+		const category = tx.category || 'Uncategorized';
 		const date = tx.date;
 
 		totalSpent += amount;
@@ -297,7 +297,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			const lastYearByCategory = new Map<string, number>();
 			
 			for (const tx of lastYearTx) {
-				const cat = tx.category || 'Uncategorised';
+				const cat = tx.category || 'Uncategorized';
 				lastYearByCategory.set(cat, (lastYearByCategory.get(cat) || 0) + (tx.amount || 0));
 			}
 			

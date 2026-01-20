@@ -27,7 +27,7 @@
 	let ruleModalExclude = $state(false);
 	let creatingRule = $state(false);
 
-	const categories = ['Groceries', 'Dining', 'Coffee', 'Delivery', 'Shopping', 'Gas/Transport', 'Subscriptions', 'Travel', 'Entertainment', 'Healthcare', 'Utilities', 'Housing', 'Personal Care', 'Education', 'Gifts', 'Uncategorised'];
+	const categories = ['Groceries', 'Dining', 'Coffee', 'Delivery', 'Shopping', 'Gas/Transport', 'Subscriptions', 'Travel', 'Entertainment', 'Healthcare', 'Utilities', 'Housing', 'Personal Care', 'Education', 'Gifts', 'Uncategorized'];
 
 	const kindOptions: { value: TransactionKind; label: string }[] = [
 		{ value: 'purchase', label: 'Purchase' },
@@ -78,9 +78,23 @@
 		loadRows();
 	}
 
-	// Handle kind change with rule prompt
+	// Handle kind change - apply to ALL rows with same merchant
 	async function handleKindChange(row: RawRowEffective, newKind: TransactionKind) {
-		await updateOverride(row.id, { kind: newKind });
+		// Find all rows with the same merchant and update them all
+		const merchantNorm = row.merchantNorm;
+		const sameMerchantRows = merchantNorm 
+			? rows.filter(r => r.merchantNorm === merchantNorm).map(r => r.id)
+			: [row.id];
+		
+		await fetch(`/api/imports/${batchId}/override`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				rawTransactionIds: sameMerchantRows,
+				patch: { kind: newKind },
+				applyToAllWithMerchant: merchantNorm // Also update any rows not in current page
+			})
+		});
 
 		// Prompt to create a rule if merchant exists and kind changed from system
 		if (row.merchantNorm && newKind !== row.systemKind) {
@@ -90,11 +104,27 @@
 			ruleModalCategory = null;
 			showRuleModal = true;
 		}
+		
+		loadRows();
 	}
 
-	// Handle category change with rule prompt  
+	// Handle category change - apply to ALL rows with same merchant
 	async function handleCategoryChange(row: RawRowEffective, newCategory: string) {
-		await updateOverride(row.id, { category: newCategory });
+		// Find all rows with the same merchant and update them all
+		const merchantNorm = row.merchantNorm;
+		const sameMerchantRows = merchantNorm 
+			? rows.filter(r => r.merchantNorm === merchantNorm).map(r => r.id)
+			: [row.id];
+		
+		await fetch(`/api/imports/${batchId}/override`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				rawTransactionIds: sameMerchantRows,
+				patch: { category: newCategory },
+				applyToAllWithMerchant: merchantNorm // Also update any rows not in current page
+			})
+		});
 
 		// Prompt to create a rule if merchant exists and category changed
 		if (row.merchantNorm && newCategory !== row.systemCategory) {
@@ -104,6 +134,8 @@
 			ruleModalExclude = false;
 			showRuleModal = true;
 		}
+		
+		loadRows();
 	}
 
 	async function createRule() {
@@ -398,7 +430,7 @@
 										<div class="flex justify-center">
 											{#if row.effectiveKind === 'purchase'}
 												<select
-													value={row.effectiveCategory || 'Uncategorised'}
+													value={row.effectiveCategory || 'Uncategorized'}
 													onchange={(e) => handleCategoryChange(row, e.currentTarget.value)}
 													class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
 												>
