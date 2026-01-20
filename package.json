@@ -12,7 +12,7 @@
   "devDependencies": {
     "@sveltejs/adapter-netlify": "^4.3.6",
     "@sveltejs/kit": "^2.8.3",
-    "@sveltejs/vite-plugin-svelte": "^4.0.1",
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@types/node": "^22.10.1",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
@@ -23,6 +23,7 @@
     "vite": "^6.0.3"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.2",
     "d3-sankey": "^0.12.3",
     "d3-selection": "^3.0.0",
