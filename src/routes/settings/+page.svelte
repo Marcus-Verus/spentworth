@@ -1,0 +1,154 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+
+	let { data } = $props();
+
+	let defaultTicker = $state('SPY');
+	let investDelayTradingDays = $state(1);
+	let allowFallbackForAllTickers = $state(false);
+	let loading = $state(true);
+	let saving = $state(false);
+	let saved = $state(false);
+
+	onMount(async () => {
+		const res = await fetch('/api/settings');
+		const json = await res.json();
+
+		if (json.ok) {
+			defaultTicker = json.data.defaultTicker;
+			investDelayTradingDays = json.data.investDelayTradingDays;
+			allowFallbackForAllTickers = json.data.allowFallbackForAllTickers;
+		}
+		loading = false;
+	});
+
+	async function saveSettings() {
+		saving = true;
+		saved = false;
+
+		await fetch('/api/settings', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				defaultTicker,
+				investDelayTradingDays,
+				allowFallbackForAllTickers
+			})
+		});
+
+		saving = false;
+		saved = true;
+		setTimeout(() => saved = false, 2000);
+	}
+</script>
+
+<div class="min-h-screen">
+	<!-- Header -->
+	<header class="border-b border-sw-border/50 bg-sw-bg/80 backdrop-blur-sm sticky top-0 z-40">
+		<div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+			<div class="flex items-center gap-4">
+				<a href="/dashboard" class="flex items-center gap-3">
+					<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sw-accent to-emerald-600 flex items-center justify-center text-sw-bg font-bold text-xl">
+						$
+					</div>
+					<span class="font-display text-xl font-semibold">SpentWorth</span>
+				</a>
+			</div>
+			<nav class="flex items-center gap-6">
+				<a href="/dashboard" class="text-sw-text-dim hover:text-sw-text transition-colors">Dashboard</a>
+				<a href="/imports" class="text-sw-text-dim hover:text-sw-text transition-colors">Imports</a>
+				<a href="/settings" class="text-sw-accent font-medium">Settings</a>
+			</nav>
+		</div>
+	</header>
+
+	<main class="max-w-2xl mx-auto px-6 py-8">
+		<h1 class="font-display text-3xl font-bold mb-8">Settings</h1>
+
+		{#if loading}
+			<div class="flex items-center justify-center py-16">
+				<div class="w-8 h-8 rounded-full border-2 border-sw-accent border-t-transparent animate-spin"></div>
+			</div>
+		{:else}
+			<div class="space-y-8">
+				<!-- Investment Settings -->
+				<div class="card">
+					<h2 class="font-display text-lg font-semibold mb-4">Investment Settings</h2>
+					
+					<div class="space-y-6">
+						<div>
+							<label for="ticker" class="label">Default Ticker</label>
+							<select
+								id="ticker"
+								bind:value={defaultTicker}
+								class="input max-w-xs"
+							>
+								<option value="SPY">SPY (S&P 500)</option>
+								<option value="VTI">VTI (Total Market)</option>
+								<option value="VOO">VOO (S&P 500)</option>
+								<option value="QQQ">QQQ (Nasdaq 100)</option>
+							</select>
+							<p class="text-sm text-sw-text-dim mt-1">The index fund used to calculate opportunity cost</p>
+						</div>
+
+						<div>
+							<label for="delay" class="label">Investment Delay (Trading Days)</label>
+							<select
+								id="delay"
+								bind:value={investDelayTradingDays}
+								class="input max-w-xs"
+							>
+								<option value={0}>Same day (0 days)</option>
+								<option value={1}>Next trading day (1 day)</option>
+								<option value={3}>3 trading days</option>
+								<option value={7}>7 trading days</option>
+							</select>
+							<p class="text-sm text-sw-text-dim mt-1">Simulates when you'd realistically invest after a purchase</p>
+						</div>
+
+						<div>
+							<label class="flex items-center gap-3 cursor-pointer">
+								<input
+									type="checkbox"
+									bind:checked={allowFallbackForAllTickers}
+									class="w-5 h-5 rounded border-sw-border text-sw-accent focus:ring-sw-accent"
+								/>
+								<span>Use fallback calculation when price data unavailable</span>
+							</label>
+							<p class="text-sm text-sw-text-dim mt-1 ml-8">If enabled, uses 7% annual return when historical prices aren't available</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Method explanation -->
+				<div class="card">
+					<h2 class="font-display text-lg font-semibold mb-4">How We Calculate</h2>
+					<div class="space-y-4 text-sm text-sw-text-dim">
+						<p>
+							<strong class="text-sw-text">Adjusted Close Prices:</strong> We use adjusted close prices which account for dividends and stock splits, giving you an accurate total return calculation.
+						</p>
+						<p>
+							<strong class="text-sw-text">Investment Delay:</strong> To simulate realistic investing, we assume you'd invest on the next trading day after a purchase (configurable above).
+						</p>
+						<p>
+							<strong class="text-sw-text">Excluded by Default:</strong> Transfers, credit card payments, ATM withdrawals, and refunds are excluded to avoid double-counting your spending.
+						</p>
+					</div>
+				</div>
+
+				<div class="flex items-center gap-4">
+					<button
+						onclick={saveSettings}
+						disabled={saving}
+						class="btn btn-primary"
+					>
+						{saving ? 'Saving...' : 'Save Settings'}
+					</button>
+					{#if saved}
+						<span class="text-sw-accent text-sm animate-fade-in">Settings saved!</span>
+					{/if}
+				</div>
+			</div>
+		{/if}
+	</main>
+</div>
