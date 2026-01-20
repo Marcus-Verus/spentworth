@@ -19,7 +19,8 @@ async function fetchFullPriceHistory(ticker: string): Promise<Record<string, num
 	}
 
 	try {
-		const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
+		// Use TIME_SERIES_DAILY (free) instead of TIME_SERIES_DAILY_ADJUSTED (premium)
+		const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
 		console.log(`Fetching Alpha Vantage data for ${ticker}...`);
 		const response = await fetch(url);
 		const json = await response.json();
@@ -54,9 +55,10 @@ async function fetchFullPriceHistory(ticker: string): Promise<Record<string, num
 		const data: Record<string, number> = {};
 
 		for (const [dateKey, values] of Object.entries(timeSeries)) {
-			const adjClose = parseFloat((values as Record<string, string>)['5. adjusted close']);
-			if (!isNaN(adjClose)) {
-				data[dateKey] = adjClose;
+			// Use closing price (field 4) from the free endpoint
+			const close = parseFloat((values as Record<string, string>)['4. close']);
+			if (!isNaN(close)) {
+				data[dateKey] = close;
 			}
 		}
 
