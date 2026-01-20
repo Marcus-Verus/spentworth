@@ -68,7 +68,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		totalSpent: number; 
 		totalFuture: number;
 		lastDate: string;
+		dates: string[];
 	}>();
+	
+	// Day of week tracking (0 = Sunday, 6 = Saturday)
+	const dayOfWeekSpend = [0, 0, 0, 0, 0, 0, 0];
+	const dayOfWeekCount = [0, 0, 0, 0, 0, 0, 0];
 
 	for (const tx of transactions || []) {
 		const amount = tx.amount || 0;
@@ -123,13 +128,21 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		// Track merchant frequency
 		const merchantName = tx.merchant || 'Unknown';
 		if (!merchantMap.has(merchantName)) {
-			merchantMap.set(merchantName, { count: 0, totalSpent: 0, totalFuture: 0, lastDate: date });
+			merchantMap.set(merchantName, { count: 0, totalSpent: 0, totalFuture: 0, lastDate: date, dates: [] });
 		}
 		const m = merchantMap.get(merchantName)!;
 		m.count++;
 		m.totalSpent += amount;
 		m.totalFuture += future;
+		m.dates.push(date);
 		if (date > m.lastDate) m.lastDate = date;
+		
+		// Track day of week
+		if (date) {
+			const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+			dayOfWeekSpend[dayOfWeek] += amount;
+			dayOfWeekCount[dayOfWeek]++;
+		}
 	}
 	
 	// Sort and take top 10 by absolute growth
@@ -179,6 +192,85 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const biggestPurchase = topGrowth.length > 0 
 		? topGrowth.reduce((max, tx) => tx.amount > max.amount ? tx : max)
 		: null;
+	
+	// Day of week patterns
+	const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	const dayOfWeek = dayNames.map((name, i) => ({
+		day: name,
+		dayShort: name.slice(0, 3),
+		spent: Math.round(dayOfWeekSpend[i] * 100) / 100,
+		count: dayOfWeekCount[i],
+		avg: dayOfWeekCount[i] > 0 ? Math.round((dayOfWeekSpend[i] / dayOfWeekCount[i]) * 100) / 100 : 0
+	}));
+	
+	// Find biggest spending day
+	const biggestSpendingDay = dayOfWeek.reduce((max, d) => d.spent > max.spent ? d : max);
+	const mostFrequentDay = dayOfWeek.reduce((max, d) => d.count > max.count ? d : max);
+	
+	// Detect recurring charges (merchants with regular intervals)
+	const recurringCharges: Array<{
+		merchant: string;
+		avgAmount: number;
+		frequency: string;
+		monthlyEstimate: number;
+		yearlyEstimate: number;
+		count: number;
+	}> = [];
+	
+	for (const [merchant, data] of merchantMap.entries()) {
+		if (data.count >= 2 && data.dates.length >= 2) {
+			// Sort dates and calculate intervals
+			const sortedDates = data.dates.sort();
+			const intervals: number[] = [];
+			
+			for (let i = 1; i < sortedDates.length; i++) {
+				const d1 = new Date(sortedDates[i - 1]);
+				const d2 = new Date(sortedDates[i]);
+				const daysDiff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+				intervals.push(daysDiff);
+			}
+			
+			if (intervals.length > 0) {
+				const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+				const avgAmount = data.totalSpent / data.count;
+				
+				// Detect patterns
+				let frequency = '';
+				let monthlyEstimate = 0;
+				
+				if (avgInterval >= 25 && avgInterval <= 35) {
+					frequency = 'Monthly';
+					monthlyEstimate = avgAmount;
+				} else if (avgInterval >= 12 && avgInterval <= 16) {
+					frequency = 'Bi-weekly';
+					monthlyEstimate = avgAmount * 2;
+				} else if (avgInterval >= 5 && avgInterval <= 9) {
+					frequency = 'Weekly';
+					monthlyEstimate = avgAmount * 4;
+				} else if (avgInterval >= 85 && avgInterval <= 95) {
+					frequency = 'Quarterly';
+					monthlyEstimate = avgAmount / 3;
+				} else if (avgInterval >= 355 && avgInterval <= 375) {
+					frequency = 'Yearly';
+					monthlyEstimate = avgAmount / 12;
+				}
+				
+				if (frequency && data.count >= 2) {
+					recurringCharges.push({
+						merchant,
+						avgAmount: Math.round(avgAmount * 100) / 100,
+						frequency,
+						monthlyEstimate: Math.round(monthlyEstimate * 100) / 100,
+						yearlyEstimate: Math.round(monthlyEstimate * 12 * 100) / 100,
+						count: data.count
+					});
+				}
+			}
+		}
+	}
+	
+	// Sort recurring by yearly estimate (biggest impact first)
+	recurringCharges.sort((a, b) => b.yearlyEstimate - a.yearlyEstimate);
 
 	// Build category summaries
 	const categories: CategorySummary[] = Array.from(categoryMap.entries())
@@ -206,7 +298,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		topMerchants,
 		topMerchantsBySpend,
 		avgTransaction: Math.round(avgTransaction * 100) / 100,
-		biggestPurchase
+		biggestPurchase,
+		dayOfWeek,
+		biggestSpendingDay,
+		mostFrequentDay,
+		recurringCharges
 	};
 
 	return json({

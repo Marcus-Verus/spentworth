@@ -210,6 +210,10 @@ export interface DashboardSummary {
 	topMerchantsBySpend: MerchantSummary[];
 	avgTransaction: number;
 	biggestPurchase: TopTransaction | null;
+	dayOfWeek: DayOfWeekSummary[];
+	biggestSpendingDay: DayOfWeekSummary;
+	mostFrequentDay: DayOfWeekSummary;
+	recurringCharges: RecurringCharge[];
 }
 
 export interface MonthlySummary {
@@ -236,6 +240,23 @@ export interface MerchantSummary {
 	totalGrowth: number;
 	avgTransaction: number;
 	lastDate: string;
+}
+
+export interface DayOfWeekSummary {
+	day: string;
+	dayShort: string;
+	spent: number;
+	count: number;
+	avg: number;
+}
+
+export interface RecurringCharge {
+	merchant: string;
+	avgAmount: number;
+	frequency: string;
+	monthlyEstimate: number;
+	yearlyEstimate: number;
+	count: number;
 }
 
 export interface CategorySummary {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import type { DashboardSummary } from '$lib/types';
+	import type { DashboardSummary, RecurringCharge } from '$lib/types';
 
 	let { data } = $props();
 
@@ -10,6 +10,10 @@
 	let recalculating = $state(false);
 	let recalcMessage = $state<string | null>(null);
 	let merchantView = $state<'frequency' | 'spend'>('frequency');
+	
+	// What-if calculator state
+	let whatIfYears = $state(10);
+	let selectedWhatIf = $state<RecurringCharge | null>(null);
 
 	onMount(async () => {
 		await loadSummary();
@@ -98,6 +102,17 @@
 		return `${years} year${years !== 1 ? 's' : ''}`;
 	}
 
+	// Calculate "what if" projection
+	function calculateWhatIf(monthlyAmount: number, years: number) {
+		const annualReturn = 0.07;
+		let total = 0;
+		// Monthly contributions compounded
+		for (let month = 0; month < years * 12; month++) {
+			total = (total + monthlyAmount) * Math.pow(1 + annualReturn, 1/12);
+		}
+		return total;
+	}
+
 	async function handleLogout() {
 		await data.supabase.auth.signOut();
 		goto('/');
@@ -130,7 +145,7 @@
 	// Combine small categories into "Other"
 	function getDisplayCategories() {
 		if (!summary) return [];
-		const threshold = summary.totalSpent * 0.03; // 3% threshold
+		const threshold = summary.totalSpent * 0.03;
 		const main: typeof summary.categories = [];
 		let otherSpent = 0;
 		let otherFuture = 0;
@@ -160,10 +175,12 @@
 		if (summary) {
 			maxMonthlySpend = Math.max(...summary.monthly.map(m => m.spent), 1);
 			displayCategories = getDisplayCategories();
+			maxDaySpend = Math.max(...summary.dayOfWeek.map(d => d.spent), 1);
 		}
 	});
 
 	let maxMonthlySpend = $state(1);
+	let maxDaySpend = $state(1);
 	let displayCategories = $state<typeof summary.categories>([]);
 </script>
 
@@ -250,19 +267,19 @@
 						<p class="text-xs text-sw-text-dim truncate">{summary.biggestPurchase.merchant}</p>
 					</div>
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">Avg Transaction</p>
-						<p class="font-mono text-lg">{formatCurrency(summary.avgTransaction)}</p>
-						<p class="text-xs text-sw-text-dim">{summary.transactionCount} total</p>
+						<p class="text-xs text-sw-text-dim mb-1">Busiest Day</p>
+						<p class="font-mono text-lg">{summary.biggestSpendingDay.day}</p>
+						<p class="text-xs text-sw-text-dim">{formatCurrency(summary.biggestSpendingDay.spent)} total</p>
 					</div>
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
 						<p class="text-xs text-sw-text-dim mb-1">Monthly Avg</p>
 						<p class="font-mono text-lg">{formatCurrency(summary.totalSpent / Math.max(summary.monthly.length, 1))}</p>
-						<p class="text-xs text-sw-text-dim">{summary.monthly.length} months</p>
+						<p class="text-xs text-sw-text-dim">{summary.monthly.length} months tracked</p>
 					</div>
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">Unique Merchants</p>
-						<p class="font-mono text-lg">{summary.topMerchants.length}+</p>
-						<p class="text-xs text-sw-text-dim">places you shop</p>
+						<p class="text-xs text-sw-text-dim mb-1">Recurring Costs</p>
+						<p class="font-mono text-lg">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</p>
+						<p class="text-xs text-sw-text-dim">{summary.recurringCharges.length} subscriptions</p>
 					</div>
 				</div>
 			{/if}
@@ -277,34 +294,18 @@
 							</svg>
 						</div>
 						<div>
-							<p class="text-sm font-medium">
-								{summary.usingRealPrices > 0 ? 'Mixed calculation' : 'Using estimates'}
-							</p>
-							<p class="text-xs text-sw-text-dim">
-								{summary.usingRealPrices} with real {summary.ticker} prices, {summary.usingFallback} with 7% estimate
-							</p>
+							<p class="text-sm font-medium">{summary.usingRealPrices > 0 ? 'Mixed calculation' : 'Using estimates'}</p>
+							<p class="text-xs text-sw-text-dim">{summary.usingRealPrices} real prices, {summary.usingFallback} estimated</p>
 						</div>
 					</div>
-					
-					<button
-						onclick={recalculateWithRealPrices}
-						disabled={recalculating}
-						class="btn btn-secondary text-sm flex items-center gap-2"
-					>
-						{#if recalculating}
-							<div class="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin"></div>
-							Fetching...
-						{:else}
-							Refresh Prices
-						{/if}
+					<button onclick={recalculateWithRealPrices} disabled={recalculating} class="btn btn-secondary text-sm">
+						{recalculating ? 'Fetching...' : 'Refresh Prices'}
 					</button>
 				</div>
 			{/if}
 			
 			{#if recalcMessage}
-				<div class="mb-6 rounded-lg bg-sw-surface/60 border border-sw-border/50 p-4 text-sm">
-					{recalcMessage}
-				</div>
+				<div class="mb-6 rounded-lg bg-sw-surface/60 border border-sw-border/50 p-4 text-sm">{recalcMessage}</div>
 			{/if}
 
 			<!-- Charts Row -->
@@ -320,16 +321,11 @@
 									{@const startAngle = displayCategories.slice(0, i).reduce((acc, c) => acc + (c.spent / total) * 360, 0)}
 									{@const angle = (cat.spent / total) * 360}
 									{#if angle > 0.5}
-										<path
-											d={getDonutPath(startAngle, startAngle + angle - 0.5)}
-											fill={COLORS[i % COLORS.length]}
-											class="hover:opacity-80 transition-opacity cursor-pointer"
-										>
+										<path d={getDonutPath(startAngle, startAngle + angle - 0.5)} fill={COLORS[i % COLORS.length]} class="hover:opacity-80 transition-opacity cursor-pointer">
 											<title>{cat.category}: {formatCurrency(cat.spent)}</title>
 										</path>
 									{/if}
 								{/each}
-								<!-- Center text -->
 								<text x="100" y="95" text-anchor="middle" class="fill-sw-text-dim text-xs">Total</text>
 								<text x="100" y="115" text-anchor="middle" class="fill-sw-text font-display font-bold text-base">{formatCurrency(summary.totalSpent)}</text>
 							</svg>
@@ -346,34 +342,150 @@
 					</div>
 				</div>
 
-				<!-- Monthly Spending Chart -->
+				<!-- Day of Week Chart -->
 				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 p-6">
-					<h3 class="font-display font-semibold mb-4">Monthly Spending</h3>
-					{#if summary.monthly.length > 0}
-						<div class="h-44 flex items-end gap-1">
-							{#each summary.monthly as month}
-								{@const height = (month.spent / maxMonthlySpend) * 100}
-								<div class="flex-1 flex flex-col items-center gap-1 min-w-0">
-									<div class="w-full flex flex-col items-center justify-end" style="height: 130px;">
-										<div 
-											class="w-full bg-gradient-to-t from-sw-accent to-sw-accent/60 rounded-t transition-all hover:from-sw-accent/80 cursor-pointer relative group"
-											style="height: {Math.max(height, 4)}%;"
-										>
-											<div class="absolute -top-16 left-1/2 -translate-x-1/2 bg-sw-bg border border-sw-border rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-												<p class="font-medium">{formatCurrency(month.spent)}</p>
-												<p class="text-sw-accent text-[10px]">→ {formatCurrency(month.future)} (+{formatCurrency(month.delta)})</p>
-											</div>
+					<h3 class="font-display font-semibold mb-4">Spending by Day</h3>
+					<div class="h-44 flex items-end gap-2">
+						{#each summary.dayOfWeek as day}
+							{@const height = (day.spent / maxDaySpend) * 100}
+							{@const isMax = day.day === summary.biggestSpendingDay.day}
+							<div class="flex-1 flex flex-col items-center gap-1">
+								<div class="w-full flex flex-col items-center justify-end" style="height: 130px;">
+									<div 
+										class="w-full rounded-t transition-all cursor-pointer relative group {isMax ? 'bg-gradient-to-t from-sw-accent to-sw-accent/80' : 'bg-gradient-to-t from-sw-accent/50 to-sw-accent/30'}"
+										style="height: {Math.max(height, 4)}%;"
+									>
+										<div class="absolute -top-16 left-1/2 -translate-x-1/2 bg-sw-bg border border-sw-border rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+											<p class="font-medium">{formatCurrency(day.spent)}</p>
+											<p class="text-sw-text-dim">{day.count} transactions</p>
 										</div>
 									</div>
-									<span class="text-[10px] text-sw-text-dim truncate w-full text-center">{formatMonth(month.month)}</span>
 								</div>
-							{/each}
-						</div>
-					{:else}
-						<p class="text-sw-text-dim text-sm">Not enough data</p>
-					{/if}
+								<span class="text-xs text-sw-text-dim {isMax ? 'text-sw-accent font-medium' : ''}">{day.dayShort}</span>
+							</div>
+						{/each}
+					</div>
 				</div>
 			</div>
+
+			<!-- Monthly Spending -->
+			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 p-6 mb-8">
+				<h3 class="font-display font-semibold mb-4">Monthly Spending</h3>
+				{#if summary.monthly.length > 0}
+					<div class="h-32 flex items-end gap-1">
+						{#each summary.monthly as month}
+							{@const height = (month.spent / maxMonthlySpend) * 100}
+							<div class="flex-1 flex flex-col items-center gap-1 min-w-0">
+								<div class="w-full flex flex-col items-center justify-end" style="height: 100px;">
+									<div class="w-full bg-gradient-to-t from-sw-accent to-sw-accent/60 rounded-t transition-all hover:from-sw-accent/80 cursor-pointer relative group" style="height: {Math.max(height, 4)}%;">
+										<div class="absolute -top-16 left-1/2 -translate-x-1/2 bg-sw-bg border border-sw-border rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+											<p class="font-medium">{formatCurrency(month.spent)}</p>
+											<p class="text-sw-accent text-[10px]">→ {formatCurrency(month.future)}</p>
+										</div>
+									</div>
+								</div>
+								<span class="text-[10px] text-sw-text-dim truncate w-full text-center">{formatMonth(month.month)}</span>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<p class="text-sw-text-dim text-sm">Not enough data</p>
+				{/if}
+			</div>
+
+			<!-- Recurring Charges + What-If Calculator -->
+			{#if summary.recurringCharges.length > 0}
+				<div class="grid lg:grid-cols-2 gap-6 mb-8">
+					<!-- Recurring Charges -->
+					<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden">
+						<div class="px-6 py-4 border-b border-sw-border/50">
+							<h3 class="font-display font-semibold">Recurring Charges</h3>
+							<p class="text-sm text-sw-text-dim">Detected subscriptions and regular payments</p>
+						</div>
+						<div class="divide-y divide-sw-border/30 max-h-80 overflow-y-auto">
+							{#each summary.recurringCharges as charge}
+								<button 
+									onclick={() => selectedWhatIf = charge}
+									class="w-full px-6 py-3 flex items-center justify-between hover:bg-sw-bg/30 transition-colors text-left {selectedWhatIf?.merchant === charge.merchant ? 'bg-sw-accent/10' : ''}"
+								>
+									<div>
+										<p class="font-medium">{charge.merchant}</p>
+										<p class="text-xs text-sw-text-dim">{charge.frequency} • {charge.count} charges</p>
+									</div>
+									<div class="text-right">
+										<p class="font-mono">{formatCurrency(charge.avgAmount)}</p>
+										<p class="text-xs text-sw-text-dim">{formatCurrency(charge.yearlyEstimate)}/yr</p>
+									</div>
+								</button>
+							{/each}
+						</div>
+						<div class="px-6 py-3 bg-sw-bg/30 border-t border-sw-border/50">
+							<div class="flex justify-between text-sm">
+								<span class="text-sw-text-dim">Total recurring</span>
+								<span class="font-mono font-medium">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- What-If Calculator -->
+					<div class="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl border border-purple-500/30 p-6">
+						<h3 class="font-display font-semibold mb-2">💭 What If Calculator</h3>
+						<p class="text-sm text-sw-text-dim mb-4">
+							{selectedWhatIf ? `If you cancelled ${selectedWhatIf.merchant}...` : 'Select a recurring charge to see projections'}
+						</p>
+						
+						{#if selectedWhatIf}
+							{@const monthlyAmount = selectedWhatIf.monthlyEstimate}
+							{@const futureValue = calculateWhatIf(monthlyAmount, whatIfYears)}
+							{@const totalContributed = monthlyAmount * whatIfYears * 12}
+							{@const gains = futureValue - totalContributed}
+							
+							<div class="space-y-4">
+								<div class="flex items-center gap-4">
+									<label class="text-sm text-sw-text-dim">Time horizon:</label>
+									<div class="flex rounded-lg bg-sw-bg p-1">
+										{#each [5, 10, 20, 30] as years}
+											<button 
+												onclick={() => whatIfYears = years}
+												class="px-3 py-1 text-xs rounded-md transition-colors {whatIfYears === years ? 'bg-purple-500 text-white' : 'text-sw-text-dim hover:text-sw-text'}"
+											>
+												{years}yr
+											</button>
+										{/each}
+									</div>
+								</div>
+								
+								<div class="bg-sw-bg/50 rounded-xl p-4 space-y-3">
+									<div class="flex justify-between">
+										<span class="text-sw-text-dim">Monthly savings</span>
+										<span class="font-mono">{formatCurrency(monthlyAmount)}</span>
+									</div>
+									<div class="flex justify-between">
+										<span class="text-sw-text-dim">Total contributed</span>
+										<span class="font-mono">{formatCurrency(totalContributed)}</span>
+									</div>
+									<div class="flex justify-between">
+										<span class="text-sw-text-dim">Investment gains (7%)</span>
+										<span class="font-mono text-sw-accent">+{formatCurrency(gains)}</span>
+									</div>
+									<div class="border-t border-sw-border/50 pt-3 flex justify-between">
+										<span class="font-medium">In {whatIfYears} years</span>
+										<span class="font-display text-2xl font-bold text-purple-400">{formatCurrency(futureValue)}</span>
+									</div>
+								</div>
+								
+								<p class="text-xs text-sw-text-dim text-center">
+									Cancelling {selectedWhatIf.merchant} and investing {formatCurrency(monthlyAmount)}/mo could grow to {formatCurrency(futureValue)} in {whatIfYears} years
+								</p>
+							</div>
+						{:else}
+							<div class="bg-sw-bg/50 rounded-xl p-8 text-center">
+								<p class="text-sw-text-dim">👈 Click a recurring charge to see how much you could save</p>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
 
 			<!-- Merchant Frequency -->
 			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
@@ -383,33 +495,19 @@
 						<p class="text-sm text-sw-text-dim">Your most visited merchants</p>
 					</div>
 					<div class="flex rounded-lg bg-sw-bg p-1">
-						<button 
-							onclick={() => merchantView = 'frequency'}
-							class="px-3 py-1 text-xs rounded-md transition-colors {merchantView === 'frequency' ? 'bg-sw-surface text-sw-text' : 'text-sw-text-dim hover:text-sw-text'}"
-						>
-							Most Visits
-						</button>
-						<button 
-							onclick={() => merchantView = 'spend'}
-							class="px-3 py-1 text-xs rounded-md transition-colors {merchantView === 'spend' ? 'bg-sw-surface text-sw-text' : 'text-sw-text-dim hover:text-sw-text'}"
-						>
-							Most Spent
-						</button>
+						<button onclick={() => merchantView = 'frequency'} class="px-3 py-1 text-xs rounded-md transition-colors {merchantView === 'frequency' ? 'bg-sw-surface text-sw-text' : 'text-sw-text-dim hover:text-sw-text'}">Most Visits</button>
+						<button onclick={() => merchantView = 'spend'} class="px-3 py-1 text-xs rounded-md transition-colors {merchantView === 'spend' ? 'bg-sw-surface text-sw-text' : 'text-sw-text-dim hover:text-sw-text'}">Most Spent</button>
 					</div>
 				</div>
 				<div class="divide-y divide-sw-border/30">
 					{#each (merchantView === 'frequency' ? summary.topMerchants : summary.topMerchantsBySpend).slice(0, 10) as merchant, i}
 						{@const maxCount = summary.topMerchants[0]?.count || 1}
 						{@const maxSpend = summary.topMerchantsBySpend[0]?.totalSpent || 1}
-						{@const barWidth = merchantView === 'frequency' 
-							? (merchant.count / maxCount) * 100 
-							: (merchant.totalSpent / maxSpend) * 100}
+						{@const barWidth = merchantView === 'frequency' ? (merchant.count / maxCount) * 100 : (merchant.totalSpent / maxSpend) * 100}
 						
 						<div class="px-6 py-3 hover:bg-sw-bg/30 transition-colors">
 							<div class="flex items-center gap-4">
-								<div class="w-8 h-8 rounded-lg bg-sw-accent/10 flex items-center justify-center text-sw-accent font-mono text-sm flex-shrink-0">
-									{i + 1}
-								</div>
+								<div class="w-8 h-8 rounded-lg bg-sw-accent/10 flex items-center justify-center text-sw-accent font-mono text-sm flex-shrink-0">{i + 1}</div>
 								<div class="flex-1 min-w-0">
 									<div class="flex items-center justify-between mb-1">
 										<p class="font-medium truncate">{merchant.merchant}</p>
@@ -420,10 +518,7 @@
 										</div>
 									</div>
 									<div class="h-1.5 bg-sw-bg rounded-full overflow-hidden">
-										<div 
-											class="h-full bg-sw-accent/60 rounded-full transition-all"
-											style="width: {barWidth}%;"
-										></div>
+										<div class="h-full bg-sw-accent/60 rounded-full transition-all" style="width: {barWidth}%;"></div>
 									</div>
 								</div>
 							</div>
@@ -442,16 +537,12 @@
 					<div class="divide-y divide-sw-border/30">
 						{#each summary.topTransactions.slice(0, 8) as tx, i}
 							<div class="px-6 py-3 flex items-center gap-4 hover:bg-sw-bg/30 transition-colors">
-								<div class="w-8 h-8 rounded-lg bg-sw-accent/10 flex items-center justify-center text-sw-accent font-mono text-sm">
-									{i + 1}
-								</div>
+								<div class="w-8 h-8 rounded-lg bg-sw-accent/10 flex items-center justify-center text-sw-accent font-mono text-sm">{i + 1}</div>
 								<div class="flex-1 min-w-0">
 									<p class="font-medium truncate">{tx.merchant}</p>
 									<p class="text-xs text-sw-text-dim">{formatShortDate(tx.date)}</p>
 								</div>
-								<div class="text-right">
-									<p class="font-mono">{formatCurrency(tx.amount)}</p>
-								</div>
+								<div class="text-right"><p class="font-mono">{formatCurrency(tx.amount)}</p></div>
 								<div class="text-sw-text-dim">→</div>
 								<div class="text-right">
 									<p class="font-mono text-sw-accent">{formatCurrency(tx.futureValue)}</p>
@@ -472,7 +563,6 @@
 				<div class="border-t border-sw-border/50 divide-y divide-sw-border/30">
 					{#each summary.categories as cat, i}
 						{@const barWidth = summary.totalSpent > 0 ? (cat.spent / summary.totalSpent) * 100 : 0}
-						
 						<div class="px-6 py-3 hover:bg-sw-bg/30 transition-colors">
 							<div class="flex items-center justify-between mb-1">
 								<div class="flex items-center gap-2">
@@ -487,10 +577,7 @@
 								</div>
 							</div>
 							<div class="h-1.5 bg-sw-bg rounded-full overflow-hidden">
-								<div 
-									class="h-full rounded-full transition-all"
-									style="width: {barWidth}%; background: {COLORS[i % COLORS.length]};"
-								></div>
+								<div class="h-full rounded-full transition-all" style="width: {barWidth}%; background: {COLORS[i % COLORS.length]};"></div>
 							</div>
 						</div>
 					{/each}
