@@ -61,6 +61,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		growth: number;
 		growthPct: number;
 	}> = [];
+	
+	// Track merchant frequency
+	const merchantMap = new Map<string, { 
+		count: number; 
+		totalSpent: number; 
+		totalFuture: number;
+		lastDate: string;
+	}>();
 
 	for (const tx of transactions || []) {
 		const amount = tx.amount || 0;
@@ -111,6 +119,17 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				growthPct: (growth / amount) * 100
 			});
 		}
+		
+		// Track merchant frequency
+		const merchantName = tx.merchant || 'Unknown';
+		if (!merchantMap.has(merchantName)) {
+			merchantMap.set(merchantName, { count: 0, totalSpent: 0, totalFuture: 0, lastDate: date });
+		}
+		const m = merchantMap.get(merchantName)!;
+		m.count++;
+		m.totalSpent += amount;
+		m.totalFuture += future;
+		if (date > m.lastDate) m.lastDate = date;
 	}
 	
 	// Sort and take top 10 by absolute growth
@@ -126,6 +145,40 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			future: Math.round(data.future * 100) / 100,
 			delta: Math.round((data.future - data.spent) * 100) / 100
 		}));
+	
+	// Build merchant frequency data - sort by count (most frequent first)
+	const topMerchants = Array.from(merchantMap.entries())
+		.map(([merchant, data]) => ({
+			merchant,
+			count: data.count,
+			totalSpent: Math.round(data.totalSpent * 100) / 100,
+			totalFuture: Math.round(data.totalFuture * 100) / 100,
+			totalGrowth: Math.round((data.totalFuture - data.totalSpent) * 100) / 100,
+			avgTransaction: Math.round((data.totalSpent / data.count) * 100) / 100,
+			lastDate: data.lastDate
+		}))
+		.sort((a, b) => b.count - a.count)
+		.slice(0, 15);
+	
+	// Also sort by total spent
+	const topMerchantsBySpend = Array.from(merchantMap.entries())
+		.map(([merchant, data]) => ({
+			merchant,
+			count: data.count,
+			totalSpent: Math.round(data.totalSpent * 100) / 100,
+			totalFuture: Math.round(data.totalFuture * 100) / 100,
+			totalGrowth: Math.round((data.totalFuture - data.totalSpent) * 100) / 100,
+			avgTransaction: Math.round((data.totalSpent / data.count) * 100) / 100,
+			lastDate: data.lastDate
+		}))
+		.sort((a, b) => b.totalSpent - a.totalSpent)
+		.slice(0, 15);
+	
+	// Fun stats
+	const avgTransaction = totalSpent / (transactions?.length || 1);
+	const biggestPurchase = topGrowth.length > 0 
+		? topGrowth.reduce((max, tx) => tx.amount > max.amount ? tx : max)
+		: null;
 
 	// Build category summaries
 	const categories: CategorySummary[] = Array.from(categoryMap.entries())
@@ -149,7 +202,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		dateMin,
 		dateMax,
 		monthly,
-		topTransactions
+		topTransactions,
+		topMerchants,
+		topMerchantsBySpend,
+		avgTransaction: Math.round(avgTransaction * 100) / 100,
+		biggestPurchase
 	};
 
 	return json({

@@ -9,6 +9,7 @@
 	let loading = $state(true);
 	let recalculating = $state(false);
 	let recalcMessage = $state<string | null>(null);
+	let merchantView = $state<'frequency' | 'spend'>('frequency');
 
 	onMount(async () => {
 		await loadSummary();
@@ -70,6 +71,13 @@
 		});
 	}
 
+	function formatShortDate(dateStr: string) {
+		return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric'
+		});
+	}
+
 	function formatMonth(monthStr: string) {
 		const [year, month] = monthStr.split('-');
 		return new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', {
@@ -119,13 +127,44 @@
 		return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
 	}
 
+	// Combine small categories into "Other"
+	function getDisplayCategories() {
+		if (!summary) return [];
+		const threshold = summary.totalSpent * 0.03; // 3% threshold
+		const main: typeof summary.categories = [];
+		let otherSpent = 0;
+		let otherFuture = 0;
+		
+		for (const cat of summary.categories) {
+			if (cat.spent >= threshold && main.length < 7) {
+				main.push(cat);
+			} else {
+				otherSpent += cat.spent;
+				otherFuture += cat.future;
+			}
+		}
+		
+		if (otherSpent > 0) {
+			main.push({
+				category: 'Other',
+				spent: Math.round(otherSpent * 100) / 100,
+				future: Math.round(otherFuture * 100) / 100,
+				delta: Math.round((otherFuture - otherSpent) * 100) / 100
+			});
+		}
+		
+		return main;
+	}
+
 	$effect(() => {
 		if (summary) {
 			maxMonthlySpend = Math.max(...summary.monthly.map(m => m.spent), 1);
+			displayCategories = getDisplayCategories();
 		}
 	});
 
 	let maxMonthlySpend = $state(1);
+	let displayCategories = $state<typeof summary.categories>([]);
 </script>
 
 <div class="min-h-screen">
@@ -182,7 +221,7 @@
 				<div class="bg-sw-surface/60 rounded-2xl p-6 border border-sw-border/50">
 					<p class="text-sm text-sw-text-dim mb-2">Total Spent</p>
 					<p class="font-display text-4xl font-bold tracking-tight">{formatCurrency(summary.totalSpent)}</p>
-					<p class="text-xs text-sw-text-dim mt-2">{summary.transactionCount} transactions over {getDateRangeText()}</p>
+					<p class="text-xs text-sw-text-dim mt-2">{summary.transactionCount} transactions • avg {formatCurrency(summary.avgTransaction)}</p>
 				</div>
 				
 				<div class="bg-sw-surface/60 rounded-2xl p-6 border border-sw-border/50">
@@ -202,6 +241,32 @@
 				</div>
 			</div>
 
+			<!-- Quick Stats Row -->
+			{#if summary.biggestPurchase}
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
+						<p class="text-xs text-sw-text-dim mb-1">Biggest Purchase</p>
+						<p class="font-mono text-lg">{formatCurrency(summary.biggestPurchase.amount)}</p>
+						<p class="text-xs text-sw-text-dim truncate">{summary.biggestPurchase.merchant}</p>
+					</div>
+					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
+						<p class="text-xs text-sw-text-dim mb-1">Avg Transaction</p>
+						<p class="font-mono text-lg">{formatCurrency(summary.avgTransaction)}</p>
+						<p class="text-xs text-sw-text-dim">{summary.transactionCount} total</p>
+					</div>
+					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
+						<p class="text-xs text-sw-text-dim mb-1">Monthly Avg</p>
+						<p class="font-mono text-lg">{formatCurrency(summary.totalSpent / Math.max(summary.monthly.length, 1))}</p>
+						<p class="text-xs text-sw-text-dim">{summary.monthly.length} months</p>
+					</div>
+					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
+						<p class="text-xs text-sw-text-dim mb-1">Unique Merchants</p>
+						<p class="font-mono text-lg">{summary.topMerchants.length}+</p>
+						<p class="text-xs text-sw-text-dim">places you shop</p>
+					</div>
+				</div>
+			{/if}
+
 			<!-- Calculation Method Banner -->
 			{#if summary.usingFallback > 0}
 				<div class="mb-8 rounded-xl border bg-amber-500/5 border-amber-500/30 p-4 flex items-center justify-between">
@@ -216,7 +281,7 @@
 								{summary.usingRealPrices > 0 ? 'Mixed calculation' : 'Using estimates'}
 							</p>
 							<p class="text-xs text-sw-text-dim">
-								{summary.usingRealPrices} with real {summary.ticker} prices, {summary.usingFallback} with 7% estimate (older than ~5 months)
+								{summary.usingRealPrices} with real {summary.ticker} prices, {summary.usingFallback} with 7% estimate
 							</p>
 						</div>
 					</div>
@@ -230,9 +295,6 @@
 							<div class="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin"></div>
 							Fetching...
 						{:else}
-							<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-							</svg>
 							Refresh Prices
 						{/if}
 					</button>
@@ -251,11 +313,11 @@
 				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 p-6">
 					<h3 class="font-display font-semibold mb-4">Spending by Category</h3>
 					<div class="flex items-center gap-6">
-						<div class="relative">
-							<svg viewBox="0 0 200 200" class="w-48 h-48">
-								{#each summary.categories as cat, i}
+						<div class="relative flex-shrink-0">
+							<svg viewBox="0 0 200 200" class="w-44 h-44">
+								{#each displayCategories as cat, i}
 									{@const total = summary.totalSpent}
-									{@const startAngle = summary.categories.slice(0, i).reduce((acc, c) => acc + (c.spent / total) * 360, 0)}
+									{@const startAngle = displayCategories.slice(0, i).reduce((acc, c) => acc + (c.spent / total) * 360, 0)}
 									{@const angle = (cat.spent / total) * 360}
 									{#if angle > 0.5}
 										<path
@@ -269,20 +331,17 @@
 								{/each}
 								<!-- Center text -->
 								<text x="100" y="95" text-anchor="middle" class="fill-sw-text-dim text-xs">Total</text>
-								<text x="100" y="115" text-anchor="middle" class="fill-sw-text font-display font-bold text-lg">{formatCurrency(summary.totalSpent)}</text>
+								<text x="100" y="115" text-anchor="middle" class="fill-sw-text font-display font-bold text-base">{formatCurrency(summary.totalSpent)}</text>
 							</svg>
 						</div>
-						<div class="flex-1 space-y-2 max-h-48 overflow-y-auto">
-							{#each summary.categories.slice(0, 8) as cat, i}
+						<div class="flex-1 space-y-2">
+							{#each displayCategories as cat, i}
 								<div class="flex items-center gap-2 text-sm">
 									<div class="w-3 h-3 rounded-sm flex-shrink-0" style="background: {COLORS[i % COLORS.length]}"></div>
 									<span class="flex-1 truncate">{cat.category}</span>
-									<span class="font-mono text-sw-text-dim">{formatCurrency(cat.spent)}</span>
+									<span class="font-mono text-sw-text-dim text-xs">{formatCurrency(cat.spent)}</span>
 								</div>
 							{/each}
-							{#if summary.categories.length > 8}
-								<p class="text-xs text-sw-text-dim">+{summary.categories.length - 8} more</p>
-							{/if}
 						</div>
 					</div>
 				</div>
@@ -291,53 +350,109 @@
 				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 p-6">
 					<h3 class="font-display font-semibold mb-4">Monthly Spending</h3>
 					{#if summary.monthly.length > 0}
-						<div class="h-48 flex items-end gap-2">
+						<div class="h-44 flex items-end gap-1">
 							{#each summary.monthly as month}
 								{@const height = (month.spent / maxMonthlySpend) * 100}
-								<div class="flex-1 flex flex-col items-center gap-1">
-									<div class="w-full flex flex-col items-center justify-end" style="height: 160px;">
+								<div class="flex-1 flex flex-col items-center gap-1 min-w-0">
+									<div class="w-full flex flex-col items-center justify-end" style="height: 130px;">
 										<div 
-											class="w-full bg-gradient-to-t from-sw-accent to-sw-accent/60 rounded-t-sm transition-all hover:from-sw-accent/80 cursor-pointer relative group"
-											style="height: {Math.max(height, 2)}%;"
+											class="w-full bg-gradient-to-t from-sw-accent to-sw-accent/60 rounded-t transition-all hover:from-sw-accent/80 cursor-pointer relative group"
+											style="height: {Math.max(height, 4)}%;"
 										>
-											<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-sw-bg border border-sw-border rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-												{formatCurrency(month.spent)}
-												<span class="text-sw-accent">→ {formatCurrency(month.future)}</span>
+											<div class="absolute -top-16 left-1/2 -translate-x-1/2 bg-sw-bg border border-sw-border rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+												<p class="font-medium">{formatCurrency(month.spent)}</p>
+												<p class="text-sw-accent text-[10px]">→ {formatCurrency(month.future)} (+{formatCurrency(month.delta)})</p>
 											</div>
 										</div>
 									</div>
-									<span class="text-xs text-sw-text-dim">{formatMonth(month.month)}</span>
+									<span class="text-[10px] text-sw-text-dim truncate w-full text-center">{formatMonth(month.month)}</span>
 								</div>
 							{/each}
 						</div>
 					{:else}
-						<p class="text-sw-text-dim text-sm">Not enough data for monthly breakdown</p>
+						<p class="text-sw-text-dim text-sm">Not enough data</p>
 					{/if}
+				</div>
+			</div>
+
+			<!-- Merchant Frequency -->
+			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
+				<div class="px-6 py-4 border-b border-sw-border/50 flex items-center justify-between">
+					<div>
+						<h3 class="font-display font-semibold">Where You Shop</h3>
+						<p class="text-sm text-sw-text-dim">Your most visited merchants</p>
+					</div>
+					<div class="flex rounded-lg bg-sw-bg p-1">
+						<button 
+							onclick={() => merchantView = 'frequency'}
+							class="px-3 py-1 text-xs rounded-md transition-colors {merchantView === 'frequency' ? 'bg-sw-surface text-sw-text' : 'text-sw-text-dim hover:text-sw-text'}"
+						>
+							Most Visits
+						</button>
+						<button 
+							onclick={() => merchantView = 'spend'}
+							class="px-3 py-1 text-xs rounded-md transition-colors {merchantView === 'spend' ? 'bg-sw-surface text-sw-text' : 'text-sw-text-dim hover:text-sw-text'}"
+						>
+							Most Spent
+						</button>
+					</div>
+				</div>
+				<div class="divide-y divide-sw-border/30">
+					{#each (merchantView === 'frequency' ? summary.topMerchants : summary.topMerchantsBySpend).slice(0, 10) as merchant, i}
+						{@const maxCount = summary.topMerchants[0]?.count || 1}
+						{@const maxSpend = summary.topMerchantsBySpend[0]?.totalSpent || 1}
+						{@const barWidth = merchantView === 'frequency' 
+							? (merchant.count / maxCount) * 100 
+							: (merchant.totalSpent / maxSpend) * 100}
+						
+						<div class="px-6 py-3 hover:bg-sw-bg/30 transition-colors">
+							<div class="flex items-center gap-4">
+								<div class="w-8 h-8 rounded-lg bg-sw-accent/10 flex items-center justify-center text-sw-accent font-mono text-sm flex-shrink-0">
+									{i + 1}
+								</div>
+								<div class="flex-1 min-w-0">
+									<div class="flex items-center justify-between mb-1">
+										<p class="font-medium truncate">{merchant.merchant}</p>
+										<div class="flex items-center gap-4 text-sm flex-shrink-0">
+											<span class="text-sw-text-dim">{merchant.count}×</span>
+											<span class="font-mono">{formatCurrency(merchant.totalSpent)}</span>
+											<span class="text-sw-accent text-xs">→ {formatCurrency(merchant.totalFuture)}</span>
+										</div>
+									</div>
+									<div class="h-1.5 bg-sw-bg rounded-full overflow-hidden">
+										<div 
+											class="h-full bg-sw-accent/60 rounded-full transition-all"
+											style="width: {barWidth}%;"
+										></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					{/each}
 				</div>
 			</div>
 
 			<!-- Top Transactions -->
 			{#if summary.topTransactions.length > 0}
-				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden">
+				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
 					<div class="px-6 py-4 border-b border-sw-border/50">
 						<h3 class="font-display font-semibold">Biggest Opportunity Costs</h3>
 						<p class="text-sm text-sw-text-dim">Individual purchases with the highest potential growth</p>
 					</div>
 					<div class="divide-y divide-sw-border/30">
-						{#each summary.topTransactions as tx, i}
+						{#each summary.topTransactions.slice(0, 8) as tx, i}
 							<div class="px-6 py-3 flex items-center gap-4 hover:bg-sw-bg/30 transition-colors">
 								<div class="w-8 h-8 rounded-lg bg-sw-accent/10 flex items-center justify-center text-sw-accent font-mono text-sm">
 									{i + 1}
 								</div>
 								<div class="flex-1 min-w-0">
 									<p class="font-medium truncate">{tx.merchant}</p>
-									<p class="text-xs text-sw-text-dim">{formatDate(tx.date)}</p>
+									<p class="text-xs text-sw-text-dim">{formatShortDate(tx.date)}</p>
 								</div>
 								<div class="text-right">
 									<p class="font-mono">{formatCurrency(tx.amount)}</p>
-									<p class="text-xs text-sw-text-dim">spent</p>
 								</div>
-								<div class="w-8 text-center text-sw-text-dim">→</div>
+								<div class="text-sw-text-dim">→</div>
 								<div class="text-right">
 									<p class="font-mono text-sw-accent">{formatCurrency(tx.futureValue)}</p>
 									<p class="text-xs text-sw-accent">+{formatCurrency(tx.growth)}</p>
@@ -348,44 +463,39 @@
 				</div>
 			{/if}
 
-			<!-- Category Details -->
-			<div class="mt-8 bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden">
-				<div class="px-6 py-4 border-b border-sw-border/50">
-					<h3 class="font-display font-semibold">Category Breakdown</h3>
-					<p class="text-sm text-sw-text-dim">What you spent vs. what it would be worth</p>
-				</div>
-				
-				<div class="divide-y divide-sw-border/30">
+			<!-- Category Details (collapsible) -->
+			<details class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden">
+				<summary class="px-6 py-4 cursor-pointer hover:bg-sw-bg/30 transition-colors">
+					<span class="font-display font-semibold">Full Category Breakdown</span>
+					<span class="text-sm text-sw-text-dim ml-2">({summary.categories.length} categories)</span>
+				</summary>
+				<div class="border-t border-sw-border/50 divide-y divide-sw-border/30">
 					{#each summary.categories as cat, i}
 						{@const barWidth = summary.totalSpent > 0 ? (cat.spent / summary.totalSpent) * 100 : 0}
 						
-						<div class="px-6 py-4 hover:bg-sw-bg/30 transition-colors">
-							<div class="flex items-center justify-between mb-2">
+						<div class="px-6 py-3 hover:bg-sw-bg/30 transition-colors">
+							<div class="flex items-center justify-between mb-1">
 								<div class="flex items-center gap-2">
 									<div class="w-3 h-3 rounded-sm" style="background: {COLORS[i % COLORS.length]}"></div>
 									<span class="font-medium">{cat.category}</span>
 								</div>
-								<div class="flex items-center gap-4 text-sm">
+								<div class="flex items-center gap-3 text-sm">
 									<span class="text-sw-text-dim">{formatCurrency(cat.spent)}</span>
 									<span class="text-sw-accent">→</span>
-									<span class="font-medium">{formatCurrency(cat.future)}</span>
-									<span class="text-sw-accent font-mono text-xs px-2 py-0.5 rounded-full bg-sw-accent/10">
-										+{formatCurrency(cat.delta)}
-									</span>
+									<span>{formatCurrency(cat.future)}</span>
+									<span class="text-sw-accent font-mono text-xs">+{formatCurrency(cat.delta)}</span>
 								</div>
 							</div>
-							
-							<!-- Progress bar -->
-							<div class="h-2 bg-sw-bg rounded-full overflow-hidden">
+							<div class="h-1.5 bg-sw-bg rounded-full overflow-hidden">
 								<div 
-									class="h-full rounded-full transition-all duration-500"
+									class="h-full rounded-full transition-all"
 									style="width: {barWidth}%; background: {COLORS[i % COLORS.length]};"
 								></div>
 							</div>
 						</div>
 					{/each}
 				</div>
-			</div>
+			</details>
 
 			<!-- Info footer -->
 			<div class="mt-8 text-center text-sm text-sw-text-dim">

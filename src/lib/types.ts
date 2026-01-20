@@ -206,6 +206,10 @@ export interface DashboardSummary {
 	dateMax: string | null;
 	monthly: MonthlySummary[];
 	topTransactions: TopTransaction[];
+	topMerchants: MerchantSummary[];
+	topMerchantsBySpend: MerchantSummary[];
+	avgTransaction: number;
+	biggestPurchase: TopTransaction | null;
 }
 
 export interface MonthlySummary {
@@ -222,6 +226,16 @@ export interface TopTransaction {
 	futureValue: number;
 	growth: number;
 	growthPct: number;
+}
+
+export interface MerchantSummary {
+	merchant: string;
+	count: number;
+	totalSpent: number;
+	totalFuture: number;
+	totalGrowth: number;
+	avgTransaction: number;
+	lastDate: string;
 }
 
 export interface CategorySummary {
