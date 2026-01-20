@@ -326,10 +326,10 @@
 
 			<!-- Table -->
 			<div class="table-container bg-sw-surface/50">
-				<table class="table table-fixed w-full">
+				<table class="table w-full">
 					<thead>
 						<tr>
-							<th class="w-12 text-center">
+							<th class="w-10">
 								<input
 									type="checkbox"
 									checked={selected.size === rows.length && rows.length > 0}
@@ -337,12 +337,12 @@
 									class="rounded border-sw-border"
 								/>
 							</th>
-							<th class="w-24">Date</th>
-							<th>Merchant</th>
-							<th class="w-28 text-right">Amount</th>
-							<th class="w-32 text-center">Type</th>
-							<th class="w-40 text-center">Category</th>
-							<th class="w-24 text-center">Included</th>
+							<th class="w-20">Date</th>
+							<th class="text-left">Merchant</th>
+							<th class="w-24 text-right pr-4">Amount</th>
+							<th class="w-28 text-center">Type</th>
+							<th class="w-36 text-center">Category</th>
+							<th class="w-20 text-center">Included</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -380,7 +380,7 @@
 											<span class="text-xs text-sw-danger">{row.parseError}</span>
 										{/if}
 									</td>
-									<td class="text-right font-mono">{formatCurrency(row.amountSigned)}</td>
+									<td class="text-right font-mono pr-4">{formatCurrency(row.amountSigned)}</td>
 									<td>
 										<div class="flex justify-center">
 											<select
