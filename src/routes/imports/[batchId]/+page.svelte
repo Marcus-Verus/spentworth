@@ -19,6 +19,14 @@
 	let committing = $state(false);
 	let commitError = $state<string | null>(null);
 
+	// Rule creation modal state
+	let showRuleModal = $state(false);
+	let ruleModalMerchant = $state('');
+	let ruleModalKind = $state<TransactionKind>('purchase');
+	let ruleModalCategory = $state<string | null>(null);
+	let ruleModalExclude = $state(false);
+	let creatingRule = $state(false);
+
 	const categories = ['Groceries', 'Dining', 'Coffee', 'Delivery', 'Shopping', 'Gas/Transport', 'Subscriptions', 'Travel', 'Entertainment', 'Healthcare', 'Utilities', 'Housing', 'Personal Care', 'Education', 'Gifts', 'Uncategorised'];
 
 	const kindOptions: { value: TransactionKind; label: string }[] = [
@@ -68,6 +76,62 @@
 
 		// Refresh to get updated summary
 		loadRows();
+	}
+
+	// Handle kind change with rule prompt
+	async function handleKindChange(row: RawRowEffective, newKind: TransactionKind) {
+		await updateOverride(row.id, { kind: newKind });
+
+		// Prompt to create a rule if merchant exists
+		if (row.merchantNorm && newKind !== row.systemKind) {
+			ruleModalMerchant = row.merchantNorm;
+			ruleModalKind = newKind;
+			ruleModalExclude = newKind !== 'purchase';
+			ruleModalCategory = null;
+			showRuleModal = true;
+		}
+	}
+
+	// Handle category change with rule prompt  
+	async function handleCategoryChange(row: RawRowEffective, newCategory: string) {
+		await updateOverride(row.id, { category: newCategory });
+
+		// Prompt to create a rule if merchant exists
+		if (row.merchantNorm && newCategory !== row.systemCategory) {
+			ruleModalMerchant = row.merchantNorm;
+			ruleModalKind = 'purchase';
+			ruleModalCategory = newCategory;
+			ruleModalExclude = false;
+			showRuleModal = true;
+		}
+	}
+
+	async function createRule() {
+		creatingRule = true;
+
+		await fetch('/api/rules', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				matchType: 'contains',
+				matchField: 'merchant_norm',
+				matchValue: ruleModalMerchant,
+				actionExclude: ruleModalExclude,
+				setKind: ruleModalKind,
+				setCategory: ruleModalCategory
+			})
+		});
+
+		creatingRule = false;
+		showRuleModal = false;
+
+		// Re-apply rules to current batch
+		await fetch(`/api/imports/${batchId}/apply-rules`, { method: 'POST' });
+		loadRows();
+	}
+
+	function closeRuleModal() {
+		showRuleModal = false;
 	}
 
 	async function bulkOverride(patch: Record<string, unknown>) {
@@ -265,7 +329,7 @@
 				<table class="table">
 					<thead>
 						<tr>
-							<th class="w-10 text-center">
+							<th class="w-12 text-center">
 								<input
 									type="checkbox"
 									checked={selected.size === rows.length && rows.length > 0}
@@ -273,12 +337,12 @@
 									class="rounded border-sw-border"
 								/>
 							</th>
-							<th>Date</th>
-							<th>Merchant</th>
-							<th class="text-right">Amount</th>
-							<th class="text-center">Type</th>
-							<th class="text-center">Category</th>
-							<th class="text-center">Included</th>
+							<th class="w-24 text-left">Date</th>
+							<th class="text-left">Merchant</th>
+							<th class="w-28 text-right">Amount</th>
+							<th class="w-32 text-center">Type</th>
+							<th class="w-36 text-center">Category</th>
+							<th class="w-24 text-center">Included</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -318,7 +382,7 @@
 									<td class="text-center">
 										<select
 											value={row.effectiveKind}
-											onchange={(e) => updateOverride(row.id, { kind: e.currentTarget.value })}
+											onchange={(e) => handleKindChange(row, e.currentTarget.value as TransactionKind)}
 											class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
 										>
 											{#each kindOptions as opt}
@@ -330,7 +394,7 @@
 										{#if row.effectiveKind === 'purchase'}
 											<select
 												value={row.effectiveCategory || 'Uncategorised'}
-												onchange={(e) => updateOverride(row.id, { category: e.currentTarget.value })}
+												onchange={(e) => handleCategoryChange(row, e.currentTarget.value)}
 												class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
 											>
 												{#each categories as cat}
@@ -398,3 +462,46 @@
 		</footer>
 	{/if}
 </div>
+
+<!-- Create Rule Modal -->
+{#if showRuleModal}
+	<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onclick={closeRuleModal}>
+		<div class="card max-w-md w-full mx-4 animate-slide-up" onclick={(e) => e.stopPropagation()}>
+			<h2 class="font-display text-lg font-semibold mb-4">Create Rule for Future Imports?</h2>
+			
+			<p class="text-sw-text-dim text-sm mb-4">
+				Would you like to automatically apply this classification to all transactions containing:
+			</p>
+
+			<div class="p-3 rounded-lg bg-sw-bg border border-sw-border mb-4 font-mono text-sm">
+				{ruleModalMerchant}
+			</div>
+
+			<div class="space-y-3 mb-6">
+				<div class="flex items-center justify-between text-sm">
+					<span class="text-sw-text-dim">Type:</span>
+					<span class="font-medium">{kindOptions.find(k => k.value === ruleModalKind)?.label}</span>
+				</div>
+				{#if ruleModalCategory}
+					<div class="flex items-center justify-between text-sm">
+						<span class="text-sw-text-dim">Category:</span>
+						<span class="font-medium">{ruleModalCategory}</span>
+					</div>
+				{/if}
+				<div class="flex items-center justify-between text-sm">
+					<span class="text-sw-text-dim">Exclude from spend:</span>
+					<span class="font-medium">{ruleModalExclude ? 'Yes' : 'No'}</span>
+				</div>
+			</div>
+
+			<div class="flex items-center gap-3">
+				<button onclick={createRule} disabled={creatingRule} class="btn btn-primary flex-1">
+					{creatingRule ? 'Creating...' : 'Yes, Create Rule'}
+				</button>
+				<button onclick={closeRuleModal} class="btn btn-secondary flex-1">
+					No, Just This One
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
