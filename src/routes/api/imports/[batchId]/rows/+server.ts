@@ -3,6 +3,8 @@ import type { RequestHandler } from './$types';
 import { computeBatchSummary } from '$lib/server/imports/summary';
 import type { RawRowEffective, TransactionKind, PreviewTab, SortOption } from '$lib/types';
 
+// v2: Filter by effective values after overrides
+
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const { session, user } = await locals.safeGetSession();
 
