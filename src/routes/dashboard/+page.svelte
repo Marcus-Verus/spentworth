@@ -3,6 +3,22 @@
 	import { onMount } from 'svelte';
 	import type { DashboardSummary, RecurringCharge } from '$lib/types';
 
+	interface Goal {
+		id: string;
+		name: string;
+		goal_type: string;
+		target_category?: string;
+		target_merchant?: string;
+		target_amount: number;
+		current_period_spent: number;
+		progress_pct: number;
+		remaining: number;
+		over_budget: boolean;
+		projected_value: number;
+		project_years: number;
+		enabled: boolean;
+	}
+
 	let { data } = $props();
 
 	let summary = $state<DashboardSummary | null>(null);
@@ -14,10 +30,58 @@
 	// What-if calculator state
 	let whatIfYears = $state(10);
 	let selectedWhatIf = $state<RecurringCharge | null>(null);
+	
+	// Goals state
+	let goals = $state<Goal[]>([]);
+	let showGoalForm = $state(false);
+	let newGoalName = $state('');
+	let newGoalType = $state<'reduce_category' | 'reduce_merchant'>('reduce_category');
+	let newGoalTarget = $state('');
+	let newGoalAmount = $state(100);
 
 	onMount(async () => {
-		await loadSummary();
+		await Promise.all([loadSummary(), loadGoals()]);
 	});
+	
+	async function loadGoals() {
+		const res = await fetch('/api/goals');
+		const json = await res.json();
+		if (json.ok) {
+			goals = json.data || [];
+		}
+	}
+	
+	async function createGoal() {
+		if (!newGoalName || !newGoalAmount) return;
+		
+		const res = await fetch('/api/goals', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				name: newGoalName,
+				goal_type: newGoalType,
+				target_category: newGoalType === 'reduce_category' ? newGoalTarget : null,
+				target_merchant: newGoalType === 'reduce_merchant' ? newGoalTarget : null,
+				target_amount: newGoalAmount,
+				project_years: 10
+			})
+		});
+		
+		const json = await res.json();
+		if (json.ok) {
+			await loadGoals();
+			showGoalForm = false;
+			newGoalName = '';
+			newGoalTarget = '';
+			newGoalAmount = 100;
+		}
+	}
+	
+	async function deleteGoal(goalId: string) {
+		if (!confirm('Delete this goal?')) return;
+		await fetch(`/api/goals/${goalId}`, { method: 'DELETE' });
+		await loadGoals();
+	}
 
 	async function loadSummary() {
 		loading = true;
@@ -525,6 +589,122 @@
 						</div>
 					{/each}
 				</div>
+			</div>
+
+			<!-- Goals Section -->
+			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
+				<div class="px-6 py-4 border-b border-sw-border/50 flex items-center justify-between">
+					<div>
+						<h3 class="font-display font-semibold">🎯 Spending Goals</h3>
+						<p class="text-sm text-sw-text-dim">Set limits and track your progress</p>
+					</div>
+					<button onclick={() => showGoalForm = !showGoalForm} class="btn btn-secondary text-sm">
+						{showGoalForm ? 'Cancel' : '+ New Goal'}
+					</button>
+				</div>
+				
+				{#if showGoalForm}
+					<div class="px-6 py-4 bg-sw-bg/30 border-b border-sw-border/50">
+						<div class="grid md:grid-cols-4 gap-4">
+							<div>
+								<label class="block text-xs text-sw-text-dim mb-1">Goal Name</label>
+								<input 
+									type="text" 
+									bind:value={newGoalName}
+									placeholder="e.g., Cut dining out"
+									class="w-full px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm"
+								/>
+							</div>
+							<div>
+								<label class="block text-xs text-sw-text-dim mb-1">Type</label>
+								<select bind:value={newGoalType} class="w-full px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm">
+									<option value="reduce_category">Limit Category</option>
+									<option value="reduce_merchant">Limit Merchant</option>
+								</select>
+							</div>
+							<div>
+								<label class="block text-xs text-sw-text-dim mb-1">
+									{newGoalType === 'reduce_category' ? 'Category' : 'Merchant'}
+								</label>
+								{#if newGoalType === 'reduce_category'}
+									<select bind:value={newGoalTarget} class="w-full px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm">
+										<option value="">Select category...</option>
+										{#each displayCategories as cat}
+											<option value={cat.category}>{cat.category}</option>
+										{/each}
+									</select>
+								{:else}
+									<input 
+										type="text" 
+										bind:value={newGoalTarget}
+										placeholder="e.g., Starbucks"
+										class="w-full px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm"
+									/>
+								{/if}
+							</div>
+							<div>
+								<label class="block text-xs text-sw-text-dim mb-1">Monthly Limit ($)</label>
+								<div class="flex gap-2">
+									<input 
+										type="number" 
+										bind:value={newGoalAmount}
+										min="1"
+										class="flex-1 px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm"
+									/>
+									<button onclick={createGoal} class="btn btn-primary text-sm">Add</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/if}
+				
+				{#if goals.length > 0}
+					<div class="divide-y divide-sw-border/30">
+						{#each goals as goal}
+							<div class="px-6 py-4 hover:bg-sw-bg/30 transition-colors">
+								<div class="flex items-center justify-between mb-2">
+									<div>
+										<p class="font-medium">{goal.name}</p>
+										<p class="text-xs text-sw-text-dim">
+											{goal.goal_type === 'reduce_category' ? `Category: ${goal.target_category}` : `Merchant: ${goal.target_merchant}`}
+										</p>
+									</div>
+									<div class="flex items-center gap-4">
+										<div class="text-right">
+											<p class="font-mono {goal.over_budget ? 'text-red-400' : 'text-sw-accent'}">
+												{formatCurrency(goal.current_period_spent)} / {formatCurrency(goal.target_amount)}
+											</p>
+											<p class="text-xs text-sw-text-dim">
+												{goal.over_budget ? 'Over budget!' : `${formatCurrency(goal.remaining)} remaining`}
+											</p>
+										</div>
+										<button onclick={() => deleteGoal(goal.id)} class="text-sw-text-dim hover:text-red-400 transition-colors">
+											<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+											</svg>
+										</button>
+									</div>
+								</div>
+								<!-- Progress bar -->
+								<div class="h-2 bg-sw-bg rounded-full overflow-hidden">
+									<div 
+										class="h-full rounded-full transition-all {goal.over_budget ? 'bg-red-400' : 'bg-sw-accent'}"
+										style="width: {Math.min(goal.progress_pct, 100)}%;"
+									></div>
+								</div>
+								{#if goal.projected_value > 0}
+									<p class="text-xs text-sw-text-dim mt-2">
+										💰 If you stay under budget: Save {formatCurrency(goal.target_amount - goal.current_period_spent)}/mo → {formatCurrency(goal.projected_value)} in {goal.project_years} years
+									</p>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{:else if !showGoalForm}
+					<div class="px-6 py-8 text-center text-sw-text-dim">
+						<p>No goals yet. Create one to track your spending limits!</p>
+					</div>
+				{/if}
 			</div>
 
 			<!-- Top Transactions -->
