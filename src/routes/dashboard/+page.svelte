@@ -332,7 +332,7 @@
 						</div>
 					</div>
 					<p class="mt-4 text-xs text-sw-text-dim">
-						💡 <strong>Example:</strong> You spent $100 at Amazon 6 months ago. If you'd invested that in SPY instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.
+						<i class="fa-solid fa-lightbulb mr-1 text-sw-accent"></i><strong>Example:</strong> You spent $100 at Amazon 6 months ago. If you'd invested that in SPY instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.
 					</p>
 				</div>
 			{/if}
@@ -399,22 +399,22 @@
 			{#if summary.biggestPurchase}
 				<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">💸 Biggest Splurge</p>
+						<p class="text-xs text-sw-text-dim mb-1"><i class="fa-solid fa-money-bill-wave mr-1.5 text-sw-accent"></i>Biggest Splurge</p>
 						<p class="font-mono text-lg">{formatCurrency(summary.biggestPurchase.amount)}</p>
 						<p class="text-xs text-sw-text-dim truncate">{summary.biggestPurchase.merchant}</p>
 					</div>
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">📅 Spendy Day</p>
+						<p class="text-xs text-sw-text-dim mb-1"><i class="fa-solid fa-calendar-day mr-1.5 text-sw-accent"></i>Spendy Day</p>
 						<p class="font-mono text-lg">{summary.biggestSpendingDay.day}s</p>
 						<p class="text-xs text-sw-text-dim">{formatCurrency(summary.biggestSpendingDay.spent)} total</p>
 					</div>
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">📊 Monthly Avg</p>
+						<p class="text-xs text-sw-text-dim mb-1"><i class="fa-solid fa-chart-line mr-1.5 text-sw-accent"></i>Monthly Avg</p>
 						<p class="font-mono text-lg">{formatCurrency(summary.totalSpent / Math.max(summary.monthly.length, 1))}</p>
 						<p class="text-xs text-sw-text-dim">{summary.monthly.length} months tracked</p>
 					</div>
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">🔁 Subscriptions</p>
+						<p class="text-xs text-sw-text-dim mb-1"><i class="fa-solid fa-rotate mr-1.5 text-sw-accent"></i>Subscriptions</p>
 						<p class="font-mono text-lg">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</p>
 						<p class="text-xs text-sw-text-dim">{summary.recurringCharges.length} detected</p>
 					</div>
@@ -566,7 +566,7 @@
 
 					<!-- What-If Calculator -->
 					<div class="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl border border-purple-500/30 p-6">
-						<h3 class="font-display font-semibold mb-2">💭 What If Calculator</h3>
+						<h3 class="font-display font-semibold mb-2"><i class="fa-solid fa-lightbulb mr-2 text-purple-400"></i>What If Calculator</h3>
 						<p class="text-sm text-sw-text-dim mb-4">
 							{selectedWhatIf ? `If you cancelled ${selectedWhatIf.merchant}...` : 'Select a recurring charge to see projections'}
 						</p>
@@ -617,7 +617,7 @@
 							</div>
 						{:else}
 							<div class="bg-sw-bg/50 rounded-xl p-8 text-center">
-								<p class="text-sw-text-dim">👈 Click a recurring charge to see how much you could save</p>
+								<p class="text-sw-text-dim"><i class="fa-solid fa-arrow-left mr-1"></i>Click a recurring charge to see how much you could save</p>
 							</div>
 						{/if}
 					</div>
@@ -628,7 +628,7 @@
 			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
 				<div class="px-6 py-4 border-b border-sw-border/50 flex items-center justify-between">
 					<div>
-						<h3 class="font-display font-semibold">🏪 Where Your Money Goes</h3>
+						<h3 class="font-display font-semibold"><i class="fa-solid fa-store mr-2 text-sw-accent"></i>Where Your Money Goes</h3>
 						<p class="text-sm text-sw-text-dim">Your favorite places to spend</p>
 					</div>
 					<div class="flex rounded-lg bg-sw-bg p-1">
@@ -668,7 +668,7 @@
 			{#if summary.yoyComparison}
 				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
 					<div class="px-6 py-4 border-b border-sw-border/50">
-						<h3 class="font-display font-semibold">📊 Year-over-Year</h3>
+						<h3 class="font-display font-semibold"><i class="fa-solid fa-chart-column mr-2 text-sw-accent"></i>Year-over-Year</h3>
 						<p class="text-sm text-sw-text-dim">Compared to same period last year</p>
 					</div>
 					<div class="p-6">
@@ -721,7 +721,7 @@
 			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
 				<div class="px-6 py-4 border-b border-sw-border/50 flex items-center justify-between">
 					<div>
-						<h3 class="font-display font-semibold">🎯 Spending Goals</h3>
+						<h3 class="font-display font-semibold"><i class="fa-solid fa-bullseye mr-2 text-sw-accent"></i>Spending Goals</h3>
 						<p class="text-sm text-sw-text-dim">Set limits and track your progress</p>
 					</div>
 					<button onclick={() => showGoalForm = !showGoalForm} class="btn btn-secondary text-sm">
@@ -820,7 +820,7 @@
 								</div>
 								{#if goal.projected_value > 0}
 									<p class="text-xs text-sw-text-dim mt-2">
-										💰 If you stay under budget: Save {formatCurrency(goal.target_amount - goal.current_period_spent)}/mo → {formatCurrency(goal.projected_value)} in {goal.project_years} years
+										<i class="fa-solid fa-piggy-bank mr-1 text-sw-accent"></i>If you stay under budget: Save {formatCurrency(goal.target_amount - goal.current_period_spent)}/mo → {formatCurrency(goal.projected_value)} in {goal.project_years} years
 									</p>
 								{/if}
 							</div>
@@ -837,7 +837,7 @@
 			{#if summary.topTransactions.length > 0}
 				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
 					<div class="px-6 py-4 border-b border-sw-border/50">
-						<h3 class="font-display font-semibold">💰 Your Costliest Choices</h3>
+						<h3 class="font-display font-semibold"><i class="fa-solid fa-coins mr-2 text-sw-accent"></i>Your Costliest Choices</h3>
 						<p class="text-sm text-sw-text-dim">The purchases that would've grown the most if invested</p>
 					</div>
 					<div class="divide-y divide-sw-border/30">
