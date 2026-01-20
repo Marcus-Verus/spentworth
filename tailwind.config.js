@@ -17,8 +17,8 @@ export default {
 				'sw-blue': '#3b82f6'
 			},
 			fontFamily: {
-				'display': ['Sora', 'sans-serif'],
-				'body': ['IBM Plex Sans', 'sans-serif'],
+				'display': ['Inter', 'system-ui', 'sans-serif'],
+				'body': ['Inter', 'system-ui', 'sans-serif'],
 				'mono': ['JetBrains Mono', 'monospace']
 			},
 			backgroundImage: {

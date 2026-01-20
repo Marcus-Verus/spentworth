@@ -117,6 +117,12 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 			case 'duplicates':
 				// Duplicates: marked as duplicate, unless user explicitly included it
 				return row.isDuplicate && !row.effectiveIncludedInSpend;
+			case 'uncategorized':
+				// Uncategorized: purchases without a proper category
+				return row.effectiveKind === 'purchase' && 
+				       row.effectiveIncludedInSpend && 
+				       !row.isDuplicate &&
+				       (!row.effectiveCategory || row.effectiveCategory === 'Uncategorized');
 			default:
 				return true;
 		}
@@ -163,6 +169,7 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 		systemIncludedInSpend: r.systemIncludedInSpend,
 		effectiveKind: r.effectiveKind,
 		effectiveIncludedInSpend: r.effectiveIncludedInSpend,
+		effectiveCategory: r.effectiveCategory,
 		isDuplicate: r.isDuplicate
 	}));
 

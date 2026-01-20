@@ -8,6 +8,7 @@ export interface RawRowWithEffective {
 	systemIncludedInSpend: boolean;
 	effectiveKind: TransactionKind;
 	effectiveIncludedInSpend: boolean;
+	effectiveCategory: string | null;
 	isDuplicate: boolean;
 }
 
@@ -16,6 +17,7 @@ export function computeBatchSummary(rows: RawRowWithEffective[]): BatchSummary {
 	let rowsExcluded = 0;
 	let rowsNeedsReview = 0;
 	let rowsDuplicates = 0;
+	let rowsUncategorized = 0;
 	let totalIncludedSpend = 0;
 	let totalExcludedAmount = 0;
 	let dateMin: string | null = null;
@@ -30,6 +32,14 @@ export function computeBatchSummary(rows: RawRowWithEffective[]): BatchSummary {
 			if (!dateMax || row.dateChosen > dateMax) {
 				dateMax = row.dateChosen;
 			}
+		}
+
+		// Count uncategorized (purchases without a category or with "Uncategorized")
+		if (row.effectiveKind === 'purchase' && 
+		    row.effectiveIncludedInSpend && 
+		    !row.isDuplicate &&
+		    (!row.effectiveCategory || row.effectiveCategory === 'Uncategorized')) {
+			rowsUncategorized++;
 		}
 
 		// Count by status
@@ -65,6 +75,7 @@ export function computeBatchSummary(rows: RawRowWithEffective[]): BatchSummary {
 		rowsExcluded,
 		rowsNeedsReview,
 		rowsDuplicates,
+		rowsUncategorized,
 		totalIncludedSpend: Math.round(totalIncludedSpend * 100) / 100,
 		totalExcludedAmount: Math.round(totalExcludedAmount * 100) / 100,
 		dateMin,

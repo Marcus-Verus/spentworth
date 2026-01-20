@@ -327,19 +327,20 @@
 			</div>
 
 			<!-- Tabs -->
-			<div class="flex items-center gap-1 mb-4 border-b border-sw-border">
+			<div class="flex items-center gap-1 mb-4 border-b border-sw-border overflow-x-auto">
 				{#each [
 					{ id: 'included', label: 'Included', count: summary.rowsIncluded },
+					{ id: 'uncategorized', label: 'Uncategorized', count: summary.rowsUncategorized, highlight: true },
 					{ id: 'excluded', label: 'Excluded', count: summary.rowsExcluded - summary.rowsNeedsReview - summary.rowsDuplicates },
 					{ id: 'needs_review', label: 'Needs Review', count: summary.rowsNeedsReview },
 					{ id: 'duplicates', label: 'Duplicates', count: summary.rowsDuplicates }
 				] as tabItem}
 					<button
 						onclick={() => { tab = tabItem.id as PreviewTab; currentPage = 1; loadRows(); }}
-						class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {tab === tabItem.id ? 'border-sw-accent text-sw-accent' : 'border-transparent text-sw-text-dim hover:text-sw-text'}"
+						class="px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap {tab === tabItem.id ? 'border-sw-accent text-sw-accent' : 'border-transparent text-sw-text-dim hover:text-sw-text'}"
 					>
 						{tabItem.label}
-						<span class="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-sw-surface">{tabItem.count}</span>
+						<span class="ml-1.5 px-1.5 py-0.5 rounded-full text-xs {tabItem.highlight && tabItem.count > 0 ? 'bg-amber-500/30 text-amber-300' : 'bg-sw-surface'}">{tabItem.count}</span>
 					</button>
 				{/each}
 			</div>

@@ -35,6 +35,7 @@ export interface BatchSummary {
 	rowsExcluded: number;
 	rowsNeedsReview: number;
 	rowsDuplicates: number;
+	rowsUncategorized: number;
 	totalIncludedSpend: number;
 	totalExcludedAmount: number;
 	dateMin: string | null;
@@ -293,7 +294,7 @@ export interface OverridePatch {
 }
 
 // Tab types for import preview
-export type PreviewTab = 'included' | 'excluded' | 'needs_review' | 'duplicates';
+export type PreviewTab = 'included' | 'excluded' | 'needs_review' | 'duplicates' | 'uncategorized';
 
 // Sort options
 export type SortOption = 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';

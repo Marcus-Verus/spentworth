@@ -88,12 +88,12 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	// Recompute summary
 	const { data: allRows } = await locals.supabase
 		.from('raw_transactions')
-		.select('id, parse_status, amount_signed, date_chosen, kind, included_in_spend, is_duplicate')
+		.select('id, parse_status, amount_signed, date_chosen, kind, included_in_spend, category, is_duplicate')
 		.eq('batch_id', batchId);
 
 	const { data: allOverrides } = await locals.supabase
 		.from('transaction_overrides')
-		.select('raw_transaction_id, override_kind, override_included_in_spend')
+		.select('raw_transaction_id, override_kind, override_included_in_spend, override_category')
 		.in(
 			'raw_transaction_id',
 			(allRows || []).map((r) => r.id)
@@ -113,6 +113,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			systemIncludedInSpend: r.included_in_spend,
 			effectiveKind: (override?.override_kind ?? r.kind) as TransactionKind,
 			effectiveIncludedInSpend: override?.override_included_in_spend ?? r.included_in_spend,
+			effectiveCategory: override?.override_category ?? r.category,
 			isDuplicate: r.is_duplicate
 		};
 	});
