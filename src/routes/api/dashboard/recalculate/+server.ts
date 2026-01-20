@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!pricesLoaded) {
 		return json({
 			ok: false,
-			error: 'Failed to fetch price data. API may be rate limited - try again in a minute.'
+			error: `Failed to fetch ${ticker} price data. Make sure ALPHA_VANTAGE_API_KEY is set in Netlify environment variables. If it is, the API may be rate limited - try again in a minute.`
 		});
 	}
 

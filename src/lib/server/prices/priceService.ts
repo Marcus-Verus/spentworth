@@ -14,14 +14,18 @@ async function fetchFullPriceHistory(ticker: string): Promise<Record<string, num
 	}
 
 	if (!ALPHA_VANTAGE_API_KEY) {
-		console.warn('ALPHA_VANTAGE_API_KEY not set');
+		console.error('ALPHA_VANTAGE_API_KEY not set in environment variables');
 		return null;
 	}
 
 	try {
 		const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
+		console.log(`Fetching Alpha Vantage data for ${ticker}...`);
 		const response = await fetch(url);
 		const json = await response.json();
+
+		// Log the response keys for debugging
+		console.log('Alpha Vantage response keys:', Object.keys(json));
 
 		// Check for API errors
 		if (json['Error Message']) {
@@ -31,12 +35,18 @@ async function fetchFullPriceHistory(ticker: string): Promise<Record<string, num
 
 		if (json['Note']) {
 			// Rate limit hit
-			console.warn('Alpha Vantage rate limit:', json['Note']);
+			console.error('Alpha Vantage rate limit:', json['Note']);
+			return null;
+		}
+
+		if (json['Information']) {
+			// API limit or other info message
+			console.error('Alpha Vantage info:', json['Information']);
 			return null;
 		}
 
 		if (!json['Time Series (Daily)']) {
-			console.error('Alpha Vantage: No time series data');
+			console.error('Alpha Vantage: No time series data. Full response:', JSON.stringify(json).slice(0, 500));
 			return null;
 		}
 
