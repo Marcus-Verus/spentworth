@@ -82,7 +82,7 @@
 	async function handleKindChange(row: RawRowEffective, newKind: TransactionKind) {
 		await updateOverride(row.id, { kind: newKind });
 
-		// Prompt to create a rule if merchant exists
+		// Prompt to create a rule if merchant exists and kind changed from system
 		if (row.merchantNorm && newKind !== row.systemKind) {
 			ruleModalMerchant = row.merchantNorm;
 			ruleModalKind = newKind;
@@ -96,7 +96,7 @@
 	async function handleCategoryChange(row: RawRowEffective, newCategory: string) {
 		await updateOverride(row.id, { category: newCategory });
 
-		// Prompt to create a rule if merchant exists
+		// Prompt to create a rule if merchant exists and category changed
 		if (row.merchantNorm && newCategory !== row.systemCategory) {
 			ruleModalMerchant = row.merchantNorm;
 			ruleModalKind = 'purchase';
@@ -125,7 +125,7 @@
 		creatingRule = false;
 		showRuleModal = false;
 
-		// Re-apply rules to current batch
+		// Re-apply rules to current batch - update all matching rows
 		await fetch(`/api/imports/${batchId}/apply-rules`, { method: 'POST' });
 		loadRows();
 	}
@@ -326,7 +326,7 @@
 
 			<!-- Table -->
 			<div class="table-container bg-sw-surface/50">
-				<table class="table">
+				<table class="table table-fixed w-full">
 					<thead>
 						<tr>
 							<th class="w-12 text-center">
@@ -337,11 +337,11 @@
 									class="rounded border-sw-border"
 								/>
 							</th>
-							<th class="w-24 text-left">Date</th>
-							<th class="text-left">Merchant</th>
+							<th class="w-24">Date</th>
+							<th>Merchant</th>
 							<th class="w-28 text-right">Amount</th>
 							<th class="w-32 text-center">Type</th>
-							<th class="w-36 text-center">Category</th>
+							<th class="w-40 text-center">Category</th>
 							<th class="w-24 text-center">Included</th>
 						</tr>
 					</thead>
@@ -361,17 +361,19 @@
 						{:else}
 							{#each rows as row}
 								<tr class="{selected.has(row.id) ? 'bg-sw-accent/5' : ''}">
-									<td class="text-center">
-										<input
-											type="checkbox"
-											checked={selected.has(row.id)}
-											onchange={() => toggleSelect(row.id)}
-											class="rounded border-sw-border"
-										/>
+									<td>
+										<div class="flex justify-center">
+											<input
+												type="checkbox"
+												checked={selected.has(row.id)}
+												onchange={() => toggleSelect(row.id)}
+												class="rounded border-sw-border"
+											/>
+										</div>
 									</td>
 									<td class="font-mono text-sm">{formatDate(row.dateChosen)}</td>
 									<td>
-										<div class="max-w-xs truncate" title={row.descriptionRaw || ''}>
+										<div class="truncate" title={row.descriptionRaw || ''}>
 											{row.merchantRaw || row.descriptionRaw || '-'}
 										</div>
 										{#if row.parseStatus === 'error'}
@@ -379,40 +381,46 @@
 										{/if}
 									</td>
 									<td class="text-right font-mono">{formatCurrency(row.amountSigned)}</td>
-									<td class="text-center">
-										<select
-											value={row.effectiveKind}
-											onchange={(e) => handleKindChange(row, e.currentTarget.value as TransactionKind)}
-											class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
-										>
-											{#each kindOptions as opt}
-												<option value={opt.value} class="bg-sw-bg text-sw-text">{opt.label}</option>
-											{/each}
-										</select>
-									</td>
-									<td class="text-center">
-										{#if row.effectiveKind === 'purchase'}
+									<td>
+										<div class="flex justify-center">
 											<select
-												value={row.effectiveCategory || 'Uncategorised'}
-												onchange={(e) => handleCategoryChange(row, e.currentTarget.value)}
+												value={row.effectiveKind}
+												onchange={(e) => handleKindChange(row, e.currentTarget.value as TransactionKind)}
 												class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
 											>
-												{#each categories as cat}
-													<option value={cat} class="bg-sw-bg text-sw-text">{cat}</option>
+												{#each kindOptions as opt}
+													<option value={opt.value} class="bg-sw-bg text-sw-text">{opt.label}</option>
 												{/each}
 											</select>
-										{:else}
-											<span class="text-sw-text-dim">-</span>
-										{/if}
+										</div>
 									</td>
-									<td class="text-center">
-										<button
-											onclick={() => updateOverride(row.id, { includedInSpend: !row.effectiveIncludedInSpend })}
-											class="toggle {row.effectiveIncludedInSpend ? 'toggle-checked' : 'toggle-unchecked'}"
-											aria-label="Toggle included"
-										>
-											<span class="toggle-dot"></span>
-										</button>
+									<td>
+										<div class="flex justify-center">
+											{#if row.effectiveKind === 'purchase'}
+												<select
+													value={row.effectiveCategory || 'Uncategorised'}
+													onchange={(e) => handleCategoryChange(row, e.currentTarget.value)}
+													class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
+												>
+													{#each categories as cat}
+														<option value={cat} class="bg-sw-bg text-sw-text">{cat}</option>
+													{/each}
+												</select>
+											{:else}
+												<span class="text-sw-text-dim">-</span>
+											{/if}
+										</div>
+									</td>
+									<td>
+										<div class="flex justify-center">
+											<button
+												onclick={() => updateOverride(row.id, { includedInSpend: !row.effectiveIncludedInSpend })}
+												class="toggle {row.effectiveIncludedInSpend ? 'toggle-checked' : 'toggle-unchecked'}"
+												aria-label="Toggle included"
+											>
+												<span class="toggle-dot"></span>
+											</button>
+										</div>
 									</td>
 								</tr>
 							{/each}
@@ -470,10 +478,10 @@
 			<h2 class="font-display text-lg font-semibold mb-4">Create Rule for Future Imports?</h2>
 			
 			<p class="text-sw-text-dim text-sm mb-4">
-				Would you like to automatically apply this classification to all transactions containing:
+				Apply this classification to all transactions containing:
 			</p>
 
-			<div class="p-3 rounded-lg bg-sw-bg border border-sw-border mb-4 font-mono text-sm">
+			<div class="p-3 rounded-lg bg-sw-bg border border-sw-border mb-4 font-mono text-sm break-all">
 				{ruleModalMerchant}
 			</div>
 
