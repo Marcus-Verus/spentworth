@@ -202,6 +202,26 @@ export interface DashboardSummary {
 	usingRealPrices: number;
 	usingFallback: number;
 	transactionCount: number;
+	dateMin: string | null;
+	dateMax: string | null;
+	monthly: MonthlySummary[];
+	topTransactions: TopTransaction[];
+}
+
+export interface MonthlySummary {
+	month: string; // YYYY-MM
+	spent: number;
+	future: number;
+	delta: number;
+}
+
+export interface TopTransaction {
+	merchant: string;
+	date: string;
+	amount: number;
+	futureValue: number;
+	growth: number;
+	growthPct: number;
 }
 
 export interface CategorySummary {

@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	// Build query for included purchases
 	let query = locals.supabase
 		.from('transactions')
-		.select('amount, future_value, category, calc_method')
+		.select('id, date, amount, future_value, growth_delta, category, calc_method, merchant')
 		.eq('user_id', user.id)
 		.eq('included_in_spend', true)
 		.eq('kind', 'purchase');
@@ -47,15 +47,44 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	let totalFutureValue = 0;
 	let usingRealPrices = 0;
 	let usingFallback = 0;
+	let dateMin: string | null = null;
+	let dateMax: string | null = null;
 	const categoryMap = new Map<string, { spent: number; future: number }>();
+	const monthlyMap = new Map<string, { spent: number; future: number }>();
+	
+	// Track top growth transactions
+	const topGrowth: Array<{
+		merchant: string;
+		date: string;
+		amount: number;
+		futureValue: number;
+		growth: number;
+		growthPct: number;
+	}> = [];
 
 	for (const tx of transactions || []) {
 		const amount = tx.amount || 0;
 		const future = tx.future_value || amount;
 		const category = tx.category || 'Uncategorised';
+		const date = tx.date;
 
 		totalSpent += amount;
 		totalFutureValue += future;
+
+		// Track date range
+		if (date) {
+			if (!dateMin || date < dateMin) dateMin = date;
+			if (!dateMax || date > dateMax) dateMax = date;
+			
+			// Monthly aggregation (YYYY-MM)
+			const month = date.substring(0, 7);
+			if (!monthlyMap.has(month)) {
+				monthlyMap.set(month, { spent: 0, future: 0 });
+			}
+			const m = monthlyMap.get(month)!;
+			m.spent += amount;
+			m.future += future;
+		}
 
 		if (tx.calc_method === 'adj_close_ratio') {
 			usingRealPrices++;
@@ -69,7 +98,34 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		const cat = categoryMap.get(category)!;
 		cat.spent += amount;
 		cat.future += future;
+		
+		// Track for top growth
+		const growth = tx.growth_delta || 0;
+		if (amount > 0) {
+			topGrowth.push({
+				merchant: tx.merchant || 'Unknown',
+				date: tx.date,
+				amount,
+				futureValue: future,
+				growth,
+				growthPct: (growth / amount) * 100
+			});
+		}
 	}
+	
+	// Sort and take top 10 by absolute growth
+	topGrowth.sort((a, b) => b.growth - a.growth);
+	const topTransactions = topGrowth.slice(0, 10);
+	
+	// Build monthly data sorted by date
+	const monthly = Array.from(monthlyMap.entries())
+		.sort(([a], [b]) => a.localeCompare(b))
+		.map(([month, data]) => ({
+			month,
+			spent: Math.round(data.spent * 100) / 100,
+			future: Math.round(data.future * 100) / 100,
+			delta: Math.round((data.future - data.spent) * 100) / 100
+		}));
 
 	// Build category summaries
 	const categories: CategorySummary[] = Array.from(categoryMap.entries())
@@ -89,7 +145,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		ticker,
 		usingRealPrices,
 		usingFallback,
-		transactionCount: (transactions || []).length
+		transactionCount: (transactions || []).length,
+		dateMin,
+		dateMax,
+		monthly,
+		topTransactions
 	};
 
 	return json({
