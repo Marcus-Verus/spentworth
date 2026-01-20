@@ -165,7 +165,7 @@
 	<header class="border-b border-sw-border/50 bg-sw-bg/80 backdrop-blur-sm sticky top-0 z-40">
 		<div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<a href="/imports" class="text-sw-text-dim hover:text-sw-text transition-colors">
+				<a href="/imports" class="text-sw-text-dim hover:text-sw-text transition-colors" aria-label="Back to imports">
 					<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 					</svg>
@@ -265,7 +265,7 @@
 				<table class="table">
 					<thead>
 						<tr>
-							<th class="w-10">
+							<th class="w-10 text-center">
 								<input
 									type="checkbox"
 									checked={selected.size === rows.length && rows.length > 0}
@@ -276,9 +276,9 @@
 							<th>Date</th>
 							<th>Merchant</th>
 							<th class="text-right">Amount</th>
-							<th>Type</th>
-							<th>Category</th>
-							<th>Included</th>
+							<th class="text-center">Type</th>
+							<th class="text-center">Category</th>
+							<th class="text-center">Included</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -297,7 +297,7 @@
 						{:else}
 							{#each rows as row}
 								<tr class="{selected.has(row.id) ? 'bg-sw-accent/5' : ''}">
-									<td>
+									<td class="text-center">
 										<input
 											type="checkbox"
 											checked={selected.has(row.id)}
@@ -315,36 +315,37 @@
 										{/if}
 									</td>
 									<td class="text-right font-mono">{formatCurrency(row.amountSigned)}</td>
-									<td>
+									<td class="text-center">
 										<select
 											value={row.effectiveKind}
 											onchange={(e) => updateOverride(row.id, { kind: e.currentTarget.value })}
-											class="text-xs bg-transparent border border-sw-border rounded px-2 py-1"
+											class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
 										>
 											{#each kindOptions as opt}
-												<option value={opt.value}>{opt.label}</option>
+												<option value={opt.value} class="bg-sw-bg text-sw-text">{opt.label}</option>
 											{/each}
 										</select>
 									</td>
-									<td>
+									<td class="text-center">
 										{#if row.effectiveKind === 'purchase'}
 											<select
 												value={row.effectiveCategory || 'Uncategorised'}
 												onchange={(e) => updateOverride(row.id, { category: e.currentTarget.value })}
-												class="text-xs bg-transparent border border-sw-border rounded px-2 py-1"
+												class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
 											>
 												{#each categories as cat}
-													<option value={cat}>{cat}</option>
+													<option value={cat} class="bg-sw-bg text-sw-text">{cat}</option>
 												{/each}
 											</select>
 										{:else}
 											<span class="text-sw-text-dim">-</span>
 										{/if}
 									</td>
-									<td>
+									<td class="text-center">
 										<button
 											onclick={() => updateOverride(row.id, { includedInSpend: !row.effectiveIncludedInSpend })}
 											class="toggle {row.effectiveIncludedInSpend ? 'toggle-checked' : 'toggle-unchecked'}"
+											aria-label="Toggle included"
 										>
 											<span class="toggle-dot"></span>
 										</button>
