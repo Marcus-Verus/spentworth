@@ -38,6 +38,9 @@
 	let newGoalType = $state<'reduce_category' | 'reduce_merchant'>('reduce_category');
 	let newGoalTarget = $state('');
 	let newGoalAmount = $state(100);
+	
+	// How it works
+	let showHowItWorks = $state(false);
 
 	onMount(async () => {
 		await Promise.all([loadSummary(), loadGoals()]);
@@ -289,36 +292,106 @@
 				<a href="/imports" class="btn btn-primary">Import CSV</a>
 			</div>
 		{:else}
-			<!-- Date Range Header -->
-			{#if summary.dateMin && summary.dateMax}
-				<div class="mb-6 text-sm text-sw-text-dim">
-					Tracking spending from <span class="text-sw-text font-medium">{formatDate(summary.dateMin)}</span> to <span class="text-sw-text font-medium">{formatDate(summary.dateMax)}</span>
-					<span class="text-sw-accent">({getDateRangeText()})</span>
+			<!-- Date Range Header + How it works -->
+			<div class="mb-6 flex items-center justify-between">
+				{#if summary.dateMin && summary.dateMax}
+					<p class="text-sm text-sw-text-dim">
+						Tracking spending from <span class="text-sw-text font-medium">{formatDate(summary.dateMin)}</span> to <span class="text-sw-text font-medium">{formatDate(summary.dateMax)}</span>
+						<span class="text-sw-accent">({getDateRangeText()})</span>
+					</p>
+				{/if}
+				<button 
+					onclick={() => showHowItWorks = !showHowItWorks}
+					class="text-xs text-sw-text-dim hover:text-sw-text flex items-center gap-1"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+					</svg>
+					How it works
+				</button>
+			</div>
+			
+			{#if showHowItWorks}
+				<div class="mb-8 bg-gradient-to-br from-sw-accent/5 to-cyan-500/5 rounded-2xl border border-sw-accent/20 p-6">
+					<h3 class="font-display font-semibold mb-3">How SpentWorth Works</h3>
+					<div class="grid md:grid-cols-3 gap-6 text-sm">
+						<div>
+							<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center text-sw-accent mb-2">1</div>
+							<p class="font-medium mb-1">Track Your Spending</p>
+							<p class="text-sw-text-dim">Import your bank statements and we categorize your purchases automatically.</p>
+						</div>
+						<div>
+							<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center text-sw-accent mb-2">2</div>
+							<p class="font-medium mb-1">Calculate Opportunity Cost</p>
+							<p class="text-sw-text-dim">For each purchase, we calculate what it would be worth today if you'd invested in {summary.ticker} instead.</p>
+						</div>
+						<div>
+							<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center text-sw-accent mb-2">3</div>
+							<p class="font-medium mb-1">Make Smarter Choices</p>
+							<p class="text-sw-text-dim">See which spending habits cost you the most, set goals, and watch your potential savings grow.</p>
+						</div>
+					</div>
+					<p class="mt-4 text-xs text-sw-text-dim">
+						💡 <strong>Example:</strong> You spent $100 at Amazon 6 months ago. If you'd invested that in SPY instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.
+					</p>
 				</div>
 			{/if}
 
 			<!-- Hero Stats -->
 			<div class="grid md:grid-cols-3 gap-6 mb-8">
-				<div class="bg-sw-surface/60 rounded-2xl p-6 border border-sw-border/50">
-					<p class="text-sm text-sw-text-dim mb-2">Total Spent</p>
+				<div class="bg-sw-surface/60 rounded-2xl p-6 border border-sw-border/50 group relative">
+					<p class="text-sm text-sw-text-dim mb-2 flex items-center gap-1">
+						Total Spent
+						<span class="cursor-help text-sw-text-dim/50 hover:text-sw-text-dim">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+						</span>
+					</p>
 					<p class="font-display text-4xl font-bold tracking-tight">{formatCurrency(summary.totalSpent)}</p>
-					<p class="text-xs text-sw-text-dim mt-2">{summary.transactionCount} transactions • avg {formatCurrency(summary.avgTransaction)}</p>
+					<p class="text-xs text-sw-text-dim mt-2">{summary.transactionCount} purchases • avg {formatCurrency(summary.avgTransaction)}</p>
+					<!-- Tooltip -->
+					<div class="absolute left-0 right-0 top-full mt-2 p-3 bg-sw-bg border border-sw-border rounded-lg text-xs text-sw-text-dim opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
+						The total amount you spent on purchases (excluding transfers, payments, refunds, etc.)
+					</div>
 				</div>
 				
-				<div class="bg-sw-surface/60 rounded-2xl p-6 border border-sw-border/50">
-					<p class="text-sm text-sw-text-dim mb-2">Would Be Worth</p>
+				<div class="bg-sw-surface/60 rounded-2xl p-6 border border-sw-border/50 group relative">
+					<p class="text-sm text-sw-text-dim mb-2 flex items-center gap-1">
+						Today's Value
+						<span class="cursor-help text-sw-text-dim/50 hover:text-sw-text-dim">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+						</span>
+					</p>
 					<p class="font-display text-4xl font-bold tracking-tight text-sw-accent">{formatCurrency(summary.totalFutureValue)}</p>
-					<p class="text-xs text-sw-text-dim mt-2">If invested in {summary.ticker}</p>
+					<p class="text-xs text-sw-text-dim mt-2">If you'd invested in {summary.ticker} instead</p>
+					<!-- Tooltip -->
+					<div class="absolute left-0 right-0 top-full mt-2 p-3 bg-sw-bg border border-sw-border rounded-lg text-xs text-sw-text-dim opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
+						What your money would be worth today if you had invested each purchase amount into {summary.ticker} (S&P 500 ETF) on the day you made that purchase.
+					</div>
 				</div>
 				
-				<div class="bg-gradient-to-br from-sw-accent/20 to-sw-accent/5 rounded-2xl p-6 border border-sw-accent/30">
-					<p class="text-sm text-sw-text-dim mb-2">Opportunity Cost</p>
+				<div class="bg-gradient-to-br from-sw-accent/20 to-sw-accent/5 rounded-2xl p-6 border border-sw-accent/30 group relative">
+					<p class="text-sm text-sw-text-dim mb-2 flex items-center gap-1">
+						You Left on the Table
+						<span class="cursor-help text-sw-text-dim/50 hover:text-sw-text-dim">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+						</span>
+					</p>
 					<p class="font-display text-4xl font-bold tracking-tight text-sw-accent">
 						{summary.totalDelta >= 0 ? '+' : ''}{formatCurrency(summary.totalDelta)}
 					</p>
 					<p class="text-sm text-sw-text-dim mt-1">
 						{formatPercent(summary.totalSpent > 0 ? summary.totalDelta / summary.totalSpent : 0)} growth over {getDateRangeText()}
 					</p>
+					<!-- Tooltip -->
+					<div class="absolute left-0 right-0 top-full mt-2 p-3 bg-sw-bg border border-sw-border rounded-lg text-xs text-sw-text-dim opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
+						This is your "opportunity cost" — the potential gains you missed by spending instead of investing. It's the difference between Today's Value and what you actually spent.
+					</div>
 				</div>
 			</div>
 
@@ -326,24 +399,24 @@
 			{#if summary.biggestPurchase}
 				<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">Biggest Purchase</p>
+						<p class="text-xs text-sw-text-dim mb-1">💸 Biggest Splurge</p>
 						<p class="font-mono text-lg">{formatCurrency(summary.biggestPurchase.amount)}</p>
 						<p class="text-xs text-sw-text-dim truncate">{summary.biggestPurchase.merchant}</p>
 					</div>
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">Busiest Day</p>
-						<p class="font-mono text-lg">{summary.biggestSpendingDay.day}</p>
+						<p class="text-xs text-sw-text-dim mb-1">📅 Spendy Day</p>
+						<p class="font-mono text-lg">{summary.biggestSpendingDay.day}s</p>
 						<p class="text-xs text-sw-text-dim">{formatCurrency(summary.biggestSpendingDay.spent)} total</p>
 					</div>
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">Monthly Avg</p>
+						<p class="text-xs text-sw-text-dim mb-1">📊 Monthly Avg</p>
 						<p class="font-mono text-lg">{formatCurrency(summary.totalSpent / Math.max(summary.monthly.length, 1))}</p>
 						<p class="text-xs text-sw-text-dim">{summary.monthly.length} months tracked</p>
 					</div>
 					<div class="bg-sw-surface/40 rounded-xl p-4 border border-sw-border/30">
-						<p class="text-xs text-sw-text-dim mb-1">Recurring Costs</p>
+						<p class="text-xs text-sw-text-dim mb-1">🔁 Subscriptions</p>
 						<p class="font-mono text-lg">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</p>
-						<p class="text-xs text-sw-text-dim">{summary.recurringCharges.length} subscriptions</p>
+						<p class="text-xs text-sw-text-dim">{summary.recurringCharges.length} detected</p>
 					</div>
 				</div>
 			{/if}
@@ -555,8 +628,8 @@
 			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
 				<div class="px-6 py-4 border-b border-sw-border/50 flex items-center justify-between">
 					<div>
-						<h3 class="font-display font-semibold">Where You Shop</h3>
-						<p class="text-sm text-sw-text-dim">Your most visited merchants</p>
+						<h3 class="font-display font-semibold">🏪 Where Your Money Goes</h3>
+						<p class="text-sm text-sw-text-dim">Your favorite places to spend</p>
 					</div>
 					<div class="flex rounded-lg bg-sw-bg p-1">
 						<button onclick={() => merchantView = 'frequency'} class="px-3 py-1 text-xs rounded-md transition-colors {merchantView === 'frequency' ? 'bg-sw-surface text-sw-text' : 'text-sw-text-dim hover:text-sw-text'}">Most Visits</button>
@@ -764,8 +837,8 @@
 			{#if summary.topTransactions.length > 0}
 				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
 					<div class="px-6 py-4 border-b border-sw-border/50">
-						<h3 class="font-display font-semibold">Biggest Opportunity Costs</h3>
-						<p class="text-sm text-sw-text-dim">Individual purchases with the highest potential growth</p>
+						<h3 class="font-display font-semibold">💰 Your Costliest Choices</h3>
+						<p class="text-sm text-sw-text-dim">The purchases that would've grown the most if invested</p>
 					</div>
 					<div class="divide-y divide-sw-border/30">
 						{#each summary.topTransactions.slice(0, 8) as tx, i}
