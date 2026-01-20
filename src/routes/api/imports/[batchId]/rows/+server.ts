@@ -29,8 +29,8 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 		throw error(404, 'Batch not found');
 	}
 
-	// Fetch raw transactions with overrides
-	let query = locals.supabase
+	// Fetch ALL raw transactions for this batch (we'll filter by effective values in JS)
+	const { data: rawRows, error: fetchError } = await locals.supabase
 		.from('raw_transactions')
 		.select(
 			`
@@ -51,74 +51,26 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 			duplicate_of
 		`
 		)
-		.eq('batch_id', batchId);
-
-	// Apply tab filter
-	switch (tab) {
-		case 'included':
-			query = query.eq('included_in_spend', true).eq('is_duplicate', false);
-			break;
-		case 'excluded':
-			query = query.eq('included_in_spend', false).eq('is_duplicate', false).neq('kind', 'unknown');
-			break;
-		case 'needs_review':
-			query = query.or('parse_status.eq.error,kind.eq.unknown').eq('is_duplicate', false);
-			break;
-		case 'duplicates':
-			query = query.eq('is_duplicate', true);
-			break;
-	}
-
-	// Apply search
-	if (q) {
-		query = query.or(`merchant_norm.ilike.%${q}%,description_raw.ilike.%${q}%`);
-	}
-
-	// Apply sort
-	switch (sort) {
-		case 'date_desc':
-			query = query.order('date_chosen', { ascending: false, nullsFirst: false });
-			break;
-		case 'date_asc':
-			query = query.order('date_chosen', { ascending: true, nullsFirst: true });
-			break;
-		case 'amount_desc':
-			query = query.order('amount_signed', { ascending: true }); // More negative = higher spend
-			break;
-		case 'amount_asc':
-			query = query.order('amount_signed', { ascending: false });
-			break;
-	}
-
-	// Count total before pagination
-	const { count } = await locals.supabase
-		.from('raw_transactions')
-		.select('id', { count: 'exact', head: true })
-		.eq('batch_id', batchId);
-
-	// Apply pagination
-	const offset = (page - 1) * pageSize;
-	query = query.range(offset, offset + pageSize - 1);
-
-	const { data: rawRows, error: fetchError } = await query;
+		.eq('batch_id', batchId)
+		.order('date_chosen', { ascending: false, nullsFirst: false });
 
 	if (fetchError) {
 		throw error(500, 'Failed to fetch rows');
 	}
 
-	// Fetch overrides for these rows
-	const rowIds = (rawRows || []).map((r) => r.id);
+	// Fetch ALL overrides for this batch's rows
+	const allRowIds = (rawRows || []).map((r) => r.id);
 	const { data: overrides } = await locals.supabase
 		.from('transaction_overrides')
 		.select('raw_transaction_id, override_kind, override_included_in_spend, override_category')
-		.in('raw_transaction_id', rowIds);
+		.in('raw_transaction_id', allRowIds);
 
 	const overrideMap = new Map(
 		(overrides || []).map((o) => [o.raw_transaction_id, o])
 	);
 
-	// Map to effective rows
-	const rows: RawRowEffective[] = (rawRows || []).map((r) => {
+	// Map ALL rows to effective rows
+	const allEffectiveRows: RawRowEffective[] = (rawRows || []).map((r) => {
 		const override = overrideMap.get(r.id);
 
 		return {
@@ -147,47 +99,75 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 		};
 	});
 
-	// Compute fresh summary
-	const { data: allRows } = await locals.supabase
-		.from('raw_transactions')
-		.select('id, parse_status, amount_signed, date_chosen, kind, included_in_spend, is_duplicate')
-		.eq('batch_id', batchId);
-
-	const { data: allOverrides } = await locals.supabase
-		.from('transaction_overrides')
-		.select('raw_transaction_id, override_kind, override_included_in_spend')
-		.in(
-			'raw_transaction_id',
-			(allRows || []).map((r) => r.id)
-		);
-
-	const allOverrideMap = new Map(
-		(allOverrides || []).map((o) => [o.raw_transaction_id, o])
-	);
-
-	const summaryRows = (allRows || []).map((r) => {
-		const override = allOverrideMap.get(r.id);
-		return {
-			parseStatus: r.parse_status as 'ok' | 'error',
-			amountSigned: r.amount_signed,
-			dateChosen: r.date_chosen,
-			systemKind: r.kind as TransactionKind,
-			systemIncludedInSpend: r.included_in_spend,
-			effectiveKind: (override?.override_kind ?? r.kind) as TransactionKind,
-			effectiveIncludedInSpend: override?.override_included_in_spend ?? r.included_in_spend,
-			isDuplicate: r.is_duplicate
-		};
+	// Filter by tab based on EFFECTIVE values
+	let filteredRows = allEffectiveRows.filter((row) => {
+		switch (tab) {
+			case 'included':
+				return row.effectiveIncludedInSpend && !row.isDuplicate;
+			case 'excluded':
+				return !row.effectiveIncludedInSpend && !row.isDuplicate && row.effectiveKind !== 'unknown' && row.parseStatus !== 'error';
+			case 'needs_review':
+				return !row.isDuplicate && (row.parseStatus === 'error' || row.effectiveKind === 'unknown');
+			case 'duplicates':
+				return row.isDuplicate;
+			default:
+				return true;
+		}
 	});
+
+	// Apply search filter
+	if (q) {
+		const searchLower = q.toLowerCase();
+		filteredRows = filteredRows.filter((row) =>
+			(row.merchantNorm?.toLowerCase().includes(searchLower)) ||
+			(row.descriptionRaw?.toLowerCase().includes(searchLower))
+		);
+	}
+
+	// Apply sort
+	filteredRows.sort((a, b) => {
+		switch (sort) {
+			case 'date_desc':
+				return (b.dateChosen || '').localeCompare(a.dateChosen || '');
+			case 'date_asc':
+				return (a.dateChosen || '').localeCompare(b.dateChosen || '');
+			case 'amount_desc':
+				return (a.amountSigned || 0) - (b.amountSigned || 0); // More negative = higher spend
+			case 'amount_asc':
+				return (b.amountSigned || 0) - (a.amountSigned || 0);
+			default:
+				return 0;
+		}
+	});
+
+	// Get total count AFTER filtering
+	const totalRows = filteredRows.length;
+
+	// Apply pagination
+	const offset = (page - 1) * pageSize;
+	const paginatedRows = filteredRows.slice(offset, offset + pageSize);
+
+	// Compute fresh summary from all effective rows
+	const summaryRows = allEffectiveRows.map((r) => ({
+		parseStatus: r.parseStatus,
+		amountSigned: r.amountSigned,
+		dateChosen: r.dateChosen,
+		systemKind: r.systemKind,
+		systemIncludedInSpend: r.systemIncludedInSpend,
+		effectiveKind: r.effectiveKind,
+		effectiveIncludedInSpend: r.effectiveIncludedInSpend,
+		isDuplicate: r.isDuplicate
+	}));
 
 	const summary = computeBatchSummary(summaryRows);
 
 	return json({
 		ok: true,
 		data: {
-			rows,
+			rows: paginatedRows,
 			page,
 			pageSize,
-			totalRows: count || 0,
+			totalRows,
 			summary
 		}
 	});
