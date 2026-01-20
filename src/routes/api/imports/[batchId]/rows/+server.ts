@@ -102,16 +102,21 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 	});
 
 	// Filter by tab based on EFFECTIVE values
+	// Key: if user explicitly includes something (duplicate, needs review), it moves to Included tab
 	let filteredRows = allEffectiveRows.filter((row) => {
 		switch (tab) {
 			case 'included':
-				return row.effectiveIncludedInSpend && !row.isDuplicate;
+				// Show anything that's effectively included (even if it was originally a duplicate)
+				return row.effectiveIncludedInSpend;
 			case 'excluded':
+				// Excluded: not included, not duplicate (or included duplicate), not needs review
 				return !row.effectiveIncludedInSpend && !row.isDuplicate && row.effectiveKind !== 'unknown' && row.parseStatus !== 'error';
 			case 'needs_review':
-				return !row.isDuplicate && (row.parseStatus === 'error' || row.effectiveKind === 'unknown');
+				// Needs review: parse error or unknown kind, unless user explicitly included it
+				return !row.effectiveIncludedInSpend && !row.isDuplicate && (row.parseStatus === 'error' || row.effectiveKind === 'unknown');
 			case 'duplicates':
-				return row.isDuplicate;
+				// Duplicates: marked as duplicate, unless user explicitly included it
+				return row.isDuplicate && !row.effectiveIncludedInSpend;
 			default:
 				return true;
 		}

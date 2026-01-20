@@ -1,7 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createPriceService } from '$lib/server/prices/priceService';
-import { parseISO, addDays } from 'date-fns';
+import { parseISO, format, addBusinessDays } from 'date-fns';
 import type { TransactionKind } from '$lib/types';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -41,7 +40,6 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	const ticker = requestedTicker || prefs?.default_ticker || 'SPY';
 	const delayDays = prefs?.invest_delay_trading_days ?? 1;
-	const allowFallback = prefs?.allow_fallback_for_all_tickers ?? false;
 
 	// Fetch all raw transactions with effective values
 	const { data: rawRows } = await locals.supabase
@@ -62,13 +60,13 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	const overrideMap = new Map((overrides || []).map((o) => [o.raw_transaction_id, o]));
 
-	// Initialize price service
-	const priceService = createPriceService(locals.supabase);
-
 	// Prepare transactions to commit
 	const transactionsToCommit = [];
 	let committedCount = 0;
 	let excludedCount = 0;
+
+	const today = new Date();
+	const ANNUAL_RETURN = 0.07; // 7% fallback return
 
 	for (const raw of rawRows) {
 		const override = overrideMap.get(raw.id);
@@ -77,20 +75,14 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		const effectiveIncluded = override?.override_included_in_spend ?? raw.included_in_spend;
 		const effectiveCategory = override?.override_category ?? raw.category;
 
-		// Skip duplicates
-		if (raw.is_duplicate) {
+		// Skip if not included (respects user overrides for duplicates too)
+		if (!effectiveIncluded) {
 			excludedCount++;
 			continue;
 		}
 
-		// Skip parse errors
-		if (raw.parse_status === 'error') {
-			excludedCount++;
-			continue;
-		}
-
-		// Only commit purchases and refunds
-		if (effectiveKind !== 'purchase' && effectiveKind !== 'refund') {
+		// Skip parse errors unless user explicitly included
+		if (raw.parse_status === 'error' && !override?.override_included_in_spend) {
 			excludedCount++;
 			continue;
 		}
@@ -104,20 +96,21 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		const purchaseDate = parseISO(raw.date_chosen);
 		const amount = Math.abs(raw.amount_signed);
 
-		// Calculate opportunity cost
-		const costResult = await priceService.calculateOpportunityCost(
-			amount,
-			purchaseDate,
-			ticker,
-			delayDays,
-			allowFallback
-		);
+		// Calculate invest date (add delay days)
+		const investDate = addBusinessDays(purchaseDate, delayDays);
+		const investDateStr = format(investDate, 'yyyy-MM-dd');
+
+		// Use 7% annual return fallback (avoids API timeout)
+		// Real price calculation can be done later via a separate "recalculate" action
+		const years = (today.getTime() - investDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+		const futureValue = amount * Math.pow(1 + ANNUAL_RETURN, Math.max(0, years));
+		const growthDelta = futureValue - amount;
 
 		transactionsToCommit.push({
 			user_id: user.id,
 			batch_id: batchId,
 			date: raw.date_chosen,
-			invest_date: costResult.investDate,
+			invest_date: investDateStr,
 			amount: amount,
 			direction: raw.amount_signed < 0 ? 'debit' : 'credit',
 			merchant: raw.merchant_raw,
@@ -127,24 +120,29 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			category: effectiveCategory,
 			included_in_spend: effectiveIncluded,
 			ticker_symbol: ticker,
-			future_value: costResult.futureValue,
-			growth_delta: costResult.growthDelta,
-			calc_method: costResult.calcMethod,
-			calc_error: costResult.calcError
+			future_value: Math.round(futureValue * 100) / 100,
+			growth_delta: Math.round(growthDelta * 100) / 100,
+			calc_method: 'fallback_7pct',
+			calc_error: null
 		});
 
 		committedCount++;
 	}
 
-	// Insert committed transactions
+	// Insert committed transactions in batches to avoid timeout
 	if (transactionsToCommit.length > 0) {
-		const { error: insertError } = await locals.supabase
-			.from('transactions')
-			.insert(transactionsToCommit);
+		// Insert in chunks of 50
+		const chunkSize = 50;
+		for (let i = 0; i < transactionsToCommit.length; i += chunkSize) {
+			const chunk = transactionsToCommit.slice(i, i + chunkSize);
+			const { error: insertError } = await locals.supabase
+				.from('transactions')
+				.insert(chunk);
 
-		if (insertError) {
-			console.error('Commit error:', insertError);
-			throw error(500, 'Failed to commit transactions');
+			if (insertError) {
+				console.error('Commit error:', insertError);
+				throw error(500, `Failed to commit transactions: ${insertError.message}`);
+			}
 		}
 	}
 
