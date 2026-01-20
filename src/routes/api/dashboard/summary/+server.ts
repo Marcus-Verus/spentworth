@@ -271,6 +271,63 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	
 	// Sort recurring by yearly estimate (biggest impact first)
 	recurringCharges.sort((a, b) => b.yearlyEstimate - a.yearlyEstimate);
+	
+	// Year-over-Year comparison (if we have data from last year)
+	let yoyComparison = null;
+	if (dateMin && dateMax) {
+		const currentStart = new Date(dateMin);
+		const currentEnd = new Date(dateMax);
+		const lastYearStart = new Date(currentStart);
+		lastYearStart.setFullYear(lastYearStart.getFullYear() - 1);
+		const lastYearEnd = new Date(currentEnd);
+		lastYearEnd.setFullYear(lastYearEnd.getFullYear() - 1);
+		
+		// Get last year's data for same period
+		const { data: lastYearTx } = await locals.supabase
+			.from('transactions')
+			.select('amount, category')
+			.eq('user_id', user.id)
+			.eq('included_in_spend', true)
+			.eq('kind', 'purchase')
+			.gte('date', lastYearStart.toISOString().slice(0, 10))
+			.lte('date', lastYearEnd.toISOString().slice(0, 10));
+		
+		if (lastYearTx && lastYearTx.length > 0) {
+			const lastYearTotal = lastYearTx.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+			const lastYearByCategory = new Map<string, number>();
+			
+			for (const tx of lastYearTx) {
+				const cat = tx.category || 'Uncategorised';
+				lastYearByCategory.set(cat, (lastYearByCategory.get(cat) || 0) + (tx.amount || 0));
+			}
+			
+			const changeAmount = totalSpent - lastYearTotal;
+			const changePct = lastYearTotal > 0 ? ((totalSpent - lastYearTotal) / lastYearTotal) * 100 : 0;
+			
+			// Category changes
+			const categoryChanges = categories.map(cat => {
+				const lastYear = lastYearByCategory.get(cat.category) || 0;
+				const change = cat.spent - lastYear;
+				const changePct = lastYear > 0 ? ((cat.spent - lastYear) / lastYear) * 100 : (cat.spent > 0 ? 100 : 0);
+				return {
+					category: cat.category,
+					currentYear: cat.spent,
+					lastYear: Math.round(lastYear * 100) / 100,
+					change: Math.round(change * 100) / 100,
+					changePct: Math.round(changePct * 10) / 10
+				};
+			}).sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+			
+			yoyComparison = {
+				lastYearTotal: Math.round(lastYearTotal * 100) / 100,
+				currentYearTotal: Math.round(totalSpent * 100) / 100,
+				changeAmount: Math.round(changeAmount * 100) / 100,
+				changePct: Math.round(changePct * 10) / 10,
+				lastYearTxCount: lastYearTx.length,
+				categoryChanges: categoryChanges.slice(0, 10)
+			};
+		}
+	}
 
 	// Build category summaries
 	const categories: CategorySummary[] = Array.from(categoryMap.entries())
@@ -302,7 +359,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		dayOfWeek,
 		biggestSpendingDay,
 		mostFrequentDay,
-		recurringCharges
+		recurringCharges,
+		yoyComparison
 	};
 
 	return json({

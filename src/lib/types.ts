@@ -214,6 +214,24 @@ export interface DashboardSummary {
 	biggestSpendingDay: DayOfWeekSummary;
 	mostFrequentDay: DayOfWeekSummary;
 	recurringCharges: RecurringCharge[];
+	yoyComparison: YoYComparison | null;
+}
+
+export interface YoYComparison {
+	lastYearTotal: number;
+	currentYearTotal: number;
+	changeAmount: number;
+	changePct: number;
+	lastYearTxCount: number;
+	categoryChanges: CategoryChange[];
+}
+
+export interface CategoryChange {
+	category: string;
+	currentYear: number;
+	lastYear: number;
+	change: number;
+	changePct: number;
 }
 
 export interface MonthlySummary {

@@ -591,6 +591,59 @@
 				</div>
 			</div>
 
+			<!-- Year-over-Year Comparison -->
+			{#if summary.yoyComparison}
+				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
+					<div class="px-6 py-4 border-b border-sw-border/50">
+						<h3 class="font-display font-semibold">📊 Year-over-Year</h3>
+						<p class="text-sm text-sw-text-dim">Compared to same period last year</p>
+					</div>
+					<div class="p-6">
+						<div class="grid md:grid-cols-3 gap-6 mb-6">
+							<div class="text-center">
+								<p class="text-sm text-sw-text-dim mb-1">Last Year</p>
+								<p class="font-display text-2xl font-bold">{formatCurrency(summary.yoyComparison.lastYearTotal)}</p>
+								<p class="text-xs text-sw-text-dim">{summary.yoyComparison.lastYearTxCount} transactions</p>
+							</div>
+							<div class="text-center">
+								<p class="text-sm text-sw-text-dim mb-1">This Year</p>
+								<p class="font-display text-2xl font-bold">{formatCurrency(summary.yoyComparison.currentYearTotal)}</p>
+								<p class="text-xs text-sw-text-dim">{summary.transactionCount} transactions</p>
+							</div>
+							<div class="text-center">
+								<p class="text-sm text-sw-text-dim mb-1">Change</p>
+								<p class="font-display text-2xl font-bold {summary.yoyComparison.changeAmount > 0 ? 'text-red-400' : 'text-sw-accent'}">
+									{summary.yoyComparison.changeAmount > 0 ? '+' : ''}{formatCurrency(summary.yoyComparison.changeAmount)}
+								</p>
+								<p class="text-xs {summary.yoyComparison.changePct > 0 ? 'text-red-400' : 'text-sw-accent'}">
+									{summary.yoyComparison.changePct > 0 ? '↑' : '↓'} {Math.abs(summary.yoyComparison.changePct)}%
+								</p>
+							</div>
+						</div>
+						
+						{#if summary.yoyComparison.categoryChanges.length > 0}
+							<div class="border-t border-sw-border/50 pt-4">
+								<p class="text-sm font-medium mb-3">Biggest Changes by Category</p>
+								<div class="grid md:grid-cols-2 gap-2">
+									{#each summary.yoyComparison.categoryChanges.slice(0, 6) as change}
+										<div class="flex items-center justify-between px-3 py-2 bg-sw-bg/30 rounded-lg">
+											<span class="text-sm truncate">{change.category}</span>
+											<div class="flex items-center gap-2">
+												<span class="text-xs text-sw-text-dim">{formatCurrency(change.lastYear)} →</span>
+												<span class="text-sm font-mono">{formatCurrency(change.currentYear)}</span>
+												<span class="text-xs font-mono px-1.5 py-0.5 rounded {change.change > 0 ? 'bg-red-400/10 text-red-400' : 'bg-sw-accent/10 text-sw-accent'}">
+													{change.change > 0 ? '+' : ''}{change.changePct}%
+												</span>
+											</div>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+
 			<!-- Goals Section -->
 			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-8">
 				<div class="px-6 py-4 border-b border-sw-border/50 flex items-center justify-between">
