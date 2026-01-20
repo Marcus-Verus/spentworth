@@ -19,9 +19,10 @@ async function fetchFullPriceHistory(ticker: string): Promise<Record<string, num
 	}
 
 	try {
-		// Use TIME_SERIES_DAILY (free) instead of TIME_SERIES_DAILY_ADJUSTED (premium)
-		const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
-		console.log(`Fetching Alpha Vantage data for ${ticker}...`);
+		// Use TIME_SERIES_DAILY with compact (free) - returns last 100 trading days
+		// full history requires premium subscription
+		const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${ticker}&outputsize=compact&apikey=${ALPHA_VANTAGE_API_KEY}`;
+		console.log(`Fetching Alpha Vantage data for ${ticker} (last 100 days)...`);
 		const response = await fetch(url);
 		const json = await response.json();
 
@@ -182,15 +183,21 @@ export class PriceService {
 		this.dbCacheLoaded.add(ticker);
 	}
 
-	// Fetch and cache full price history for a ticker
+	// Fetch and cache price history for a ticker (last 100 trading days on free tier)
 	async ensurePricesLoaded(ticker: string): Promise<boolean> {
 		// Load DB cache
 		await this.loadCacheForTicker(ticker);
 
-		// If we have substantial cache data, we're good
+		// If we have recent cache data (within last week), we're good
 		const cached = this.dbCache.get(ticker);
-		if (cached && cached.size > 100) {
-			return true;
+		if (cached && cached.size > 0) {
+			const dates = Array.from(cached.keys()).sort().reverse();
+			const mostRecent = dates[0];
+			const daysSinceCache = (Date.now() - new Date(mostRecent).getTime()) / (1000 * 60 * 60 * 24);
+			if (daysSinceCache < 7) {
+				console.log(`Using cached prices for ${ticker} (${cached.size} dates, most recent: ${mostRecent})`);
+				return true;
+			}
 		}
 
 		// Fetch from API
