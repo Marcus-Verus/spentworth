@@ -12,10 +12,19 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const from = url.searchParams.get('from');
 	const to = url.searchParams.get('to');
 
+	// Get user preferences
+	const { data: prefs } = await locals.supabase
+		.from('user_prefs')
+		.select('default_ticker')
+		.eq('user_id', user.id)
+		.single();
+
+	const ticker = prefs?.default_ticker || 'SPY';
+
 	// Build query for included purchases
 	let query = locals.supabase
 		.from('transactions')
-		.select('amount, future_value, category')
+		.select('amount, future_value, category, calc_method')
 		.eq('user_id', user.id)
 		.eq('included_in_spend', true)
 		.eq('kind', 'purchase');
@@ -36,6 +45,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	// Calculate totals
 	let totalSpent = 0;
 	let totalFutureValue = 0;
+	let usingRealPrices = 0;
+	let usingFallback = 0;
 	const categoryMap = new Map<string, { spent: number; future: number }>();
 
 	for (const tx of transactions || []) {
@@ -45,6 +56,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 		totalSpent += amount;
 		totalFutureValue += future;
+
+		if (tx.calc_method === 'adj_close_ratio') {
+			usingRealPrices++;
+		} else {
+			usingFallback++;
+		}
 
 		if (!categoryMap.has(category)) {
 			categoryMap.set(category, { spent: 0, future: 0 });
@@ -68,7 +85,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		totalSpent: Math.round(totalSpent * 100) / 100,
 		totalFutureValue: Math.round(totalFutureValue * 100) / 100,
 		totalDelta: Math.round((totalFutureValue - totalSpent) * 100) / 100,
-		categories
+		categories,
+		ticker,
+		usingRealPrices,
+		usingFallback,
+		transactionCount: (transactions || []).length
 	};
 
 	return json({

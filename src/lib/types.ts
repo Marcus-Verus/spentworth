@@ -198,6 +198,10 @@ export interface DashboardSummary {
 	totalFutureValue: number;
 	totalDelta: number;
 	categories: CategorySummary[];
+	ticker: string;
+	usingRealPrices: number;
+	usingFallback: number;
+	transactionCount: number;
 }
 
 export interface CategorySummary {

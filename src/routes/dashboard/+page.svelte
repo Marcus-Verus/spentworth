@@ -7,6 +7,8 @@
 
 	let summary = $state<DashboardSummary | null>(null);
 	let loading = $state(true);
+	let recalculating = $state(false);
+	let recalcMessage = $state<string | null>(null);
 
 	onMount(async () => {
 		await loadSummary();
@@ -21,6 +23,28 @@
 			summary = json.data;
 		}
 		loading = false;
+	}
+
+	async function recalculateWithRealPrices() {
+		recalculating = true;
+		recalcMessage = null;
+		
+		try {
+			const res = await fetch('/api/dashboard/recalculate', { method: 'POST' });
+			const json = await res.json();
+			
+			if (json.ok) {
+				recalcMessage = json.data.message;
+				// Reload summary to reflect new calculations
+				await loadSummary();
+			} else {
+				recalcMessage = json.error || 'Recalculation failed';
+			}
+		} catch (e) {
+			recalcMessage = 'Recalculation failed - please try again';
+		}
+		
+		recalculating = false;
 	}
 
 	function formatCurrency(amount: number) {
@@ -97,15 +121,17 @@
 			</div>
 		{:else}
 			<!-- Hero Stats -->
-			<div class="grid md:grid-cols-3 gap-6 mb-10">
+			<div class="grid md:grid-cols-3 gap-6 mb-8">
 				<div class="bg-sw-surface/60 rounded-2xl p-6 border border-sw-border/50">
 					<p class="text-sm text-sw-text-dim mb-2">Total Spent</p>
 					<p class="font-display text-4xl font-bold tracking-tight">{formatCurrency(summary.totalSpent)}</p>
+					<p class="text-xs text-sw-text-dim mt-2">{summary.transactionCount} transactions</p>
 				</div>
 				
 				<div class="bg-sw-surface/60 rounded-2xl p-6 border border-sw-border/50">
 					<p class="text-sm text-sw-text-dim mb-2">Would Be Worth</p>
 					<p class="font-display text-4xl font-bold tracking-tight text-sw-accent">{formatCurrency(summary.totalFutureValue)}</p>
+					<p class="text-xs text-sw-text-dim mt-2">If invested in {summary.ticker}</p>
 				</div>
 				
 				<div class="bg-gradient-to-br from-sw-accent/20 to-sw-accent/5 rounded-2xl p-6 border border-sw-accent/30">
@@ -118,6 +144,69 @@
 					</p>
 				</div>
 			</div>
+
+			<!-- Calculation Method Banner -->
+			<div class="mb-8 rounded-xl border {summary.usingRealPrices === summary.transactionCount 
+				? 'bg-sw-accent/5 border-sw-accent/30' 
+				: 'bg-amber-500/5 border-amber-500/30'} p-4 flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					{#if summary.usingRealPrices === summary.transactionCount}
+						<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-sw-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+							</svg>
+						</div>
+						<div>
+							<p class="text-sm font-medium">Using real {summary.ticker} prices</p>
+							<p class="text-xs text-sw-text-dim">{summary.usingRealPrices} of {summary.transactionCount} transactions calculated with actual stock data</p>
+						</div>
+					{:else if summary.usingRealPrices > 0}
+						<div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+						</div>
+						<div>
+							<p class="text-sm font-medium">Mixed calculation methods</p>
+							<p class="text-xs text-sw-text-dim">{summary.usingRealPrices} with real prices, {summary.usingFallback} with 7% estimate</p>
+						</div>
+					{:else}
+						<div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+						</div>
+						<div>
+							<p class="text-sm font-medium">Using 7% annual estimate</p>
+							<p class="text-xs text-sw-text-dim">Click to recalculate with real {summary.ticker} stock prices</p>
+						</div>
+					{/if}
+				</div>
+				
+				{#if summary.usingFallback > 0}
+					<button
+						onclick={recalculateWithRealPrices}
+						disabled={recalculating}
+						class="btn btn-secondary text-sm flex items-center gap-2"
+					>
+						{#if recalculating}
+							<div class="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin"></div>
+							Fetching prices...
+						{:else}
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+							</svg>
+							Recalculate
+						{/if}
+					</button>
+				{/if}
+			</div>
+			
+			{#if recalcMessage}
+				<div class="mb-6 rounded-lg bg-sw-surface/60 border border-sw-border/50 p-4 text-sm">
+					{recalcMessage}
+				</div>
+			{/if}
 
 			<!-- Category Breakdown -->
 			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden">
@@ -158,7 +247,7 @@
 
 			<!-- Info footer -->
 			<div class="mt-8 text-center text-sm text-sw-text-dim">
-				<p>Calculated using 7% annual return estimate • <a href="/settings" class="text-sw-accent hover:underline">Change settings</a></p>
+				<p>Tracking {summary.ticker} performance • <a href="/settings" class="text-sw-accent hover:underline">Change ticker</a></p>
 			</div>
 		{/if}
 	</main>

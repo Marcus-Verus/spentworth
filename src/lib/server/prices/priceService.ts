@@ -1,83 +1,67 @@
 import { ALPHA_VANTAGE_API_KEY } from '$env/static/private';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { addDays, subDays, isWeekend, format, parseISO } from 'date-fns';
+import { addDays, subDays, isWeekend, format, parseISO, isBefore, isAfter, startOfDay } from 'date-fns';
 
-// Price provider interface
-export interface PriceProvider {
-	name: string;
-	getAdjustedClose(ticker: string, date: Date): Promise<number | null>;
-}
+// In-memory cache for full ticker data (survives during single request)
+const tickerDataCache = new Map<string, Record<string, number>>();
 
-// Alpha Vantage provider
-class AlphaVantageProvider implements PriceProvider {
-	name = 'alpha_vantage';
-	private cache = new Map<string, Record<string, number>>();
-
-	async getAdjustedClose(ticker: string, date: Date): Promise<number | null> {
-		const dateStr = format(date, 'yyyy-MM-dd');
-		const cacheKey = `${ticker}`;
-
-		// Check in-memory cache first
-		if (this.cache.has(cacheKey)) {
-			const data = this.cache.get(cacheKey)!;
-			if (data[dateStr] !== undefined) {
-				return data[dateStr];
-			}
-		}
-
-		// Fetch from API
-		try {
-			const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
-			const response = await fetch(url);
-			const json = await response.json();
-
-			if (json['Time Series (Daily)']) {
-				const timeSeries = json['Time Series (Daily)'];
-				const data: Record<string, number> = {};
-
-				for (const [dateKey, values] of Object.entries(timeSeries)) {
-					const adjClose = parseFloat((values as Record<string, string>)['5. adjusted close']);
-					if (!isNaN(adjClose)) {
-						data[dateKey] = adjClose;
-					}
-				}
-
-				this.cache.set(cacheKey, data);
-
-				if (data[dateStr] !== undefined) {
-					return data[dateStr];
-				}
-			}
-
-			return null;
-		} catch (error) {
-			console.error('Alpha Vantage error:', error);
-			return null;
-		}
+// Fetch full price history for a ticker from Alpha Vantage
+// Returns ALL historical data in ONE API call
+async function fetchFullPriceHistory(ticker: string): Promise<Record<string, number> | null> {
+	// Check in-memory cache first
+	if (tickerDataCache.has(ticker)) {
+		return tickerDataCache.get(ticker)!;
 	}
-}
 
-// Fallback provider using constant return
-class FallbackProvider implements PriceProvider {
-	name = 'fallback_7pct';
-	private annualReturn = 0.07;
-
-	async getAdjustedClose(_ticker: string, _date: Date): Promise<number | null> {
-		// This provider doesn't return actual prices
-		// It's used as a signal to use the fallback calculation
+	if (!ALPHA_VANTAGE_API_KEY) {
+		console.warn('ALPHA_VANTAGE_API_KEY not set');
 		return null;
 	}
 
-	calculateFutureValue(amount: number, investDate: Date, currentDate: Date = new Date()): number {
-		const years = (currentDate.getTime() - investDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-		return amount * Math.pow(1 + this.annualReturn, years);
+	try {
+		const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
+		const response = await fetch(url);
+		const json = await response.json();
+
+		// Check for API errors
+		if (json['Error Message']) {
+			console.error('Alpha Vantage error:', json['Error Message']);
+			return null;
+		}
+
+		if (json['Note']) {
+			// Rate limit hit
+			console.warn('Alpha Vantage rate limit:', json['Note']);
+			return null;
+		}
+
+		if (!json['Time Series (Daily)']) {
+			console.error('Alpha Vantage: No time series data');
+			return null;
+		}
+
+		const timeSeries = json['Time Series (Daily)'];
+		const data: Record<string, number> = {};
+
+		for (const [dateKey, values] of Object.entries(timeSeries)) {
+			const adjClose = parseFloat((values as Record<string, string>)['5. adjusted close']);
+			if (!isNaN(adjClose)) {
+				data[dateKey] = adjClose;
+			}
+		}
+
+		// Cache in memory
+		tickerDataCache.set(ticker, data);
+
+		return data;
+	} catch (error) {
+		console.error('Alpha Vantage fetch error:', error);
+		return null;
 	}
 }
 
 // Trading day utilities
 function isUSMarketOpen(date: Date): boolean {
-	// Basic check: not weekend
-	// TODO: Add US market holiday calendar
 	return !isWeekend(date);
 }
 
@@ -103,146 +87,249 @@ function getPreviousTradingDay(date: Date, maxDays: number = 7): Date | null {
 	return null;
 }
 
+// Find closest available date in price data
+function findClosestDate(
+	data: Record<string, number>,
+	targetDate: Date,
+	direction: 'before' | 'after' | 'nearest' = 'nearest'
+): { date: string; price: number } | null {
+	const targetStr = format(targetDate, 'yyyy-MM-dd');
+	
+	// Exact match
+	if (data[targetStr] !== undefined) {
+		return { date: targetStr, price: data[targetStr] };
+	}
+
+	const dates = Object.keys(data).sort();
+	
+	// Find surrounding dates
+	let before: string | null = null;
+	let after: string | null = null;
+
+	for (const d of dates) {
+		if (d < targetStr) {
+			before = d;
+		} else if (d > targetStr && !after) {
+			after = d;
+			break;
+		}
+	}
+
+	if (direction === 'before' && before) {
+		return { date: before, price: data[before] };
+	}
+	if (direction === 'after' && after) {
+		return { date: after, price: data[after] };
+	}
+	if (direction === 'nearest') {
+		// Return the closer one
+		if (before && after) {
+			const beforeDiff = Math.abs(parseISO(before).getTime() - targetDate.getTime());
+			const afterDiff = Math.abs(parseISO(after).getTime() - targetDate.getTime());
+			return beforeDiff <= afterDiff
+				? { date: before, price: data[before] }
+				: { date: after, price: data[after] };
+		}
+		if (before) return { date: before, price: data[before] };
+		if (after) return { date: after, price: data[after] };
+	}
+
+	return null;
+}
+
 // Main price service
 export class PriceService {
-	private primaryProvider: PriceProvider;
-	private fallbackProvider: FallbackProvider;
 	private supabase: SupabaseClient;
+	private dbCacheLoaded = new Set<string>();
+	private dbCache: Map<string, Map<string, { price: number; source: string }>> = new Map();
 
 	constructor(supabase: SupabaseClient) {
-		this.primaryProvider = new AlphaVantageProvider();
-		this.fallbackProvider = new FallbackProvider();
 		this.supabase = supabase;
 	}
 
-	// Get adjusted close with caching and date shifting
-	async getAdjustedClose(ticker: string, date: Date): Promise<{
+	// Load all cached prices for a ticker from database
+	async loadCacheForTicker(ticker: string): Promise<void> {
+		if (this.dbCacheLoaded.has(ticker)) return;
+
+		const { data } = await this.supabase
+			.from('price_cache')
+			.select('price_date, adj_close, source')
+			.eq('ticker', ticker);
+
+		if (data && data.length > 0) {
+			const tickerCache = new Map<string, { price: number; source: string }>();
+			for (const row of data) {
+				tickerCache.set(row.price_date, {
+					price: row.adj_close,
+					source: row.source || 'cache'
+				});
+			}
+			this.dbCache.set(ticker, tickerCache);
+		}
+
+		this.dbCacheLoaded.add(ticker);
+	}
+
+	// Fetch and cache full price history for a ticker
+	async ensurePricesLoaded(ticker: string): Promise<boolean> {
+		// Load DB cache
+		await this.loadCacheForTicker(ticker);
+
+		// If we have substantial cache data, we're good
+		const cached = this.dbCache.get(ticker);
+		if (cached && cached.size > 100) {
+			return true;
+		}
+
+		// Fetch from API
+		const priceData = await fetchFullPriceHistory(ticker);
+		if (!priceData) {
+			return false;
+		}
+
+		// Bulk insert into database cache
+		const rows = Object.entries(priceData).map(([date, price]) => ({
+			ticker,
+			price_date: date,
+			adj_close: price,
+			source: 'alpha_vantage'
+		}));
+
+		// Insert in chunks
+		const chunkSize = 500;
+		for (let i = 0; i < rows.length; i += chunkSize) {
+			const chunk = rows.slice(i, i + chunkSize);
+			await this.supabase.from('price_cache').upsert(chunk, {
+				onConflict: 'ticker,price_date'
+			});
+		}
+
+		// Update local cache
+		const tickerCache = new Map<string, { price: number; source: string }>();
+		for (const [date, price] of Object.entries(priceData)) {
+			tickerCache.set(date, { price, source: 'alpha_vantage' });
+		}
+		this.dbCache.set(ticker, tickerCache);
+
+		return true;
+	}
+
+	// Get price for a specific date
+	async getPrice(ticker: string, date: Date): Promise<{
 		price: number | null;
-		source: string;
 		actualDate: string;
+		source: string;
 	}> {
 		const dateStr = format(date, 'yyyy-MM-dd');
 
-		// 1. Check database cache
-		const { data: cached } = await this.supabase
-			.from('price_cache')
-			.select('adj_close, source')
-			.eq('ticker', ticker)
-			.eq('price_date', dateStr)
-			.single();
+		// Ensure prices are loaded
+		await this.loadCacheForTicker(ticker);
+		const tickerCache = this.dbCache.get(ticker);
 
-		if (cached?.adj_close) {
-			return {
-				price: cached.adj_close,
-				source: cached.source || 'cache',
-				actualDate: dateStr
-			};
-		}
+		// Check cache
+		if (tickerCache) {
+			const cached = tickerCache.get(dateStr);
+			if (cached) {
+				return { price: cached.price, actualDate: dateStr, source: cached.source };
+			}
 
-		// 2. Try to fetch from primary provider
-		let price = await this.primaryProvider.getAdjustedClose(ticker, date);
-		let actualDate = date;
-
-		// 3. If no price, try shifting to next trading day
-		if (price === null) {
-			const nextDay = getNextTradingDay(date);
-			if (nextDay) {
-				price = await this.primaryProvider.getAdjustedClose(ticker, nextDay);
-				if (price !== null) {
-					actualDate = nextDay;
-				}
+			// Find nearest date
+			const cacheData: Record<string, number> = {};
+			for (const [d, v] of tickerCache) {
+				cacheData[d] = v.price;
+			}
+			const nearest = findClosestDate(cacheData, date, 'before');
+			if (nearest) {
+				return { price: nearest.price, actualDate: nearest.date, source: 'cache' };
 			}
 		}
 
-		// 4. If still no price, try shifting to previous trading day
-		if (price === null) {
-			const prevDay = getPreviousTradingDay(date);
-			if (prevDay) {
-				price = await this.primaryProvider.getAdjustedClose(ticker, prevDay);
-				if (price !== null) {
-					actualDate = prevDay;
-				}
+		// Try fetching from API
+		const priceData = await fetchFullPriceHistory(ticker);
+		if (priceData) {
+			const result = findClosestDate(priceData, date, 'before');
+			if (result) {
+				return { price: result.price, actualDate: result.date, source: 'alpha_vantage' };
 			}
 		}
 
-		// 5. Cache the result if we got a price
-		if (price !== null) {
-			await this.supabase.from('price_cache').upsert({
-				ticker,
-				price_date: format(actualDate, 'yyyy-MM-dd'),
-				adj_close: price,
-				source: this.primaryProvider.name
-			});
-
-			return {
-				price,
-				source: this.primaryProvider.name,
-				actualDate: format(actualDate, 'yyyy-MM-dd')
-			};
-		}
-
-		return {
-			price: null,
-			source: 'unavailable',
-			actualDate: dateStr
-		};
+		return { price: null, actualDate: dateStr, source: 'unavailable' };
 	}
 
-	// Calculate investment date based on delay
-	calculateInvestDate(purchaseDate: Date, delayTradingDays: number): Date {
-		let investDate = purchaseDate;
+	// Get current price (most recent)
+	async getCurrentPrice(ticker: string): Promise<{
+		price: number | null;
+		date: string;
+		source: string;
+	}> {
+		await this.loadCacheForTicker(ticker);
+		const tickerCache = this.dbCache.get(ticker);
 
-		for (let i = 0; i < delayTradingDays; i++) {
-			const next = getNextTradingDay(investDate);
-			if (next) {
-				investDate = next;
-			} else {
-				break;
+		if (tickerCache && tickerCache.size > 0) {
+			// Find most recent date
+			const dates = Array.from(tickerCache.keys()).sort().reverse();
+			const mostRecent = dates[0];
+			const data = tickerCache.get(mostRecent)!;
+			return { price: data.price, date: mostRecent, source: data.source };
+		}
+
+		// Try API
+		const priceData = await fetchFullPriceHistory(ticker);
+		if (priceData) {
+			const dates = Object.keys(priceData).sort().reverse();
+			if (dates.length > 0) {
+				const mostRecent = dates[0];
+				return { price: priceData[mostRecent], date: mostRecent, source: 'alpha_vantage' };
 			}
 		}
 
-		// Make sure invest date is a trading day
-		if (!isUSMarketOpen(investDate)) {
-			const next = getNextTradingDay(investDate);
-			if (next) {
-				investDate = next;
-			}
-		}
-
-		return investDate;
+		return { price: null, date: format(new Date(), 'yyyy-MM-dd'), source: 'unavailable' };
 	}
 
-	// Calculate opportunity cost for a transaction
+	// Calculate opportunity cost using real prices when available
 	async calculateOpportunityCost(
 		amount: number,
 		purchaseDate: Date,
 		ticker: string,
-		delayTradingDays: number,
-		allowFallback: boolean = false
+		delayTradingDays: number
 	): Promise<{
 		investDate: string;
-		futureValue: number | null;
-		growthDelta: number | null;
-		calcMethod: 'adj_close_ratio' | 'fallback_7pct' | 'unavailable';
+		investPrice: number | null;
+		currentPrice: number | null;
+		currentDate: string | null;
+		futureValue: number;
+		growthDelta: number;
+		calcMethod: 'adj_close_ratio' | 'fallback_7pct';
 		calcError: string | null;
 	}> {
-		const investDate = this.calculateInvestDate(purchaseDate, delayTradingDays);
+		// Calculate invest date
+		let investDate = purchaseDate;
+		for (let i = 0; i < delayTradingDays; i++) {
+			const next = getNextTradingDay(investDate);
+			if (next) investDate = next;
+		}
+		if (!isUSMarketOpen(investDate)) {
+			const next = getNextTradingDay(investDate);
+			if (next) investDate = next;
+		}
+
 		const investDateStr = format(investDate, 'yyyy-MM-dd');
 		const today = new Date();
 
-		// Get price on invest date
-		const investPrice = await this.getAdjustedClose(ticker, investDate);
+		// Try to get real prices
+		const investPriceResult = await this.getPrice(ticker, investDate);
+		const currentPriceResult = await this.getCurrentPrice(ticker);
 
-		// Get current price
-		const currentPrice = await this.getAdjustedClose(ticker, today);
-
-		if (investPrice.price !== null && currentPrice.price !== null) {
-			// Calculate using adjusted close ratio
-			const futureValue = amount * (currentPrice.price / investPrice.price);
+		if (investPriceResult.price !== null && currentPriceResult.price !== null) {
+			const ratio = currentPriceResult.price / investPriceResult.price;
+			const futureValue = amount * ratio;
 			const growthDelta = futureValue - amount;
 
 			return {
 				investDate: investDateStr,
+				investPrice: investPriceResult.price,
+				currentPrice: currentPriceResult.price,
+				currentDate: currentPriceResult.date,
 				futureValue: Math.round(futureValue * 100) / 100,
 				growthDelta: Math.round(growthDelta * 100) / 100,
 				calcMethod: 'adj_close_ratio',
@@ -250,32 +337,26 @@ export class PriceService {
 			};
 		}
 
-		// Check if fallback is allowed
-		const fallbackTickers = ['SPY', 'VTI', 'VOO', 'QQQ'];
-		if (allowFallback || fallbackTickers.includes(ticker.toUpperCase())) {
-			const futureValue = this.fallbackProvider.calculateFutureValue(amount, investDate, today);
-			const growthDelta = futureValue - amount;
-
-			return {
-				investDate: investDateStr,
-				futureValue: Math.round(futureValue * 100) / 100,
-				growthDelta: Math.round(growthDelta * 100) / 100,
-				calcMethod: 'fallback_7pct',
-				calcError: 'Price unavailable, using 7% annual return fallback'
-			};
-		}
+		// Fallback to 7% annual
+		const years = (today.getTime() - investDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+		const futureValue = amount * Math.pow(1.07, Math.max(0, years));
+		const growthDelta = futureValue - amount;
 
 		return {
 			investDate: investDateStr,
-			futureValue: null,
-			growthDelta: null,
-			calcMethod: 'unavailable',
-			calcError: 'Price data unavailable'
+			investPrice: null,
+			currentPrice: null,
+			currentDate: null,
+			futureValue: Math.round(futureValue * 100) / 100,
+			growthDelta: Math.round(growthDelta * 100) / 100,
+			calcMethod: 'fallback_7pct',
+			calcError: investPriceResult.price === null
+				? 'Price data unavailable for invest date'
+				: 'Current price unavailable'
 		};
 	}
 }
 
-// Create a price service instance
 export function createPriceService(supabase: SupabaseClient): PriceService {
 	return new PriceService(supabase);
 }
