@@ -43,7 +43,7 @@ const CC_PAYMENT_PATTERNS = [
 
 const CASH_WITHDRAWAL_PATTERNS = ['ATM', 'CASH WITHDRAWAL', 'WITHDRAWAL', 'CASH ADVANCE'];
 
-const REFUND_PATTERNS = ['REFUND', 'RETURN', 'REVERSAL', 'CHARGEBACK', 'REVERSAL OF', '*REFUND'];
+const REFUND_PATTERNS = ['REFUND', 'RETURN', 'REVERSAL', 'CHARGEBACK', 'REVERSAL OF', '*REFUND', 'CREDIT', 'CR ADJ', 'ADJUSTMENT CR', 'REBATE'];
 
 const FEE_INTEREST_PATTERNS = [
 	'FEE',
@@ -347,4 +347,55 @@ export function classifyTransaction(
 // Classify all rows in a batch
 export function classifyBatch(rows: ParsedRow[], rules: MerchantRule[] = []): ClassificationResult[] {
 	return rows.map((row) => classifyTransaction(row, rules));
+}
+
+// Find potential refund pairs (same merchant, same amount, different dates)
+export interface RefundPair {
+	purchaseIndex: number;
+	refundIndex: number;
+	merchant: string;
+	amount: number;
+}
+
+export function findPotentialRefundPairs(rows: ParsedRow[]): RefundPair[] {
+	const pairs: RefundPair[] = [];
+	const matched = new Set<number>();
+	
+	for (let i = 0; i < rows.length; i++) {
+		if (matched.has(i)) continue;
+		const row1 = rows[i];
+		if (!row1.merchantNorm || row1.amountSigned === null) continue;
+		
+		// Look for a matching pair
+		for (let j = i + 1; j < rows.length; j++) {
+			if (matched.has(j)) continue;
+			const row2 = rows[j];
+			if (!row2.merchantNorm || row2.amountSigned === null) continue;
+			
+			// Same merchant, opposite signs, same absolute amount
+			const sameAmount = Math.abs(Math.abs(row1.amountSigned) - Math.abs(row2.amountSigned)) < 0.01;
+			const sameMerchant = row1.merchantNorm === row2.merchantNorm;
+			const oppositeSign = (row1.amountSigned > 0 && row2.amountSigned < 0) || 
+			                     (row1.amountSigned < 0 && row2.amountSigned > 0);
+			
+			if (sameMerchant && sameAmount && oppositeSign) {
+				// Determine which is purchase and which is refund
+				const purchaseIdx = row1.amountSigned < 0 ? i : j;
+				const refundIdx = row1.amountSigned < 0 ? j : i;
+				
+				pairs.push({
+					purchaseIndex: purchaseIdx,
+					refundIndex: refundIdx,
+					merchant: row1.merchantNorm,
+					amount: Math.abs(row1.amountSigned)
+				});
+				
+				matched.add(i);
+				matched.add(j);
+				break;
+			}
+		}
+	}
+	
+	return pairs;
 }

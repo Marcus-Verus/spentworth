@@ -225,12 +225,22 @@
 		}
 	}
 
-	function formatCurrency(amount: number | null) {
+	function formatCurrency(amount: number | null, showSign = false) {
 		if (amount === null) return '-';
-		return new Intl.NumberFormat('en-US', {
+		const formatted = new Intl.NumberFormat('en-US', {
 			style: 'currency',
 			currency: 'USD'
 		}).format(Math.abs(amount));
+		
+		if (showSign) {
+			return amount < 0 ? `-${formatted}` : `+${formatted}`;
+		}
+		return formatted;
+	}
+	
+	function getAmountColor(amount: number | null) {
+		if (amount === null) return '';
+		return amount > 0 ? 'text-green-400' : 'text-sw-text';
 	}
 
 	function formatDate(dateStr: string | null) {
@@ -412,7 +422,7 @@
 											<span class="text-xs text-sw-danger">{row.parseError}</span>
 										{/if}
 									</td>
-									<td class="text-right font-mono pr-4">{formatCurrency(row.amountSigned)}</td>
+									<td class="text-right font-mono pr-4 {getAmountColor(row.amountSigned)}">{formatCurrency(row.amountSigned, true)}</td>
 									<td>
 										<div class="flex justify-center">
 											<select
