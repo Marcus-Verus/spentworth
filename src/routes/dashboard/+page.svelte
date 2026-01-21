@@ -50,6 +50,83 @@
 	
 	// Onboarding
 	let showOnboarding = $state(false);
+	
+	// Cancelled subscriptions (stored in localStorage)
+	let cancelledSubscriptions = $state<Set<string>>(new Set());
+	
+	function loadCancelledSubscriptions() {
+		const saved = localStorage.getItem('sw_cancelled_subscriptions');
+		if (saved) {
+			cancelledSubscriptions = new Set(JSON.parse(saved));
+		}
+	}
+	
+	function toggleSubscriptionCancelled(merchant: string) {
+		if (cancelledSubscriptions.has(merchant)) {
+			cancelledSubscriptions.delete(merchant);
+		} else {
+			cancelledSubscriptions.add(merchant);
+		}
+		cancelledSubscriptions = new Set(cancelledSubscriptions); // trigger reactivity
+		localStorage.setItem('sw_cancelled_subscriptions', JSON.stringify([...cancelledSubscriptions]));
+	}
+	
+	// CSV Export
+	function exportToCSV() {
+		if (!summary) return;
+		
+		// Build CSV content
+		let csv = 'SpentWorth Export\n\n';
+		
+		// Summary
+		csv += 'SUMMARY\n';
+		csv += `Total Spent,${summary.totalSpent}\n`;
+		csv += `Future Value (if invested),${summary.totalFutureValue}\n`;
+		csv += `Opportunity Cost,${summary.totalFutureValue - summary.totalSpent}\n`;
+		csv += `Date Range,${summary.dateMin} to ${summary.dateMax}\n`;
+		csv += `Ticker,${summary.ticker}\n\n`;
+		
+		// Categories
+		csv += 'SPENDING BY CATEGORY\n';
+		csv += 'Category,Amount Spent,Future Value,Opportunity Cost\n';
+		for (const cat of summary.categories) {
+			csv += `${cat.category},${cat.spent},${cat.future},${cat.delta}\n`;
+		}
+		csv += '\n';
+		
+		// Top Merchants
+		csv += 'TOP MERCHANTS\n';
+		csv += 'Merchant,Visits,Total Spent,Future Value\n';
+		for (const m of summary.topMerchants.slice(0, 20)) {
+			csv += `"${m.merchant}",${m.count},${m.totalSpent},${m.totalFuture}\n`;
+		}
+		csv += '\n';
+		
+		// Subscriptions
+		csv += 'SUBSCRIPTIONS\n';
+		csv += 'Merchant,Frequency,Avg Amount,Monthly Estimate,Yearly Estimate,Status\n';
+		for (const sub of summary.recurringCharges) {
+			const status = cancelledSubscriptions.has(sub.merchant) ? 'Cancelled' : 'Active';
+			csv += `"${sub.merchant}",${sub.frequency},${sub.avgAmount},${sub.monthlyEstimate},${sub.yearlyEstimate},${status}\n`;
+		}
+		csv += '\n';
+		
+		// Monthly
+		csv += 'MONTHLY SPENDING\n';
+		csv += 'Month,Spent,Future Value\n';
+		for (const m of summary.monthly) {
+			csv += `${m.month},${m.spent},${m.future}\n`;
+		}
+		
+		// Download
+		const blob = new Blob([csv], { type: 'text/csv' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `spentworth-export-${new Date().toISOString().slice(0, 10)}.csv`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
 
 	onMount(async () => {
 		initTheme();
@@ -60,6 +137,9 @@
 		if (!onboardingCompleted) {
 			showOnboarding = true;
 		}
+		
+		// Load cancelled subscriptions from localStorage
+		loadCancelledSubscriptions();
 		
 		await Promise.all([loadSummary(), loadGoals()]);
 	});
@@ -283,9 +363,20 @@
 		{:else}
 			<!-- Page Title -->
 			<div class="mb-6 sm:mb-8">
-				<h1 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
-					Your Spending <span class="text-gradient">Dashboard</span>
-				</h1>
+				<div class="flex items-start justify-between gap-4">
+					<h1 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+						Your Spending <span class="text-gradient">Dashboard</span>
+					</h1>
+					<button 
+						onclick={exportToCSV}
+						class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+						style="background: {isDark ? '#262626' : '#f5f0e8'}; color: {isDark ? '#a3a3a3' : '#525252'}"
+						title="Export data to CSV"
+					>
+						<i class="fa-solid fa-download text-[10px]"></i>
+						<span class="hidden sm:inline">Export</span>
+					</button>
+				</div>
 				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 					{#if summary.dateMin && summary.dateMax}
 						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
@@ -507,32 +598,63 @@
 					<!-- Recurring Charges -->
 					<div class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 						<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Recurring Charges</h3>
-							<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subscriptions and regular payments</p>
+							<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Subscriptions</h3>
+							<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Click to calculate savings • Tap ✕ to mark cancelled</p>
 						</div>
 						<div class="max-h-64 sm:max-h-80 overflow-y-auto" style="border-color: {isDark ? 'rgba(64,64,64,0.3)' : '#e5e5e5'}">
 							{#each summary.recurringCharges as charge}
-								<button 
-									onclick={() => selectedWhatIf = charge}
-									class="w-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between transition-colors text-left"
-									style="background: {selectedWhatIf?.merchant === charge.merchant ? 'rgba(13,148,136,0.1)' : 'transparent'}; border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}"
+								{@const isCancelled = cancelledSubscriptions.has(charge.merchant)}
+								<div 
+									class="w-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 transition-colors"
+									style="background: {selectedWhatIf?.merchant === charge.merchant ? 'rgba(13,148,136,0.1)' : 'transparent'}; border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}; {isCancelled ? 'opacity: 0.5;' : ''}"
 								>
-									<div class="min-w-0 flex-1 mr-3">
-										<p class="font-medium text-sm sm:text-base truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{charge.merchant}</p>
-										<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{charge.frequency} • {charge.count}×</p>
-									</div>
-									<div class="text-right flex-shrink-0">
-										<p class="font-mono text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(charge.avgAmount)}</p>
-										<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatCurrency(charge.yearlyEstimate)}/yr</p>
-									</div>
-								</button>
+									<button 
+										onclick={() => selectedWhatIf = charge}
+										class="flex-1 flex items-center justify-between text-left min-w-0"
+									>
+										<div class="min-w-0 flex-1 mr-3">
+											<p class="font-medium text-sm sm:text-base truncate {isCancelled ? 'line-through' : ''}" style="color: {isDark ? '#ffffff' : '#171717'}">{charge.merchant}</p>
+											<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+												{#if isCancelled}
+													<span class="text-green-500">Cancelled — saving {formatCurrency(charge.yearlyEstimate)}/yr</span>
+												{:else}
+													{charge.frequency} • {charge.count}×
+												{/if}
+											</p>
+										</div>
+										<div class="text-right flex-shrink-0">
+											<p class="font-mono text-sm sm:text-base {isCancelled ? 'line-through' : ''}" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(charge.avgAmount)}</p>
+											<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatCurrency(charge.yearlyEstimate)}/yr</p>
+										</div>
+									</button>
+									<button
+										onclick={() => toggleSubscriptionCancelled(charge.merchant)}
+										class="p-1.5 rounded-lg transition-colors flex-shrink-0"
+										style="background: {isCancelled ? 'rgba(34,197,94,0.1)' : 'transparent'}; color: {isCancelled ? '#22c55e' : (isDark ? '#525252' : '#a3a3a3')}"
+										title={isCancelled ? 'Mark as active' : 'Mark as cancelled'}
+									>
+										{#if isCancelled}
+											<i class="fa-solid fa-rotate-left text-xs"></i>
+										{:else}
+											<i class="fa-solid fa-xmark text-xs"></i>
+										{/if}
+									</button>
+								</div>
 							{/each}
 						</div>
 						<div class="px-4 sm:px-6 py-2.5 sm:py-3" style="background: {isDark ? 'rgba(10,10,10,0.3)' : 'rgba(245,240,232,0.5)'}; border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							{@const activeTotal = summary.recurringCharges.filter(r => !cancelledSubscriptions.has(r.merchant)).reduce((a, r) => a + r.monthlyEstimate, 0)}
+							{@const cancelledTotal = summary.recurringCharges.filter(r => cancelledSubscriptions.has(r.merchant)).reduce((a, r) => a + r.monthlyEstimate, 0)}
 							<div class="flex justify-between text-xs sm:text-sm">
-								<span style="color: {isDark ? '#a3a3a3' : '#737373'}">Total recurring</span>
-								<span class="font-mono font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</span>
+								<span style="color: {isDark ? '#a3a3a3' : '#737373'}">Active subscriptions</span>
+								<span class="font-mono font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(activeTotal)}/mo</span>
 							</div>
+							{#if cancelledTotal > 0}
+								<div class="flex justify-between text-xs sm:text-sm mt-1">
+									<span class="text-green-500">You're saving</span>
+									<span class="font-mono font-medium text-green-500">+{formatCurrency(cancelledTotal)}/mo</span>
+								</div>
+							{/if}
 						</div>
 					</div>
 
