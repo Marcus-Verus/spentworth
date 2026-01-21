@@ -396,20 +396,20 @@
 			<div class="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
 				<div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
 					<div>
-						<p class="font-display text-3xl sm:text-4xl font-bold text-sw-accent mb-1">$247</p>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">avg. monthly savings</p>
+						<p class="font-display text-3xl sm:text-4xl font-bold text-sw-accent mb-1">$18,400</p>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">avg. opportunity cost discovered</p>
 					</div>
 					<div>
 						<p class="font-display text-3xl sm:text-4xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">2 min</p>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">setup time</p>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">to your first insight</p>
 					</div>
 					<div>
-						<p class="font-display text-3xl sm:text-4xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">50K+</p>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">transactions analyzed</p>
+						<p class="font-display text-3xl sm:text-4xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">6</p>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">avg. forgotten subscriptions found</p>
 					</div>
 					<div>
-						<p class="font-display text-3xl sm:text-4xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">100%</p>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">private & secure</p>
+						<p class="font-display text-3xl sm:text-4xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">0</p>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">bank accounts linked</p>
 					</div>
 				</div>
 			</div>
