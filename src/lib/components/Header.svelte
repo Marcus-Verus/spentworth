@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { initTheme, toggleTheme, getTheme } from '$lib/stores/theme';
+	import Logo from '$lib/components/Logo.svelte';
 
 	interface Props {
 		showLogo?: boolean;
@@ -53,8 +54,8 @@
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
 		{#if showLogo}
 			<a href="/dashboard" class="flex items-center gap-2 sm:gap-3">
-				<div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-sw-accent flex items-center justify-center text-white font-bold text-lg sm:text-xl">
-					$
+				<div class="rounded-xl bg-sw-accent flex items-center justify-center text-white p-1.5 sm:p-2 shadow-lg shadow-sw-accent/10">
+					<Logo size="md" class="text-white" />
 				</div>
 				<span class="font-display text-lg sm:text-xl font-semibold">SpentWorth</span>
 			</a>

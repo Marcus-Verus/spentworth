@@ -253,6 +253,16 @@
 		}).format(amount);
 	}
 
+	function getTickerName(ticker: string): string {
+		const tickerMap: Record<string, string> = {
+			'SPY': 'S&P 500',
+			'VTI': 'Total Stock Market',
+			'VOO': 'S&P 500',
+			'QQQ': 'Nasdaq 100'
+		};
+		return tickerMap[ticker] || ticker;
+	}
+
 	function formatPercent(value: number) {
 		return new Intl.NumberFormat('en-US', {
 			style: 'percent',
@@ -437,7 +447,7 @@
 						<div>
 							<div class="w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-white mb-2" style="background: #0d9488">2</div>
 							<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Calculate Opportunity Cost</p>
-							<p style="color: {isDark ? '#a3a3a3' : '#737373'}">For each purchase, we calculate what it would be worth today if you'd invested in {summary.ticker} instead.</p>
+							<p style="color: {isDark ? '#a3a3a3' : '#737373'}">For each purchase, we calculate what it would be worth today if you'd invested in {getTickerName(summary.ticker)} instead.</p>
 						</div>
 						<div>
 							<div class="w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-white mb-2" style="background: #0d9488">3</div>
@@ -446,31 +456,31 @@
 						</div>
 					</div>
 					<div class="mt-4 p-3 rounded-lg text-xs" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
-						<i class="fa-solid fa-lightbulb mr-1 text-sw-accent"></i><strong style="color: {isDark ? '#ffffff' : '#171717'}">Example:</strong> <span style="color: {isDark ? '#a3a3a3' : '#525252'}">You spent $100 at Amazon 6 months ago. If you'd invested that in SPY instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.</span>
+						<i class="fa-solid fa-lightbulb mr-1 text-sw-accent"></i><strong style="color: {isDark ? '#ffffff' : '#171717'}">Example:</strong> <span style="color: {isDark ? '#a3a3a3' : '#525252'}">You spent $100 at Amazon 6 months ago. If you'd invested that in {getTickerName(summary.ticker)} instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.</span>
 					</div>
 				</div>
 			{/if}
 
 			<!-- Hero Stats -->
 			<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-				<div class="rounded-2xl p-4 sm:p-6 group relative" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<p class="text-xs sm:text-sm mb-1 sm:mb-2 flex items-center gap-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+				<div class="rounded-2xl p-4 sm:p-6 group relative text-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<p class="text-xs sm:text-sm mb-1 sm:mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 						Total Spent
 					</p>
 					<p class="font-display text-2xl sm:text-4xl font-bold tracking-tight" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.totalSpent)}</p>
 					<p class="text-[10px] sm:text-xs mt-1 sm:mt-2" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.transactionCount} purchases • avg {formatCurrency(summary.avgTransaction)}</p>
 				</div>
 				
-				<div class="rounded-2xl p-4 sm:p-6 group relative" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<p class="text-xs sm:text-sm mb-1 sm:mb-2 flex items-center gap-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+				<div class="rounded-2xl p-4 sm:p-6 group relative text-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<p class="text-xs sm:text-sm mb-1 sm:mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 						Today's Value
 					</p>
 					<p class="font-display text-2xl sm:text-4xl font-bold tracking-tight text-sw-accent">{formatCurrency(summary.totalFutureValue)}</p>
-					<p class="text-[10px] sm:text-xs mt-1 sm:mt-2" style="color: {isDark ? '#737373' : '#9ca3af'}">If invested in {summary.ticker}</p>
+					<p class="text-[10px] sm:text-xs mt-1 sm:mt-2" style="color: {isDark ? '#737373' : '#9ca3af'}">If invested in {getTickerName(summary.ticker)}</p>
 				</div>
 				
-				<div class="rounded-2xl p-4 sm:p-6 group relative" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.15), rgba(13,148,136,0.05))' : 'linear-gradient(135deg, rgba(13,148,136,0.1), rgba(13,148,136,0.02))'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
-					<p class="text-xs sm:text-sm mb-1 sm:mb-2 flex items-center gap-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+				<div class="rounded-2xl p-4 sm:p-6 group relative text-center" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.15), rgba(13,148,136,0.05))' : 'linear-gradient(135deg, rgba(13,148,136,0.1), rgba(13,148,136,0.02))'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
+					<p class="text-xs sm:text-sm mb-1 sm:mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 						Left on the Table
 					</p>
 					<p class="font-display text-2xl sm:text-4xl font-bold tracking-tight text-sw-accent">
@@ -486,22 +496,22 @@
 			{#if summary.biggestPurchase}
 				<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
 					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
-						<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest Splurge</p>
+						<p class="text-xs sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest Splurge</p>
 						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.biggestPurchase.amount)}</p>
 						<p class="text-[10px] sm:text-xs truncate" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.biggestPurchase.merchant}</p>
 					</div>
 					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
-						<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Spendy Day</p>
+						<p class="text-xs sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Spendy Day</p>
 						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{summary.biggestSpendingDay.day}s</p>
 						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatCurrency(summary.biggestSpendingDay.spent)}</p>
 					</div>
 					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
-						<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly Avg</p>
+						<p class="text-xs sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly Avg</p>
 						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.totalSpent / Math.max(summary.monthly.length, 1))}</p>
 						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.monthly.length} months</p>
 					</div>
 					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
-						<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subscriptions</p>
+						<p class="text-xs sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subscriptions</p>
 						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</p>
 						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.recurringCharges.length} detected</p>
 					</div>
@@ -610,15 +620,15 @@
 					
 					{#if trends.change !== 0}
 						<div class="mt-4 pt-4" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
 								{#if trends.change < 0}
-									<i class="fa-solid fa-piggy-bank text-sw-accent mr-1"></i>
+									<i class="fa-solid fa-piggy-bank mr-1.5" style="color: {isDark ? '#0d9488' : '#0d9488'}"></i>
 									If you invest this {formatCurrency(Math.abs(trends.change))} monthly savings, it could grow to 
-									<span class="font-semibold text-sw-accent">{formatCurrency(trends.opportunityCostChange)}</span> in 10 years.
+									<span class="font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(trends.opportunityCostChange)}</span> in 10 years.
 								{:else}
-									<i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i>
+									<i class="fa-solid fa-triangle-exclamation mr-1.5 text-amber-500"></i>
 									The {formatCurrency(trends.change)} increase costs you 
-									<span class="font-semibold text-amber-500">{formatCurrency(trends.opportunityCostChange)}</span> in lost opportunity over 10 years.
+									<span class="font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(trends.opportunityCostChange)}</span> in lost opportunity over 10 years.
 								{/if}
 							</p>
 						</div>
@@ -630,10 +640,11 @@
 							<div class="flex flex-wrap gap-2">
 								{#each trends.categoryChanges.slice(0, 3) as cat}
 									<span 
-										class="text-xs px-2 py-1 rounded-full"
-										style="background: {cat.change < 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; color: {cat.change < 0 ? '#10b981' : '#ef4444'}"
+										class="text-xs px-2.5 py-1 rounded-md font-medium"
+										style="background: {isDark ? '#1a1a1a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
 									>
-										{cat.category}: {cat.change < 0 ? '' : '+'}{formatCurrency(cat.change)}
+										<span style="color: {isDark ? '#ffffff' : '#171717'}">{cat.category}:</span>
+										<span style="color: {cat.change < 0 ? '#10b981' : '#ef4444'}"> {cat.change < 0 ? '' : '+'}{formatCurrency(cat.change)}</span>
 									</span>
 								{/each}
 							</div>
@@ -644,10 +655,10 @@
 
 			<!-- Calculation Method Banner -->
 			{#if summary.usingFallback > 0}
-				<div class="mb-8 rounded-xl p-4 flex items-center justify-between" style="background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.3)">
+				<div class="mb-8 rounded-xl p-4 flex items-center justify-between" style="background: {isDark ? '#1a1a1a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-center gap-3">
-						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(245,158,11,0.2)">
-							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" style="color: {isDark ? '#a3a3a3' : '#737373'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 						</div>
@@ -847,7 +858,7 @@
 							
 							<div class="space-y-3 sm:space-y-4">
 								<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-									<label class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Time horizon:</label>
+									<span class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Time horizon:</span>
 									<div class="flex rounded-lg p-1 w-full sm:w-auto" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
 										{#each [5, 10, 20, 30] as years}
 											<button 
@@ -900,7 +911,11 @@
 					<div>
 						<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Where Your Money Goes</h3>
 						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-							<span class="hidden sm:inline">See potential growth if invested · </span>7% return over 5 years
+							{#if summary.usingRealPrices > 0}
+								<span class="hidden sm:inline">See potential growth if invested · </span>Real returns from {getTickerName(summary.ticker)}
+							{:else}
+								<span class="hidden sm:inline">See potential growth if invested · </span>7% estimate over 5 years
+							{/if}
 						</p>
 					</div>
 					<div class="flex rounded-lg p-1 self-start sm:self-auto" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
@@ -909,7 +924,11 @@
 					</div>
 				</div>
 				<div>
-					{#each (merchantView === 'frequency' ? summary.topMerchants : summary.topMerchantsBySpend).slice(0, 10) as merchant, i}
+					{#if summary.topMerchants && summary.topMerchantsBySpend}
+						{@const displayedMerchants = (merchantView === 'frequency' ? summary.topMerchants : summary.topMerchantsBySpend).slice(0, 10)}
+						{@const totalSpent = displayedMerchants.reduce((sum, m) => sum + m.totalSpent, 0)}
+						{@const totalGain = displayedMerchants.reduce((sum, m) => sum + (m.totalFuture - m.totalSpent), 0)}
+						{#each displayedMerchants as merchant, i}
 						{@const maxCount = summary.topMerchants[0]?.count || 1}
 						{@const maxSpend = summary.topMerchantsBySpend[0]?.totalSpent || 1}
 						{@const barWidth = merchantView === 'frequency' ? (merchant.count / maxCount) * 100 : (merchant.totalSpent / maxSpend) * 100}
@@ -924,7 +943,7 @@
 										<div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-shrink-0">
 											<span style="color: {isDark ? '#a3a3a3' : '#737373'}">{merchant.count}×</span>
 											<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(merchant.totalSpent)}</span>
-											<span class="hidden sm:inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full" style="background: rgba(13,148,136,0.1); color: #0d9488" title="Potential growth if invested at 7% for 5 years">
+											<span class="hidden sm:inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full" style="background: rgba(13,148,136,0.1); color: #0d9488" title={summary.usingRealPrices > 0 ? `Potential growth if invested in ${getTickerName(summary.ticker)}` : 'Potential growth if invested at 7% for 5 years'}>
 												<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
 												+{formatCurrency(potentialGain)}
 											</span>
@@ -936,7 +955,20 @@
 								</div>
 							</div>
 						</div>
-					{/each}
+						{/each}
+						{#if displayedMerchants.length > 0}
+							<div class="px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2" style="border-top: 2px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; background: {isDark ? 'rgba(10,10,10,0.5)' : '#f9f6f1'}">
+								<p class="font-medium text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Total</p>
+								<div class="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm">
+									<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(totalSpent)}</span>
+									<span class="inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full" style="background: rgba(13,148,136,0.1); color: #0d9488">
+										<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
+										+{formatCurrency(totalGain)}
+									</span>
+								</div>
+							</div>
+						{/if}
+					{/if}
 				</div>
 			</div>
 
@@ -1009,8 +1041,9 @@
 					<div class="px-4 sm:px-6 py-3 sm:py-4" style="background: {isDark ? 'rgba(10,10,10,0.3)' : 'rgba(245,240,232,0.5)'}; border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 							<div>
-								<label class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Goal Name</label>
+								<label for="goal-name" class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Goal Name</label>
 								<input 
+									id="goal-name"
 									type="text" 
 									bind:value={newGoalName}
 									placeholder="e.g., Cut dining out"
@@ -1019,18 +1052,18 @@
 								/>
 							</div>
 							<div>
-								<label class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Type</label>
-								<select bind:value={newGoalType} class="w-full px-3 py-2 rounded-lg text-sm" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}">
+								<label for="goal-type" class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Type</label>
+								<select id="goal-type" bind:value={newGoalType} class="w-full px-3 py-2 rounded-lg text-sm" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}">
 									<option value="reduce_category">Limit Category</option>
 									<option value="reduce_merchant">Limit Merchant</option>
 								</select>
 							</div>
 							<div>
-								<label class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								<label for="goal-target" class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 									{newGoalType === 'reduce_category' ? 'Category' : 'Merchant'}
 								</label>
 								{#if newGoalType === 'reduce_category'}
-									<select bind:value={newGoalTarget} class="w-full px-3 py-2 rounded-lg text-sm" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}">
+									<select id="goal-target" bind:value={newGoalTarget} class="w-full px-3 py-2 rounded-lg text-sm" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}">
 										<option value="">Select...</option>
 										{#each displayCategories as cat}
 											<option value={cat.category}>{cat.category}</option>
@@ -1038,6 +1071,7 @@
 									</select>
 								{:else}
 									<input 
+										id="goal-target"
 										type="text" 
 										bind:value={newGoalTarget}
 										placeholder="e.g., Starbucks"
@@ -1047,9 +1081,10 @@
 								{/if}
 							</div>
 							<div>
-								<label class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly Limit ($)</label>
+								<label for="goal-amount" class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly Limit ($)</label>
 								<div class="flex gap-2">
 									<input 
+										id="goal-amount"
 										type="number" 
 										bind:value={newGoalAmount}
 										min="1"
@@ -1083,7 +1118,7 @@
 												{goal.over_budget ? 'Over!' : `${formatCurrency(goal.remaining)} left`}
 											</p>
 										</div>
-										<button onclick={() => deleteGoal(goal.id)} class="text-sw-text-dim hover:text-red-400 transition-colors p-1">
+										<button onclick={() => deleteGoal(goal.id)} class="text-sw-text-dim hover:text-red-400 transition-colors p-1" aria-label="Delete goal">
 											<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 											</svg>
@@ -1124,10 +1159,16 @@
 				<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 					<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 						<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Your Costliest Choices</h3>
-						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest opportunity cost · 7% return over 5 years</p>
+						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							Biggest opportunity cost · {summary.usingRealPrices > 0 ? `Real returns from ${getTickerName(summary.ticker)}` : '7% estimate over 5 years'}
+						</p>
 					</div>
 					<div>
-						{#each summary.topTransactions.slice(0, 8) as tx, i}
+						{#if summary.topTransactions.length > 0}
+							{@const displayedTransactions = summary.topTransactions.slice(0, 8)}
+							{@const totalAmount = displayedTransactions.reduce((sum, tx) => sum + tx.amount, 0)}
+							{@const totalGrowth = displayedTransactions.reduce((sum, tx) => sum + tx.growth, 0)}
+							{#each displayedTransactions as tx, i}
 							<div class="px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4 transition-colors" style="border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}">
 								<div class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-sw-accent font-mono text-xs sm:text-sm flex-shrink-0" style="background: rgba(13,148,136,0.1)">{i + 1}</div>
 								<div class="flex-1 min-w-0">
@@ -1137,12 +1178,25 @@
 								<div class="text-right flex-shrink-0">
 									<p class="font-mono text-xs sm:text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(tx.amount)}</p>
 								</div>
-								<span class="hidden sm:inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style="background: rgba(13,148,136,0.1); color: #0d9488" title="Potential growth if invested at 7% for 5 years">
+								<span class="hidden sm:inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style="background: rgba(13,148,136,0.1); color: #0d9488" title={summary.usingRealPrices > 0 ? `Potential growth if invested in ${getTickerName(summary.ticker)}` : 'Potential growth if invested at 7% for 5 years'}>
 									<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
 									+{formatCurrency(tx.growth)}
 								</span>
 							</div>
-						{/each}
+							{/each}
+							{#if displayedTransactions.length > 0}
+								<div class="px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2" style="border-top: 2px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; background: {isDark ? 'rgba(10,10,10,0.5)' : '#f9f6f1'}">
+									<p class="font-medium text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Total</p>
+									<div class="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm">
+										<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(totalAmount)}</span>
+										<span class="inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full" style="background: rgba(13,148,136,0.1); color: #0d9488">
+											<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
+											+{formatCurrency(totalGrowth)}
+										</span>
+									</div>
+								</div>
+							{/if}
+						{/if}
 					</div>
 				</div>
 			{/if}
@@ -1151,7 +1205,7 @@
 			<details class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 				<summary class="px-4 sm:px-6 py-3 sm:py-4 cursor-pointer transition-colors" style="color: {isDark ? '#ffffff' : '#171717'}">
 					<span class="font-display font-semibold text-base sm:text-lg">Full Category Breakdown</span>
-					<span class="text-xs sm:text-sm ml-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">({summary.categories.length}) · 7% return over 5 years</span>
+					<span class="text-xs sm:text-sm ml-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">({summary.categories.length}) · {summary.usingRealPrices > 0 ? `Real returns from ${getTickerName(summary.ticker)}` : '7% estimate over 5 years'}</span>
 				</summary>
 				<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					{#each summary.categories as cat, i}
@@ -1164,7 +1218,7 @@
 								</div>
 								<div class="flex items-center gap-1.5 sm:gap-3 text-xs sm:text-sm flex-shrink-0">
 									<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(cat.spent)}</span>
-									<span class="hidden sm:inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full" style="background: rgba(13,148,136,0.1); color: #0d9488" title="Potential growth if invested at 7% for 5 years">
+									<span class="hidden sm:inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full" style="background: rgba(13,148,136,0.1); color: #0d9488" title={summary.usingRealPrices > 0 ? `Potential growth if invested in $${summary.ticker}` : 'Potential growth if invested at 7% for 5 years'}>
 										<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
 										+{formatCurrency(cat.delta)}
 									</span>
@@ -1180,7 +1234,7 @@
 
 			<!-- Info footer -->
 			<div class="mt-6 sm:mt-8 text-center text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-				<p>Tracking {summary.ticker} • <a href="/settings" class="text-sw-accent hover:underline">Change ticker</a></p>
+				<p>Tracking {getTickerName(summary.ticker)} • <a href="/settings" class="text-sw-accent hover:underline">Change ticker</a></p>
 			</div>
 		{/if}
 	</main>

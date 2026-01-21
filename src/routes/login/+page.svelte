@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import Logo from '$lib/components/Logo.svelte';
 
 	let { data } = $props();
 
@@ -31,8 +32,8 @@
 	<div class="w-full max-w-md">
 		<div class="text-center mb-8">
 			<a href="/" class="inline-flex items-center gap-3 group mb-6">
-				<div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sw-accent to-emerald-600 flex items-center justify-center text-sw-bg font-bold text-2xl shadow-lg shadow-sw-accent/20">
-					$
+				<div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sw-accent to-emerald-600 flex items-center justify-center text-white p-2.5 shadow-lg shadow-sw-accent/20">
+					<Logo size="lg" class="text-white" />
 				</div>
 				<span class="font-display text-2xl font-semibold text-sw-text">SpentWorth</span>
 			</a>

@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { initTheme, toggleTheme, getTheme } from '$lib/stores/theme';
+	import Logo from '$lib/components/Logo.svelte';
 
 	let { data } = $props();
 	
@@ -42,8 +43,8 @@
 	<nav class="border-b border-sw-border/30 backdrop-blur-md bg-sw-surface/90 sticky top-0 z-50">
 		<div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
 			<a href="/" class="flex items-center gap-2.5 group">
-				<div class="w-9 h-9 rounded-xl bg-sw-accent flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-sw-accent/10 group-hover:shadow-sw-accent/20 transition-all">
-					$
+				<div class="rounded-xl bg-sw-accent flex items-center justify-center text-white p-2 shadow-lg shadow-sw-accent/10 group-hover:shadow-sw-accent/20 transition-all">
+					<Logo size="md" class="text-white" />
 				</div>
 				<span class="font-display text-xl font-semibold text-sw-text tracking-tight">SpentWorth</span>
 			</a>
@@ -786,6 +787,52 @@
 			</div>
 		</section>
 
+		<!-- Feature Highlights - Visual Bridge Section -->
+		<section class="border-t border-sw-border/30 relative overflow-hidden" style="background: {isDark ? '#0f0f0f' : '#faf7f2'}">
+			<!-- Decorative background elements -->
+			<div class="absolute inset-0 overflow-hidden pointer-events-none">
+				<div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl" style="background: {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.15)'}; transform: translate(-50%, -50%);"></div>
+				<div class="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl" style="background: {isDark ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.1)'}; transform: translate(50%, 50%);"></div>
+			</div>
+			
+			<div class="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+				<div class="grid md:grid-cols-3 gap-6 lg:gap-8">
+					<!-- Feature 1 -->
+					<div class="group relative">
+						<div class="rounded-2xl p-6 h-full transition-all duration-300 text-center" style="background: {isDark ? 'rgba(26,26,26,0.6)' : 'rgba(255,255,255,0.7)'}; border: 1px solid {isDark ? 'rgba(42,42,42,0.5)' : 'rgba(229,229,229,0.5)'}; backdrop-filter: blur(8px); box-shadow: {isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.05)'}">
+							<div class="w-14 h-14 rounded-xl flex items-center justify-center mb-4 mx-auto transition-transform group-hover:scale-110" style="background: linear-gradient(135deg, {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}, {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}); border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
+								<i class="fa-solid fa-shield-halved text-2xl text-sw-accent"></i>
+							</div>
+							<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">100% Private</h3>
+							<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">Your data never leaves your control. No account linking, no third-party access. Just you and your insights.</p>
+						</div>
+					</div>
+					
+					<!-- Feature 2 -->
+					<div class="group relative">
+						<div class="rounded-2xl p-6 h-full transition-all duration-300 text-center" style="background: {isDark ? 'rgba(26,26,26,0.6)' : 'rgba(255,255,255,0.7)'}; border: 1px solid {isDark ? 'rgba(42,42,42,0.5)' : 'rgba(229,229,229,0.5)'}; backdrop-filter: blur(8px); box-shadow: {isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.05)'}">
+							<div class="w-14 h-14 rounded-xl flex items-center justify-center mb-4 mx-auto transition-transform group-hover:scale-110" style="background: linear-gradient(135deg, {isDark ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.15)'}, {isDark ? 'rgba(245,158,11,0.1)' : 'rgba(245,158,11,0.08)'}); border: 1px solid {isDark ? 'rgba(245,158,11,0.3)' : 'rgba(245,158,11,0.2)'}">
+								<i class="fa-solid fa-bolt text-2xl" style="color: #f59e0b"></i>
+							</div>
+							<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Instant Insights</h3>
+							<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">Get actionable insights in minutes. See opportunity costs, spending patterns, and hidden subscriptions immediately.</p>
+						</div>
+					</div>
+					
+					<!-- Feature 3 -->
+					<div class="group relative">
+						<div class="rounded-2xl p-6 h-full transition-all duration-300 text-center" style="background: {isDark ? 'rgba(26,26,26,0.6)' : 'rgba(255,255,255,0.7)'}; border: 1px solid {isDark ? 'rgba(42,42,42,0.5)' : 'rgba(229,229,229,0.5)'}; backdrop-filter: blur(8px); box-shadow: {isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.05)'}">
+							<div class="w-14 h-14 rounded-xl flex items-center justify-center mb-4 mx-auto transition-transform group-hover:scale-110" style="background: linear-gradient(135deg, {isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.15)'}, {isDark ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.08)'}); border: 1px solid {isDark ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.2)'}">
+								<i class="fa-solid fa-chart-pie text-2xl" style="color: #6366f1"></i>
+							</div>
+							<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Smart Analysis</h3>
+							<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">Automatic categorization and real market data show you exactly what your spending could become if invested.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
 		<!-- How it works -->
 		<section class="border-t border-sw-border/30 relative overflow-hidden">
 			<!-- Background with subtle pattern -->
@@ -890,10 +937,11 @@
 							<!-- Inputs stacked -->
 							<div class="space-y-3 mb-4">
 								<div class="flex items-center justify-between">
-									<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Daily amount</label>
+									<label for="daily-amount" class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Daily amount</label>
 									<div class="flex items-center rounded-lg px-3 py-1.5" style="background: {isDark ? '#0f0f0f' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
 										<span class="text-sm mr-1" style="color: {isDark ? '#737373' : '#737373'}">$</span>
 										<input 
+											id="daily-amount"
 											type="number" 
 											bind:value={dailyAmount}
 											min="1"
@@ -904,8 +952,9 @@
 									</div>
 								</div>
 								<div class="flex items-center justify-between">
-									<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Time period</label>
+									<label for="time-period" class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Time period</label>
 									<select 
+										id="time-period"
 										bind:value={years}
 										class="px-3 py-1.5 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-sw-accent/50"
 										style="background: {isDark ? '#0f0f0f' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; color: {isDark ? '#ffffff' : '#171717'}"
@@ -980,8 +1029,8 @@
 				<!-- Brand Column -->
 				<div class="col-span-2 md:col-span-1">
 					<div class="flex items-center gap-2 mb-4">
-						<div class="w-8 h-8 rounded-xl bg-sw-accent flex items-center justify-center text-white font-bold text-lg">
-							$
+						<div class="rounded-xl bg-sw-accent flex items-center justify-center text-white p-1.5">
+							<Logo size="sm" class="text-white" />
 						</div>
 						<span class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
 					</div>
@@ -989,10 +1038,10 @@
 						Know where your money goes. Build the life you want.
 					</p>
 					<div class="flex items-center gap-3">
-						<a href="https://twitter.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+						<a href="https://twitter.com" target="_blank" rel="noopener" aria-label="Follow us on X (Twitter)" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
 							<i class="fa-brands fa-x-twitter"></i>
 						</a>
-						<a href="https://github.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+						<a href="https://github.com" target="_blank" rel="noopener" aria-label="View our GitHub repository" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
 							<i class="fa-brands fa-github"></i>
 						</a>
 					</div>

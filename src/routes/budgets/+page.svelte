@@ -69,6 +69,25 @@
 		return Math.round(total);
 	}
 
+	// Donut chart path generator
+	function getDonutPath(startAngle: number, endAngle: number, radius: number = 80, innerRadius: number = 50) {
+		const startRad = (startAngle - 90) * Math.PI / 180;
+		const endRad = (endAngle - 90) * Math.PI / 180;
+		
+		const x1 = 100 + radius * Math.cos(startRad);
+		const y1 = 100 + radius * Math.sin(startRad);
+		const x2 = 100 + radius * Math.cos(endRad);
+		const y2 = 100 + radius * Math.sin(endRad);
+		const x3 = 100 + innerRadius * Math.cos(endRad);
+		const y3 = 100 + innerRadius * Math.sin(endRad);
+		const x4 = 100 + innerRadius * Math.cos(startRad);
+		const y4 = 100 + innerRadius * Math.sin(startRad);
+		
+		const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+		
+		return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+	}
+
 	async function loadBudgets() {
 		loading = true;
 		try {
@@ -226,22 +245,26 @@
 		if (!summary) return { icon: 'fa-chart-line', message: 'Set up your first budget', subtext: 'Every dollar you save is a dollar invested in your future' };
 		
 		if (summary.overallTrend === 'improving') {
+			// Calculate what the trend improvement would be worth if invested
+			const trendFutureValue = summary.overallTrendAmount * Math.pow(1.07, 10);
 			return {
 				icon: 'fa-fire',
 				message: `You're crushing it!`,
-				subtext: `${formatCurrency(Math.abs(summary.overallTrendAmount))} less than last month → ${formatCurrency(summary.totalOpportunityCostGained)} in 10 years`
+				subtext: `${formatCurrency(Math.abs(summary.overallTrendAmount))} less than last month → ${formatCurrency(Math.round(trendFutureValue))} if invested`
 			};
 		} else if (summary.overallTrend === 'worsening') {
+			// Calculate what the trend worsening costs in opportunity cost
+			const trendOpportunityCost = Math.abs(summary.overallTrendAmount) * Math.pow(1.07, 10);
 			return {
 				icon: 'fa-triangle-exclamation',
 				message: 'Time to refocus',
-				subtext: `${formatCurrency(Math.abs(summary.overallTrendAmount))} more than last month → ${formatCurrency(summary.totalOpportunityCostLost)} opportunity cost`
+				subtext: `${formatCurrency(Math.abs(summary.overallTrendAmount))} more than last month → ${formatCurrency(Math.round(trendOpportunityCost))} opportunity cost`
 			};
 		} else if (summary.totalOverUnder > 0) {
 			return {
 				icon: 'fa-seedling',
 				message: 'On track!',
-				subtext: `${formatCurrency(summary.totalRemaining)} left to spend → ${formatCurrency(summary.totalOpportunityCostGained)} if you stay under`
+				subtext: `${formatCurrency(summary.totalRemaining)} left this month → ${formatCurrency(summary.totalOpportunityCostGained)} if invested`
 			};
 		}
 		
@@ -339,6 +362,89 @@
 				</div>
 			{/if}
 
+			<!-- Charts Section -->
+			{#if summary && budgets.length > 0}
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+					<!-- Budget Usage Donut Chart -->
+					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<h3 class="font-display font-semibold mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Budget Usage</h3>
+						<div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+							<div class="relative flex-shrink-0">
+								{#if summary}
+									{@const spentPercent = summary.totalBudget > 0 ? (summary.totalSpent / summary.totalBudget) * 360 : 0}
+									{@const remainingPercent = summary.totalBudget > 0 ? (summary.totalRemaining / summary.totalBudget) * 360 : 0}
+									<svg viewBox="0 0 200 200" class="w-32 h-32 sm:w-44 sm:h-44">
+									{#if spentPercent > 0}
+										<path d={getDonutPath(0, spentPercent)} fill="#ef4444" class="hover:opacity-80 transition-opacity">
+											<title>Spent: {formatCurrency(summary.totalSpent)}</title>
+										</path>
+									{/if}
+									{#if remainingPercent > 0}
+										<path d={getDonutPath(spentPercent, spentPercent + remainingPercent)} fill="#10b981" class="hover:opacity-80 transition-opacity">
+											<title>Remaining: {formatCurrency(summary.totalRemaining)}</title>
+										</path>
+									{/if}
+										<text x="100" y="95" text-anchor="middle" class="text-[10px] sm:text-xs" style="fill: {isDark ? '#a3a3a3' : '#737373'}">Used</text>
+										<text x="100" y="115" text-anchor="middle" class="font-display font-bold text-sm sm:text-base" style="fill: {isDark ? '#ffffff' : '#171717'}">{summary.totalBudget > 0 ? Math.round((summary.totalSpent / summary.totalBudget) * 100) : 0}%</text>
+									</svg>
+								{/if}
+							</div>
+							<div class="flex-1 w-full space-y-2">
+								<div class="flex items-center gap-2">
+									<div class="w-3 h-3 rounded-sm" style="background: #ef4444"></div>
+									<span class="text-sm flex-1" style="color: {isDark ? '#ffffff' : '#171717'}">Spent</span>
+									<span class="font-mono text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(summary.totalSpent)}</span>
+								</div>
+								<div class="flex items-center gap-2">
+									<div class="w-3 h-3 rounded-sm" style="background: #10b981"></div>
+									<span class="text-sm flex-1" style="color: {isDark ? '#ffffff' : '#171717'}">Remaining</span>
+									<span class="font-mono text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(summary.totalRemaining)}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Budget vs Spent Bar Chart -->
+					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<h3 class="font-display font-semibold mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Budget vs Spent</h3>
+						{#if budgets.length > 0}
+							{@const chartBudgets = budgets.slice(0, 8)}
+							{@const maxBudget = chartBudgets.length > 0 ? Math.max(...chartBudgets.map(b => Math.max(b.monthlyLimit || 0, b.currentSpent || 0, 1)), 1) : 1}
+							<div class="h-48 sm:h-56 flex items-end gap-1.5 sm:gap-2">
+							{#each chartBudgets as budget}
+								{@const budgetHeight = maxBudget > 0 ? ((budget.monthlyLimit || 0) / maxBudget) * 100 : 0}
+								{@const spentHeight = maxBudget > 0 ? ((budget.currentSpent || 0) / maxBudget) * 100 : 0}
+								{@const isOver = (budget.currentSpent || 0) > (budget.monthlyLimit || 0)}
+								<div class="flex-1 flex flex-col items-center gap-1 group relative">
+									<div class="w-full flex flex-col items-center justify-end" style="height: 180px;">
+										<!-- Budget limit bar (background) -->
+										<div 
+											class="w-full rounded-t transition-all"
+											style="height: {Math.max(budgetHeight, 2)}%; background: {isDark ? '#2a2a2a' : '#e5e5e5'}; opacity: 0.3;"
+										></div>
+										<!-- Spent bar (foreground) -->
+										<div 
+											class="w-full rounded-t transition-all relative group-hover:opacity-90"
+											style="height: {Math.max(spentHeight, 2)}%; background: {isOver ? '#ef4444' : '#0d9488'}; margin-top: -{Math.max(spentHeight, 2)}%;"
+										>
+											<div class="absolute -top-12 left-1/2 -translate-x-1/2 rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+												<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{budget.category}</p>
+												<p style="color: {isDark ? '#a3a3a3' : '#737373'}">Spent: {formatCurrency(budget.currentSpent)}</p>
+												<p style="color: {isDark ? '#a3a3a3' : '#737373'}">Budget: {formatCurrency(budget.monthlyLimit)}</p>
+											</div>
+										</div>
+									</div>
+									<span class="text-[9px] sm:text-[10px] truncate w-full text-center" style="color: {isDark ? '#a3a3a3' : '#737373'}" title={budget.category}>
+										{budget.category.split(' ')[0]}
+									</span>
+								</div>
+							{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+
 			<!-- Budget Cards -->
 			<div class="space-y-4 mb-6">
 				{#each budgets as budget}
@@ -400,9 +506,9 @@
 									<div class="flex items-center gap-2">
 										<i class="fa-solid fa-piggy-bank text-sw-accent"></i>
 										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-											Stay under budget and invest the 
+											Invest the 
 											<span class="font-semibold text-sw-accent">{formatCurrency(budget.remaining)}</span> 
-											→ 
+											left this month → 
 											<span class="font-semibold text-sw-accent">{formatCurrency(budget.opportunityCostGained)}</span> in 10 years
 										</p>
 									</div>

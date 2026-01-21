@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { initTheme, getTheme, toggleTheme } from '$lib/stores/theme';
+	import Logo from '$lib/components/Logo.svelte';
 
 	let isDark = $state(false);
 	let billingCycle = $state<'monthly' | 'yearly'>('yearly');
@@ -77,8 +78,8 @@
 	<header class="border-b backdrop-blur-md sticky top-0 z-50" style="border-color: {isDark ? 'rgba(42,42,42,0.3)' : 'rgba(0,0,0,0.1)'}; background: {isDark ? 'rgba(10,10,10,0.9)' : 'rgba(245,240,232,0.9)'}">
 		<div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
 			<a href="/" class="flex items-center gap-2">
-				<div class="w-8 h-8 rounded-xl bg-sw-accent flex items-center justify-center text-white font-bold text-lg">
-					$
+				<div class="rounded-xl bg-sw-accent flex items-center justify-center text-white p-1.5">
+					<Logo size="sm" class="text-white" />
 				</div>
 				<span class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
 			</a>
