@@ -443,30 +443,29 @@
 					class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
 					style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
 				>
-					<i class="fa-solid fa-receipt text-sw-accent"></i>
+					<i class="fa-solid fa-receipt" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
 					<span class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Log Spending</span>
 				</button>
 				
 				{#if availableCategories.length > 0}
-					<!-- Add Single Budget -->
+					<!-- Add Single Budget (Primary) -->
 					<button 
 						onclick={() => { showAddModal = true; newCategory = availableCategories[0]; }}
-						class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
-						style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}"
+						class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01] btn-primary"
 					>
-						<i class="fa-solid fa-plus text-sw-accent"></i>
-						<span class="font-display font-semibold text-sw-accent">Add Budget</span>
+						<i class="fa-solid fa-plus"></i>
+						<span class="font-display font-semibold">Add Budget</span>
 					</button>
 					
-					<!-- Quick Setup (multiple) -->
+					<!-- Quick Setup (Secondary/Outlined) -->
 					{#if availableCategories.length >= 3}
 						<button 
 							onclick={initQuickSetup}
 							class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
-							style="background: {isDark ? 'rgba(245,158,11,0.1)' : 'rgba(245,158,11,0.08)'}; border: 1px solid {isDark ? 'rgba(245,158,11,0.3)' : 'rgba(245,158,11,0.2)'}"
+							style="background: transparent; border: 2px dashed {isDark ? '#404040' : '#d4cfc5'}"
 						>
-							<i class="fa-solid fa-bolt text-amber-500"></i>
-							<span class="font-display font-semibold text-amber-500">Quick Setup</span>
+							<i class="fa-solid fa-layer-group" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+							<span class="font-display font-semibold" style="color: {isDark ? '#a3a3a3' : '#737373'}">Quick Setup</span>
 						</button>
 					{/if}
 				{/if}
