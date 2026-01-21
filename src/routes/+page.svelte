@@ -363,7 +363,7 @@
 							"SpentWorth showed me my $400/month food delivery habit would be worth <span class="font-semibold text-sw-accent">$28,000</span> in 5 years if invested. That hit different. Now I cook more and actually invest the savings."
 						</p>
 						<div class="flex items-center gap-3">
-							<div class="w-9 h-9 rounded-full bg-sw-accent/20 flex items-center justify-center text-sw-accent font-medium text-sm">M</div>
+							<img src="https://i.pravatar.cc/36?img=12" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Michael T.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Now investing $350/mo</p>
@@ -382,7 +382,7 @@
 							"Seeing my $6 daily coffee as a <span class="font-semibold text-sw-accent">$15,847 opportunity cost</span> over 5 years was the wake-up call I needed. I still get coffee, just not every day. My future self thanks me."
 						</p>
 						<div class="flex items-center gap-3">
-							<div class="w-9 h-9 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 font-medium text-sm">S</div>
+							<img src="https://i.pravatar.cc/36?img=25" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Sarah K.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Freelance Designer</p>
@@ -401,7 +401,7 @@
 							"I found 8 forgotten subscriptions totaling $127/mo. SpentWorth calculated that's <span class="font-semibold text-sw-accent">$9,100 lost</span> in potential growth over just 5 years. Cancelled them all that same day."
 						</p>
 						<div class="flex items-center gap-3">
-							<div class="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-600 font-medium text-sm">J</div>
+							<img src="https://i.pravatar.cc/36?img=33" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">James L.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Cut 8 subscriptions</p>
@@ -420,7 +420,7 @@
 							"We uploaded 2 years of statements. Seeing that our impulse Amazon purchases could've been <span class="font-semibold text-sw-accent">$12,000 in investments</span> by now... it changed how we shop together."
 						</p>
 						<div class="flex items-center gap-3">
-							<div class="w-9 h-9 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-500 font-medium text-sm">A</div>
+							<img src="https://i.pravatar.cc/36?img=47" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Amanda & Chris R.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Couple, Austin TX</p>
@@ -439,7 +439,7 @@
 							"The 'what if you invested instead' view is brutal but necessary. My bar tabs from last year? Would've been <span class="font-semibold text-sw-accent">$4,200 richer</span> today. Still go out, just smarter now."
 						</p>
 						<div class="flex items-center gap-3">
-							<div class="w-9 h-9 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-500 font-medium text-sm">D</div>
+							<img src="https://i.pravatar.cc/36?img=53" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">David P.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Software Engineer</p>
@@ -458,7 +458,7 @@
 							"As a new grad, seeing my small daily expenses add up to <span class="font-semibold text-sw-accent">$47,000</span> in missed growth over 10 years was mind-blowing. Started investing immediately. Wish I had this sooner."
 						</p>
 						<div class="flex items-center gap-3">
-							<div class="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-500 font-medium text-sm">E</div>
+							<img src="https://i.pravatar.cc/36?img=5" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Emily W.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Recent Graduate</p>
@@ -611,11 +611,11 @@
 			<div class="max-w-2xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
 				<div class="flex items-center justify-center gap-2 mb-6">
 					<div class="flex -space-x-2">
-						<div class="w-8 h-8 rounded-full bg-sw-accent/20 border-2 flex items-center justify-center text-sw-accent text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">M</div>
-						<div class="w-8 h-8 rounded-full bg-blue-500/20 border-2 flex items-center justify-center text-blue-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">S</div>
-						<div class="w-8 h-8 rounded-full bg-amber-500/20 border-2 flex items-center justify-center text-amber-600 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">J</div>
-						<div class="w-8 h-8 rounded-full bg-teal-500/20 border-2 flex items-center justify-center text-teal-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">A</div>
-						<div class="w-8 h-8 rounded-full bg-rose-500/20 border-2 flex items-center justify-center text-rose-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">+</div>
+						<img src="https://i.pravatar.cc/32?img=12" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
+						<img src="https://i.pravatar.cc/32?img=25" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
+						<img src="https://i.pravatar.cc/32?img=33" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
+						<img src="https://i.pravatar.cc/32?img=47" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
+						<div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}; background: {isDark ? '#262626' : '#e5e5e5'}; color: {isDark ? '#a3a3a3' : '#737373'}">+</div>
 					</div>
 					<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Join 2,500+ users</span>
 				</div>
