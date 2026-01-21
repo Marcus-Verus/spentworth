@@ -102,7 +102,8 @@
 								<input
 									type="checkbox"
 									bind:checked={allowFallbackForAllTickers}
-									class="w-5 h-5 rounded border-sw-border text-sw-accent focus:ring-sw-accent"
+									class="w-5 h-5 rounded focus:ring-sw-accent focus:ring-2 accent-sw-accent"
+									style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}"
 								/>
 								<span style="color: {isDark ? '#ffffff' : '#171717'}">Use fallback calculation when price data unavailable</span>
 							</label>
