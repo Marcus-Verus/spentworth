@@ -216,12 +216,11 @@
 								<i class="fa-solid fa-bell text-amber-500 text-sm"></i>
 							</div>
 							<div class="flex-1 min-w-0">
-								<p class="text-xs font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Subscription found</p>
-								<p class="text-[11px] mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Netflix renewed for $15.99</p>
-								<div class="flex items-center gap-1">
-									<span class="text-[10px] px-2 py-0.5 rounded-full font-medium" style="background: {isDark ? 'rgba(251,191,36,0.15)' : 'rgba(251,191,36,0.1)'}; color: #f59e0b">$192/yr</span>
-									<span class="text-[10px]" style="color: {isDark ? '#525252' : '#a3a3a3'}">→</span>
-									<span class="text-[10px]" style="color: {isDark ? '#a3a3a3' : '#737373'}">$1,340 in 5yr</span>
+								<p class="text-xs font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Netflix</p>
+								<p class="text-[11px] mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">$15.99/mo subscription</p>
+								<div class="flex flex-col gap-0.5">
+									<span class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">If invested for 5 years:</span>
+									<span class="text-[11px] font-semibold text-sw-accent">Worth $1,340</span>
 								</div>
 							</div>
 						</div>
