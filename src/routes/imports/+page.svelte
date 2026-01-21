@@ -174,29 +174,18 @@
 				{#each batches as batch}
 					<div class="rounded-2xl p-3 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 						<!-- Mobile layout -->
-						<div class="flex flex-col gap-3 sm:hidden">
-							<div class="flex items-start justify-between gap-3">
-								<div class="flex items-center gap-3 min-w-0 flex-1">
-									<div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? '#262626' : '#f5f0e8'}">
-										<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" style="color: {isDark ? '#a3a3a3' : '#737373'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-										</svg>
-									</div>
-									<div class="min-w-0">
-										<h3 class="font-medium text-sm truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{batch.originalFilename || batch.sourceName || 'Import'}</h3>
-										<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatDate(batch.uploadedAt)}</p>
-									</div>
-								</div>
-								<span class="badge text-[10px] {batch.status === 'committed' ? 'badge-success' : 'badge-info'}">
-									{batch.status === 'committed' ? 'Done' : 'Pending'}
-								</span>
-							</div>
-							<div class="flex items-center justify-between">
-								<div>
-									<p class="font-mono font-medium text-sw-accent text-sm">{formatCurrency(batch.totalIncludedSpend)}</p>
-									<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">{batch.rowsIncluded} transactions</p>
-								</div>
+						<div class="sm:hidden">
+							<!-- Header row: icon, status badge, actions -->
+							<div class="flex items-center justify-between mb-3">
 								<div class="flex items-center gap-2">
+									<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? '#262626' : '#f5f0e8'}">
+										<i class="fa-solid fa-file-csv text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+									</div>
+									<span class="badge text-[10px] {batch.status === 'committed' ? 'badge-success' : 'badge-info'}">
+										{batch.status === 'committed' ? 'Committed' : 'Pending'}
+									</span>
+								</div>
+								<div class="flex items-center gap-1">
 									{#if batch.status === 'parsed'}
 										<a href="/imports/{batch.id}" class="btn btn-primary text-xs px-3 py-1.5">Review</a>
 									{:else}
@@ -208,12 +197,25 @@
 										style="color: {isDark ? '#a3a3a3' : '#737373'}"
 										aria-label="Delete import"
 									>
-										<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-										</svg>
+										<i class="fa-solid fa-trash text-xs"></i>
 									</button>
 								</div>
 							</div>
+							
+							<!-- Amount (prominent) -->
+							<div class="mb-2">
+								<span class="font-mono text-xl font-semibold text-sw-accent">{formatCurrency(batch.totalIncludedSpend)}</span>
+								<span class="text-xs ml-2" style="color: {isDark ? '#737373' : '#9ca3af'}">{batch.rowsIncluded} transactions</span>
+							</div>
+							
+							<!-- Date info -->
+							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								Uploaded {formatDate(batch.uploadedAt)}
+								{#if batch.dateMin && batch.dateMax}
+									<br/>
+									<span style="color: {isDark ? '#525252' : '#a3a3a3'}">Covers {formatDate(batch.dateMin)} – {formatDate(batch.dateMax)}</span>
+								{/if}
+							</p>
 						</div>
 						
 						<!-- Desktop layout -->
