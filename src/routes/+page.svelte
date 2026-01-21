@@ -267,9 +267,14 @@
 								Go to Dashboard
 							</button>
 						{:else}
-							<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-semibold">
-								Get Started — It's Free
-							</button>
+							<div class="flex flex-col sm:flex-row items-center gap-3">
+								<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-semibold">
+									Get Started — It's Free
+								</button>
+								<a href="/demo" class="text-sm font-medium transition-colors font-display" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									or try the demo
+								</a>
+							</div>
 							<button onclick={() => goto('/login')} class="bg-neutral-900 dark:bg-sw-surface text-white border border-neutral-800 dark:border-sw-border hover:bg-neutral-800 dark:hover:bg-sw-border px-5 py-3 rounded-lg font-medium text-sm transition-colors font-display">
 								I have an account
 							</button>
@@ -621,9 +626,14 @@
 					Start seeing where your money really goes. Private, simple, and takes just 2 minutes.
 				</p>
 				{#if !data.session}
-					<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-display font-semibold">
-						Get Started — It's Free
-					</button>
+					<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+						<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-display font-semibold">
+							Get Started — It's Free
+						</button>
+						<a href="/demo" class="text-sm font-medium transition-colors font-display hover:underline" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							Try the demo first
+						</a>
+					</div>
 					<p class="text-xs mt-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">No credit card required • Cancel anytime</p>
 				{:else}
 					<button onclick={() => goto('/dashboard')} class="btn btn-primary text-base px-8 py-3.5 font-display font-semibold">
