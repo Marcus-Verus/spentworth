@@ -834,7 +834,7 @@
 				<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 					<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Your Costliest Choices</h3>
-						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest opportunity cost purchases</p>
+						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest opportunity cost · 7% return over 5 years</p>
 					</div>
 					<div>
 						{#each summary.topTransactions.slice(0, 8) as tx, i}
@@ -847,11 +847,10 @@
 								<div class="text-right flex-shrink-0">
 									<p class="font-mono text-xs sm:text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(tx.amount)}</p>
 								</div>
-								<div class="hidden sm:block" style="color: {isDark ? '#a3a3a3' : '#737373'}">→</div>
-								<div class="text-right flex-shrink-0">
-									<p class="font-mono text-xs sm:text-sm text-sw-accent">{formatCurrency(tx.futureValue)}</p>
-									<p class="text-[10px] sm:text-xs text-sw-accent">+{formatCurrency(tx.growth)}</p>
-								</div>
+								<span class="hidden sm:inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style="background: rgba(13,148,136,0.1); color: #0d9488" title="Potential growth if invested at 7% for 5 years">
+									<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
+									+{formatCurrency(tx.growth)}
+								</span>
 							</div>
 						{/each}
 					</div>
