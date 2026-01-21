@@ -480,7 +480,10 @@
 									<div class="w-full rounded-t transition-all cursor-pointer relative group" style="height: {Math.max(height, 4)}%; background: linear-gradient(to top, #0d9488, rgba(13,148,136,0.6));">
 										<div class="absolute -top-16 left-1/2 -translate-x-1/2 rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none hidden sm:block" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 											<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(month.spent)}</p>
-											<p class="text-sw-accent text-[10px]">→ {formatCurrency(month.future)}</p>
+											<p class="text-sw-accent text-[10px] flex items-center gap-1">
+												<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
+												+{formatCurrency(month.future - month.spent)} growth
+											</p>
 										</div>
 									</div>
 								</div>
@@ -583,8 +586,12 @@
 									</div>
 								</div>
 								
-								<p class="text-[10px] sm:text-xs text-center" style="color: {isDark ? '#737373' : '#9ca3af'}">
-									Cancel & invest {formatCurrency(monthlyAmount)}/mo → {formatCurrency(futureValue)}
+								<p class="text-[10px] sm:text-xs text-center flex items-center justify-center gap-1" style="color: {isDark ? '#737373' : '#9ca3af'}">
+									Cancel & invest {formatCurrency(monthlyAmount)}/mo
+									<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-sw-accent" style="background: rgba(13,148,136,0.1)">
+										<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
+										+{formatCurrency(futureValue - totalContributed)}
+									</span>
 								</p>
 							</div>
 						{:else}
@@ -801,8 +808,15 @@
 									></div>
 								</div>
 								{#if goal.projected_value > 0}
-									<p class="text-[10px] sm:text-xs mt-1.5 sm:mt-2 hidden sm:block" style="color: {isDark ? '#737373' : '#9ca3af'}">
-										If under budget: Save {formatCurrency(goal.target_amount - goal.current_period_spent)}/mo → {formatCurrency(goal.projected_value)} in {goal.project_years}yr
+								{@const goalSavings = goal.target_amount - goal.current_period_spent}
+								{@const goalContributed = goalSavings * goal.project_years * 12}
+								{@const goalGain = goal.projected_value - goalContributed}
+									<p class="text-[10px] sm:text-xs mt-1.5 sm:mt-2 hidden sm:flex items-center gap-1.5" style="color: {isDark ? '#737373' : '#9ca3af'}">
+										Under budget? Save {formatCurrency(goalSavings)}/mo for {goal.project_years}yr
+										<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-sw-accent" style="background: rgba(13,148,136,0.1)">
+											<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
+											+{formatCurrency(goalGain)}
+										</span>
 									</p>
 								{/if}
 							</div>
