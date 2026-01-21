@@ -861,7 +861,7 @@
 			<details class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 				<summary class="px-4 sm:px-6 py-3 sm:py-4 cursor-pointer transition-colors" style="color: {isDark ? '#ffffff' : '#171717'}">
 					<span class="font-display font-semibold text-sm sm:text-base">Full Category Breakdown</span>
-					<span class="text-xs sm:text-sm ml-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">({summary.categories.length})</span>
+					<span class="text-xs sm:text-sm ml-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">({summary.categories.length}) · 7% return over 5 years</span>
 				</summary>
 				<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					{#each summary.categories as cat, i}
@@ -873,10 +873,11 @@
 									<span class="font-medium text-xs sm:text-sm truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{cat.category}</span>
 								</div>
 								<div class="flex items-center gap-1.5 sm:gap-3 text-xs sm:text-sm flex-shrink-0">
-									<span style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(cat.spent)}</span>
-									<span class="text-sw-accent hidden sm:inline">→</span>
-									<span class="hidden sm:inline" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(cat.future)}</span>
-									<span class="text-sw-accent font-mono text-[10px] sm:text-xs">+{formatCurrency(cat.delta)}</span>
+									<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(cat.spent)}</span>
+									<span class="hidden sm:inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full" style="background: rgba(13,148,136,0.1); color: #0d9488" title="Potential growth if invested at 7% for 5 years">
+										<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
+										+{formatCurrency(cat.delta)}
+									</span>
 								</div>
 							</div>
 							<div class="h-1 sm:h-1.5 rounded-full overflow-hidden" style="background: {isDark ? '#262626' : '#f5f0e8'}">
