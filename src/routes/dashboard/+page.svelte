@@ -761,11 +761,12 @@
 					<div class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 						<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 							<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Subscriptions</h3>
-							<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Click to calculate savings • Tap ✕ to mark cancelled</p>
+							<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">What each subscription could be worth if invested instead</p>
 						</div>
 						<div class="max-h-64 sm:max-h-80 overflow-y-auto" style="border-color: {isDark ? 'rgba(64,64,64,0.3)' : '#e5e5e5'}">
 							{#each summary.recurringCharges as charge}
 								{@const isCancelled = cancelledSubscriptions.has(charge.merchant)}
+								{@const tenYearCost = calculateWhatIf(charge.monthlyEstimate, 10)}
 								<div 
 									class="w-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 transition-colors"
 									style="background: {selectedWhatIf?.merchant === charge.merchant ? 'rgba(13,148,136,0.1)' : 'transparent'}; border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}; {isCancelled ? 'opacity: 0.5;' : ''}"
@@ -780,13 +781,15 @@
 												{#if isCancelled}
 													<span class="text-green-500">Cancelled — saving {formatCurrency(charge.yearlyEstimate)}/yr</span>
 												{:else}
-													{charge.frequency} • {charge.count}×
+													{formatCurrency(charge.monthlyEstimate)}/mo
 												{/if}
 											</p>
 										</div>
 										<div class="text-right flex-shrink-0">
-											<p class="font-mono text-sm sm:text-base {isCancelled ? 'line-through' : ''}" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(charge.avgAmount)}</p>
-											<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatCurrency(charge.yearlyEstimate)}/yr</p>
+											{#if !isCancelled}
+												<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">10yr opportunity cost</p>
+												<p class="font-mono text-sm sm:text-base font-medium text-sw-accent">{formatCurrency(tenYearCost)}</p>
+											{/if}
 										</div>
 									</button>
 									<button
@@ -877,12 +880,8 @@
 									</div>
 								</div>
 								
-								<p class="text-[10px] sm:text-xs text-center flex items-center justify-center gap-1" style="color: {isDark ? '#737373' : '#9ca3af'}">
-									Cancel & invest {formatCurrency(monthlyAmount)}/mo
-									<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-sw-accent" style="background: rgba(13,148,136,0.1)">
-										<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
-										+{formatCurrency(futureValue - totalContributed)}
-									</span>
+								<p class="text-[10px] sm:text-xs text-center" style="color: {isDark ? '#737373' : '#9ca3af'}">
+									If you cancel {selectedWhatIf.merchant} and invest {formatCurrency(monthlyAmount)}/mo instead, you'd have <span class="text-sw-accent font-medium">{formatCurrency(futureValue)}</span> in {whatIfYears} years
 								</p>
 							</div>
 						{:else}
