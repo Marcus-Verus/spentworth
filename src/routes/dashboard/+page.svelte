@@ -642,9 +642,10 @@
 								</div>
 							{/each}
 						</div>
+						{#if summary.recurringCharges}
+						{@const activeTotal = summary.recurringCharges.filter(r => !cancelledSubscriptions.has(r.merchant)).reduce((a, r) => a + r.monthlyEstimate, 0)}
+						{@const cancelledTotal = summary.recurringCharges.filter(r => cancelledSubscriptions.has(r.merchant)).reduce((a, r) => a + r.monthlyEstimate, 0)}
 						<div class="px-4 sm:px-6 py-2.5 sm:py-3" style="background: {isDark ? 'rgba(10,10,10,0.3)' : 'rgba(245,240,232,0.5)'}; border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							{@const activeTotal = summary.recurringCharges.filter(r => !cancelledSubscriptions.has(r.merchant)).reduce((a, r) => a + r.monthlyEstimate, 0)}
-							{@const cancelledTotal = summary.recurringCharges.filter(r => cancelledSubscriptions.has(r.merchant)).reduce((a, r) => a + r.monthlyEstimate, 0)}
 							<div class="flex justify-between text-xs sm:text-sm">
 								<span style="color: {isDark ? '#a3a3a3' : '#737373'}">Active subscriptions</span>
 								<span class="font-mono font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(activeTotal)}/mo</span>
@@ -656,6 +657,7 @@
 								</div>
 							{/if}
 						</div>
+						{/if}
 					</div>
 
 					<!-- What-If Calculator -->
