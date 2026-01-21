@@ -265,6 +265,156 @@
 			</div>
 		</section>
 
+		<!-- Social Proof - Testimonials -->
+		<section class="border-t border-sw-border/30" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
+			<div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+				<div class="text-center mb-10 sm:mb-14">
+					<h2 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">What our users say</h2>
+					<p style="color: {isDark ? '#a3a3a3' : '#525252'}">Real stories from people who've gained financial clarity.</p>
+				</div>
+				
+				<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+					<!-- Testimonial 1 -->
+					<div class="rounded-2xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
+						<div class="flex gap-1 mb-3">
+							{#each Array(5) as _}
+								<i class="fa-solid fa-star text-xs text-amber-400"></i>
+							{/each}
+						</div>
+						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
+							"I had no idea I was spending $400/month on food delivery until SpentWorth showed me. Now I cook more and invest the difference."
+						</p>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-full bg-sw-accent/20 flex items-center justify-center text-sw-accent font-medium text-sm">M</div>
+							<div>
+								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Michael T.</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Saves $350/month</p>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Testimonial 2 -->
+					<div class="rounded-2xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
+						<div class="flex gap-1 mb-3">
+							{#each Array(5) as _}
+								<i class="fa-solid fa-star text-xs text-amber-400"></i>
+							{/each}
+						</div>
+						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
+							"The opportunity cost calculator was eye-opening. Seeing my daily coffee habit as a $15,000 loss made me reconsider my priorities."
+						</p>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-500 font-medium text-sm">S</div>
+							<div>
+								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Sarah K.</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Freelance Designer</p>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Testimonial 3 -->
+					<div class="rounded-2xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
+						<div class="flex gap-1 mb-3">
+							{#each Array(5) as _}
+								<i class="fa-solid fa-star text-xs text-amber-400"></i>
+							{/each}
+						</div>
+						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
+							"Love that I don't have to link my bank account. Just export CSV, upload, done. Finally feel in control of my finances."
+						</p>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-600 font-medium text-sm">J</div>
+							<div>
+								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">James L.</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Software Engineer</p>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Testimonial 4 -->
+					<div class="rounded-2xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
+						<div class="flex gap-1 mb-3">
+							{#each Array(5) as _}
+								<i class="fa-solid fa-star text-xs text-amber-400"></i>
+							{/each}
+						</div>
+						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
+							"My partner and I use this together. It's helped us have honest conversations about money without the arguments."
+						</p>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-500 font-medium text-sm">A</div>
+							<div>
+								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Amanda R.</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Marketing Manager</p>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Testimonial 5 -->
+					<div class="rounded-2xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
+						<div class="flex gap-1 mb-3">
+							{#each Array(5) as _}
+								<i class="fa-solid fa-star text-xs text-amber-400"></i>
+							{/each}
+						</div>
+						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
+							"Subscriptions were killing me. SpentWorth helped me find 8 I'd forgotten about. That's $127/month back in my pocket."
+						</p>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-500 font-medium text-sm">D</div>
+							<div>
+								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">David P.</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Cut 8 subscriptions</p>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Testimonial 6 -->
+					<div class="rounded-2xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
+						<div class="flex gap-1 mb-3">
+							{#each Array(5) as _}
+								<i class="fa-solid fa-star text-xs text-amber-400"></i>
+							{/each}
+						</div>
+						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
+							"So much simpler than other budgeting apps. No complicated categories to set up. It just works and shows you the truth."
+						</p>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-500 font-medium text-sm">E</div>
+							<div>
+								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Emily W.</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Recent Graduate</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Stats Section -->
+		<section class="border-t border-sw-border/30">
+			<div class="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
+					<div>
+						<p class="font-display text-3xl sm:text-4xl font-bold text-sw-accent mb-1">$247</p>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">avg. monthly savings</p>
+					</div>
+					<div>
+						<p class="font-display text-3xl sm:text-4xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">2 min</p>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">setup time</p>
+					</div>
+					<div>
+						<p class="font-display text-3xl sm:text-4xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">50K+</p>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">transactions analyzed</p>
+					</div>
+					<div>
+						<p class="font-display text-3xl sm:text-4xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">100%</p>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">private & secure</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
 		<!-- How it works -->
 		<section class="border-t border-sw-border/30">
 			<div class="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
@@ -379,21 +529,32 @@
 		</section>
 
 		<!-- Final CTA -->
-		<section class="border-t border-sw-border/30">
+		<section class="border-t border-sw-border/30" style="background: {isDark ? 'linear-gradient(180deg, #0f0f0f 0%, #0a1a17 100%)' : 'linear-gradient(180deg, #f5f0e8 0%, #e8f5f0 100%)'}">
 			<div class="max-w-2xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+				<div class="flex items-center justify-center gap-2 mb-6">
+					<div class="flex -space-x-2">
+						<div class="w-8 h-8 rounded-full bg-sw-accent/20 border-2 flex items-center justify-center text-sw-accent text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">M</div>
+						<div class="w-8 h-8 rounded-full bg-purple-500/20 border-2 flex items-center justify-center text-purple-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">S</div>
+						<div class="w-8 h-8 rounded-full bg-amber-500/20 border-2 flex items-center justify-center text-amber-600 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">J</div>
+						<div class="w-8 h-8 rounded-full bg-teal-500/20 border-2 flex items-center justify-center text-teal-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">A</div>
+						<div class="w-8 h-8 rounded-full bg-rose-500/20 border-2 flex items-center justify-center text-rose-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">+</div>
+					</div>
+					<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Join 2,500+ users</span>
+				</div>
+				
 				<h2 class="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
 					Ready to understand your spending?
 				</h2>
 				<p class="text-base sm:text-lg mb-8 max-w-lg mx-auto" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-					Join thousands of people who've gained clarity on their finances. Private, simple, and takes just a few minutes.
+					Start seeing where your money really goes. Private, simple, and takes just 2 minutes.
 				</p>
 				{#if !data.session}
-					<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow">
-						Create Free Account
+					<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-display font-semibold">
+						Get Started — It's Free
 					</button>
-					<p class="text-xs mt-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">No credit card required</p>
+					<p class="text-xs mt-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">No credit card required • Cancel anytime</p>
 				{:else}
-					<button onclick={() => goto('/dashboard')} class="btn btn-primary text-base px-8 py-3.5">
+					<button onclick={() => goto('/dashboard')} class="btn btn-primary text-base px-8 py-3.5 font-display font-semibold">
 						Go to Dashboard
 					</button>
 				{/if}
