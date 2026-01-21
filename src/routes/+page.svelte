@@ -282,13 +282,13 @@
 							{/each}
 						</div>
 						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
-							"I had no idea I was spending $400/month on food delivery until SpentWorth showed me. Now I cook more and invest the difference."
+							"SpentWorth showed me my $400/month food delivery habit would be worth <span class="font-semibold text-sw-accent">$28,000</span> in 5 years if invested. That hit different. Now I cook more and actually invest the savings."
 						</p>
 						<div class="flex items-center gap-3">
 							<div class="w-9 h-9 rounded-full bg-sw-accent/20 flex items-center justify-center text-sw-accent font-medium text-sm">M</div>
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Michael T.</p>
-								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Saves $350/month</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Now investing $350/mo</p>
 							</div>
 						</div>
 					</div>
@@ -301,7 +301,7 @@
 							{/each}
 						</div>
 						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
-							"The opportunity cost calculator was eye-opening. Seeing my daily coffee habit as a $15,000 loss made me reconsider my priorities."
+							"Seeing my $6 daily coffee as a <span class="font-semibold text-sw-accent">$15,847 opportunity cost</span> over 5 years was the wake-up call I needed. I still get coffee, just not every day. My future self thanks me."
 						</p>
 						<div class="flex items-center gap-3">
 							<div class="w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-500 font-medium text-sm">S</div>
@@ -320,13 +320,13 @@
 							{/each}
 						</div>
 						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
-							"Love that I don't have to link my bank account. Just export CSV, upload, done. Finally feel in control of my finances."
+							"I found 8 forgotten subscriptions totaling $127/mo. SpentWorth calculated that's <span class="font-semibold text-sw-accent">$9,100 lost</span> in potential growth over just 5 years. Cancelled them all that same day."
 						</p>
 						<div class="flex items-center gap-3">
 							<div class="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-600 font-medium text-sm">J</div>
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">James L.</p>
-								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Software Engineer</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Cut 8 subscriptions</p>
 							</div>
 						</div>
 					</div>
@@ -339,13 +339,13 @@
 							{/each}
 						</div>
 						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
-							"My partner and I use this together. It's helped us have honest conversations about money without the arguments."
+							"We uploaded 2 years of statements. Seeing that our impulse Amazon purchases could've been <span class="font-semibold text-sw-accent">$12,000 in investments</span> by now... it changed how we shop together."
 						</p>
 						<div class="flex items-center gap-3">
 							<div class="w-9 h-9 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-500 font-medium text-sm">A</div>
 							<div>
-								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Amanda R.</p>
-								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Marketing Manager</p>
+								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Amanda & Chris R.</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Couple, Austin TX</p>
 							</div>
 						</div>
 					</div>
@@ -358,13 +358,13 @@
 							{/each}
 						</div>
 						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
-							"Subscriptions were killing me. SpentWorth helped me find 8 I'd forgotten about. That's $127/month back in my pocket."
+							"The 'what if you invested instead' view is brutal but necessary. My bar tabs from last year? Would've been <span class="font-semibold text-sw-accent">$4,200 richer</span> today. Still go out, just smarter now."
 						</p>
 						<div class="flex items-center gap-3">
 							<div class="w-9 h-9 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-500 font-medium text-sm">D</div>
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">David P.</p>
-								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Cut 8 subscriptions</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Software Engineer</p>
 							</div>
 						</div>
 					</div>
@@ -377,7 +377,7 @@
 							{/each}
 						</div>
 						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
-							"So much simpler than other budgeting apps. No complicated categories to set up. It just works and shows you the truth."
+							"As a new grad, seeing my small daily expenses add up to <span class="font-semibold text-sw-accent">$47,000</span> in missed growth over 10 years was mind-blowing. Started investing immediately. Wish I had this sooner."
 						</p>
 						<div class="flex items-center gap-3">
 							<div class="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-500 font-medium text-sm">E</div>
