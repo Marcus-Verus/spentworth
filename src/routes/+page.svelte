@@ -312,8 +312,8 @@
 				
 				<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
 					<div class="rounded-2xl p-6 transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-						<div class="w-11 h-11 rounded-xl bg-sw-accent/10 flex items-center justify-center mb-4">
-							<i class="fa-solid fa-chart-pie text-sw-accent"></i>
+						<div class="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}">
+							<i class="fa-solid fa-chart-pie text-sw-accent text-lg"></i>
 						</div>
 						<h3 class="font-display text-lg font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Spending breakdown</h3>
 						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
@@ -322,8 +322,8 @@
 					</div>
 
 					<div class="rounded-2xl p-6 transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-						<div class="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center mb-4">
-							<i class="fa-solid fa-seedling text-amber-600"></i>
+						<div class="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style="background: {isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.12)'}">
+							<i class="fa-solid fa-seedling text-lg" style="color: #d97706"></i>
 						</div>
 						<h3 class="font-display text-lg font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Growth potential</h3>
 						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
@@ -332,8 +332,8 @@
 					</div>
 
 					<div class="rounded-2xl p-6 sm:col-span-2 lg:col-span-1 transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-						<div class="w-11 h-11 rounded-xl bg-purple-500/10 flex items-center justify-center mb-4">
-							<i class="fa-solid fa-bullseye text-purple-600"></i>
+						<div class="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style="background: {isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)'}">
+							<i class="fa-solid fa-bullseye text-lg" style="color: #7c3aed"></i>
 						</div>
 						<h3 class="font-display text-lg font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Personal goals</h3>
 						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
@@ -647,15 +647,99 @@
 	</main>
 
 	<!-- Footer -->
-	<footer class="border-t border-sw-border/30 py-8">
-		<div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-			<div class="flex items-center gap-2">
-				<div class="w-6 h-6 rounded-lg bg-sw-accent flex items-center justify-center text-white font-bold text-xs">
-					$
+	<footer class="border-t" style="border-color: {isDark ? '#2a2a2a' : '#e5e5e5'}; background: {isDark ? '#0a0a0a' : '#faf7f2'}">
+		<div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+			<!-- Main Footer Content -->
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+				<!-- Brand Column -->
+				<div class="col-span-2 md:col-span-1">
+					<div class="flex items-center gap-2 mb-4">
+						<div class="w-8 h-8 rounded-xl bg-sw-accent flex items-center justify-center text-white font-bold text-lg">
+							$
+						</div>
+						<span class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
+					</div>
+					<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Know where your money goes. Build the life you want.
+					</p>
+					<div class="flex items-center gap-3">
+						<a href="https://twitter.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+							<i class="fa-brands fa-x-twitter"></i>
+						</a>
+						<a href="https://github.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+							<i class="fa-brands fa-github"></i>
+						</a>
+					</div>
 				</div>
-				<span>SpentWorth</span>
+
+				<!-- Product -->
+				<div>
+					<h4 class="font-display font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Product</h4>
+					<ul class="space-y-2.5">
+						<li><a href="/demo" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Demo</a></li>
+						<li><a href="/pricing" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Pricing</a></li>
+						<li><a href="#features" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Features</a></li>
+						<li><a href="#how-it-works" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">How It Works</a></li>
+					</ul>
+				</div>
+
+				<!-- Company -->
+				<div>
+					<h4 class="font-display font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Company</h4>
+					<ul class="space-y-2.5">
+						<li><a href="/about" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">About</a></li>
+						<li><a href="/blog" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Blog</a></li>
+						<li><a href="mailto:support@spentworth.com" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Contact</a></li>
+					</ul>
+				</div>
+
+				<!-- Legal -->
+				<div>
+					<h4 class="font-display font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Legal</h4>
+					<ul class="space-y-2.5">
+						<li><a href="/privacy" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Privacy Policy</a></li>
+						<li><a href="/terms" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Terms of Service</a></li>
+						<li><a href="/security" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Security</a></li>
+					</ul>
+				</div>
 			</div>
-			<p class="text-xs">Personal finance clarity, made simple</p>
+
+			<!-- Security Badge -->
+			<div class="rounded-xl p-4 mb-8 flex flex-col sm:flex-row items-center gap-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+				<div class="flex items-center gap-3">
+					<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'}">
+						<i class="fa-solid fa-shield-halved text-green-500"></i>
+					</div>
+					<div>
+						<p class="font-display font-semibold text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Your data stays private</p>
+						<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">CSV imports are processed locally. We never access your bank credentials.</p>
+					</div>
+				</div>
+				<div class="flex items-center gap-3 sm:ml-auto">
+					<div class="text-center px-3">
+						<i class="fa-solid fa-lock text-sw-accent mb-1"></i>
+						<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">SSL Encrypted</p>
+					</div>
+					<div class="text-center px-3">
+						<i class="fa-solid fa-user-shield text-sw-accent mb-1"></i>
+						<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">No Bank Linking</p>
+					</div>
+					<div class="text-center px-3">
+						<i class="fa-solid fa-database text-sw-accent mb-1"></i>
+						<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">Your Data, Your Control</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Bottom Bar -->
+			<div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+				<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+					© {new Date().getFullYear()} SpentWorth. All rights reserved.
+				</p>
+				<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+					Made with <i class="fa-solid fa-heart text-red-500"></i> for people who care about their financial future
+				</p>
+			</div>
 		</div>
 	</footer>
 </div>
