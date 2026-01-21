@@ -30,6 +30,7 @@
 
 	const navItems: NavItem[] = [
 		{ href: '/dashboard', label: 'Dashboard' },
+		{ href: '/budgets', label: 'Budgets' },
 		{ href: '/imports', label: 'Imports' },
 		{ href: '/settings', label: 'Settings' }
 	];

@@ -326,3 +326,26 @@ export const CATEGORIES = [
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
+
+// Budget types
+export interface Budget {
+	id: string;
+	userId: string;
+	category: string;
+	monthlyLimit: number;
+	enabled: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface BudgetWithProgress extends Budget {
+	currentSpent: number;
+	previousSpent: number;
+	percentUsed: number;
+	remaining: number;
+	overUnder: number; // positive = under budget (savings), negative = over
+	opportunityCostLost: number; // if over budget, what that costs in 10 years
+	opportunityCostGained: number; // if under budget, what you'll gain in 10 years
+	trend: 'improving' | 'worsening' | 'stable'; // vs last month
+	trendAmount: number; // how much better/worse vs last month
+}
