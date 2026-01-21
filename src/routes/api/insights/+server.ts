@@ -168,7 +168,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			type: 'achievement',
 			priority: 'low',
 			title: `Great job on ${imp.category}!`,
-			description: `You spent ${formatCurrency(savings)} less than last month. If you keep this up and invest the difference, that's ${formatCurrency(futureValue)} in 10 years! 🎉`,
+			description: `You spent ${formatCurrency(savings)} less than last month. If you keep this up and invest the difference, that's ${formatCurrency(futureValue)} in 10 years!`,
 			category: imp.category,
 			amount: savings,
 			opportunityCost: futureValue,

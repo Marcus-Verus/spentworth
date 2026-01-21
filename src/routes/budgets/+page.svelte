@@ -44,6 +44,15 @@
 		}).format(amount);
 	}
 
+	// Calculate compound growth: monthly contributions at 7% annual return
+	function calculateFutureValue(monthlyAmount: number, years: number = 10): number {
+		let total = 0;
+		for (let month = 0; month < years * 12; month++) {
+			total = (total + monthlyAmount) * Math.pow(1.07, 1 / 12);
+		}
+		return Math.round(total);
+	}
+
 	async function loadBudgets() {
 		loading = true;
 		try {
@@ -422,8 +431,8 @@
 				<div class="rounded-xl p-4" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
 					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
 						<i class="fa-solid fa-lightbulb text-sw-accent mr-2"></i>
-						If you stay under {formatCurrency(newLimit)}/month and invest the difference, 
-						that's <span class="font-semibold text-sw-accent">{formatCurrency(newLimit * 12 * 10 * 1.5)}</span> potential growth in 10 years
+						Every dollar you save from this budget and invest could grow to 
+						<span class="font-semibold text-sw-accent">{formatCurrency(calculateFutureValue(newLimit))}</span> in 10 years at 7% return
 					</p>
 				</div>
 			</div>
