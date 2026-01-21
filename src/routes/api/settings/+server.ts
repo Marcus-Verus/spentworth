@@ -21,7 +21,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 			data: {
 				defaultTicker: 'SPY',
 				investDelayTradingDays: 1,
-				allowFallbackForAllTickers: false
+				allowFallbackForAllTickers: false,
+				monthlyIncome: null
 			}
 		});
 	}
@@ -31,7 +32,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 		data: {
 			defaultTicker: prefs.default_ticker,
 			investDelayTradingDays: prefs.invest_delay_trading_days,
-			allowFallbackForAllTickers: prefs.allow_fallback_for_all_tickers
+			allowFallbackForAllTickers: prefs.allow_fallback_for_all_tickers,
+			monthlyIncome: prefs.monthly_income
 		}
 	});
 };
@@ -44,14 +46,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const body = await request.json();
-	const { defaultTicker, investDelayTradingDays, allowFallbackForAllTickers } = body;
+	const { defaultTicker, investDelayTradingDays, allowFallbackForAllTickers, monthlyIncome } = body;
 
 	// Upsert user prefs
 	const { error: upsertError } = await locals.supabase.from('user_prefs').upsert({
 		user_id: user.id,
 		default_ticker: defaultTicker ?? 'SPY',
 		invest_delay_trading_days: investDelayTradingDays ?? 1,
-		allow_fallback_for_all_tickers: allowFallbackForAllTickers ?? false
+		allow_fallback_for_all_tickers: allowFallbackForAllTickers ?? false,
+		monthly_income: monthlyIncome || null
 	});
 
 	if (upsertError) {

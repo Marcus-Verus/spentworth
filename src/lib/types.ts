@@ -216,6 +216,7 @@ export interface DashboardSummary {
 	mostFrequentDay: DayOfWeekSummary;
 	recurringCharges: RecurringCharge[];
 	yoyComparison: YoYComparison | null;
+	monthlyIncome: number | null;
 }
 
 export interface YoYComparison {

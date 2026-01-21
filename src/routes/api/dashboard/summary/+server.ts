@@ -15,11 +15,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	// Get user preferences
 	const { data: prefs } = await locals.supabase
 		.from('user_prefs')
-		.select('default_ticker')
+		.select('default_ticker, monthly_income')
 		.eq('user_id', user.id)
 		.single();
 
 	const ticker = prefs?.default_ticker || 'SPY';
+	const monthlyIncome = prefs?.monthly_income || null;
 
 	// Build query for included purchases
 	let query = locals.supabase
@@ -405,7 +406,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		biggestSpendingDay,
 		mostFrequentDay,
 		recurringCharges,
-		yoyComparison
+		yoyComparison,
+		monthlyIncome
 	};
 
 	return json({

@@ -508,6 +508,67 @@
 				</div>
 			{/if}
 
+			<!-- Savings Rate (if income set) -->
+			{#if summary.monthlyIncome && summary.monthlyIncome > 0 && summary.monthly.length > 0}
+				{@const avgMonthlySpend = summary.totalSpent / summary.monthly.length}
+				{@const monthlySavings = summary.monthlyIncome - avgMonthlySpend}
+				{@const savingsRate = (monthlySavings / summary.monthlyIncome) * 100}
+				{@const futureValue = (() => {
+					let total = 0;
+					for (let month = 0; month < 120; month++) {
+						total = (total + Math.max(0, monthlySavings)) * Math.pow(1.07, 1/12);
+					}
+					return Math.round(total);
+				})()}
+				
+				<div class="rounded-xl p-4 sm:p-5 mb-6 sm:mb-8" style="background: {savingsRate >= 20 ? 'rgba(13,148,136,0.1)' : savingsRate >= 0 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)'}; border: 1px solid {savingsRate >= 20 ? 'rgba(13,148,136,0.2)' : savingsRate >= 0 ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)'}">
+					<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+						<div>
+							<div class="flex items-center gap-2 mb-1">
+								<i class="fa-solid fa-piggy-bank {savingsRate >= 20 ? 'text-sw-accent' : savingsRate >= 0 ? 'text-amber-500' : 'text-red-500'}"></i>
+								<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">
+									Your Savings Rate
+								</h3>
+							</div>
+							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								Based on {formatCurrency(summary.monthlyIncome)}/month income
+							</p>
+						</div>
+						
+						<div class="text-right">
+							<p class="font-mono text-3xl font-bold {savingsRate >= 20 ? 'text-sw-accent' : savingsRate >= 0 ? 'text-amber-500' : 'text-red-500'}">
+								{savingsRate.toFixed(0)}%
+							</p>
+							<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+								{formatCurrency(Math.max(0, monthlySavings))}/month saved
+							</p>
+						</div>
+					</div>
+					
+					{#if monthlySavings > 0}
+						<div class="mt-4 pt-4" style="border-top: 1px solid {savingsRate >= 20 ? 'rgba(13,148,136,0.2)' : 'rgba(245,158,11,0.2)'}">
+							<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
+								<i class="fa-solid fa-chart-line text-sw-accent mr-1"></i>
+								Keep saving {formatCurrency(monthlySavings)}/month and you could have 
+								<span class="font-semibold text-sw-accent">{formatCurrency(futureValue)}</span> in 10 years.
+								{#if savingsRate >= 20}
+									<span class="ml-1 text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Great job!</span>
+								{:else}
+									<span class="ml-1 text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Aim for 20%+ savings rate</span>
+								{/if}
+							</p>
+						</div>
+					{:else}
+						<div class="mt-4 pt-4" style="border-top: 1px solid rgba(239,68,68,0.2)">
+							<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
+								<i class="fa-solid fa-triangle-exclamation text-red-500 mr-1"></i>
+								You're spending more than you earn. Review your budgets to find areas to cut back.
+							</p>
+						</div>
+					{/if}
+				</div>
+			{/if}
+
 			<!-- Monthly Trends -->
 			{#if trends}
 				<div class="rounded-xl p-4 sm:p-5 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">

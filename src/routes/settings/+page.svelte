@@ -8,6 +8,7 @@
 	let defaultTicker = $state('SPY');
 	let investDelayTradingDays = $state(1);
 	let allowFallbackForAllTickers = $state(false);
+	let monthlyIncome = $state<number | null>(null);
 	let loading = $state(true);
 	let saving = $state(false);
 	let saved = $state(false);
@@ -24,6 +25,7 @@
 			defaultTicker = json.data.defaultTicker;
 			investDelayTradingDays = json.data.investDelayTradingDays;
 			allowFallbackForAllTickers = json.data.allowFallbackForAllTickers;
+			monthlyIncome = json.data.monthlyIncome;
 		}
 		loading = false;
 	});
@@ -38,13 +40,23 @@
 			body: JSON.stringify({
 				defaultTicker,
 				investDelayTradingDays,
-				allowFallbackForAllTickers
+				allowFallbackForAllTickers,
+				monthlyIncome
 			})
 		});
 
 		saving = false;
 		saved = true;
 		setTimeout(() => saved = false, 2000);
+	}
+
+	// Calculate potential savings growth (7% annual return over 10 years)
+	function calculateFutureValue(monthlySavings: number): number {
+		let total = 0;
+		for (let month = 0; month < 120; month++) {
+			total = (total + monthlySavings) * Math.pow(1.07, 1/12);
+		}
+		return Math.round(total);
 	}
 </script>
 
@@ -60,6 +72,43 @@
 			</div>
 		{:else}
 			<div class="space-y-8">
+				<!-- Income Settings -->
+				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-wallet text-sw-accent mr-2"></i>Monthly Income
+					</h2>
+					
+					<div class="space-y-4">
+						<div>
+							<label for="income" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Your monthly take-home pay</label>
+							<div class="flex items-center gap-2 max-w-xs">
+								<span class="text-lg" style="color: {isDark ? '#a3a3a3' : '#737373'}">$</span>
+								<input
+									id="income"
+									type="number"
+									bind:value={monthlyIncome}
+									placeholder="5000"
+									class="flex-1 px-3 py-2 rounded-lg text-sm"
+									style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+								/>
+							</div>
+							<p class="text-sm mt-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								Optional. Used to calculate your savings rate and show what your savings could grow into.
+							</p>
+						</div>
+
+						{#if monthlyIncome && monthlyIncome > 0}
+							<div class="rounded-xl p-4" style="background: rgba(13,148,136,0.1); border: 1px solid rgba(13,148,136,0.2)">
+								<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
+									<i class="fa-solid fa-chart-line text-sw-accent mr-2"></i>
+									If you save <span class="font-semibold">20%</span> of your income (${Math.round(monthlyIncome * 0.2).toLocaleString()}/month), 
+									that could grow to <span class="font-semibold text-sw-accent">${calculateFutureValue(monthlyIncome * 0.2).toLocaleString()}</span> in 10 years.
+								</p>
+							</div>
+						{/if}
+					</div>
+				</div>
+
 				<!-- Investment Settings -->
 				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Investment Settings</h2>
