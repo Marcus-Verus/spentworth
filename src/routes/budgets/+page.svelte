@@ -88,6 +88,31 @@
 		return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
 	}
 
+	// Colors for donut chart
+	const COLORS = [
+		'#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444',
+		'#ec4899', '#6366f1', '#14b8a6', '#f97316', '#84cc16'
+	];
+
+	// Get spending by category from budgets
+	function getCategorySpending() {
+		if (!budgets || budgets.length === 0) return [];
+		
+		const categoryMap = new Map<string, number>();
+		for (const budget of budgets) {
+			const spent = budget.currentSpent || 0;
+			if (spent > 0) {
+				categoryMap.set(budget.category, (categoryMap.get(budget.category) || 0) + spent);
+			}
+		}
+		
+		const categories = Array.from(categoryMap.entries())
+			.map(([category, spent]) => ({ category, spent }))
+			.sort((a, b) => b.spent - a.spent);
+		
+		return categories;
+	}
+
 	async function loadBudgets() {
 		loading = true;
 		try {
@@ -365,6 +390,43 @@
 			<!-- Charts Section -->
 			{#if summary && budgets.length > 0}
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+					<!-- Spending by Category Donut Chart -->
+					{#if getCategorySpending().length > 0}
+						{@const categorySpending = getCategorySpending()}
+						{@const totalSpent = categorySpending.reduce((sum, cat) => sum + cat.spent, 0)}
+						<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+							<h3 class="font-display font-semibold mb-3 sm:mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Spending by Category</h3>
+							<div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+								<div class="relative flex-shrink-0">
+									{#if totalSpent > 0}
+										<svg viewBox="0 0 200 200" class="w-32 h-32 sm:w-44 sm:h-44">
+											{#each categorySpending as cat, i}
+												{@const startAngle = categorySpending.slice(0, i).reduce((acc, c) => acc + (c.spent / totalSpent) * 360, 0)}
+												{@const angle = (cat.spent / totalSpent) * 360}
+												{#if angle > 0.5}
+													<path d={getDonutPath(startAngle, startAngle + angle - 0.5)} fill={COLORS[i % COLORS.length]} class="hover:opacity-80 transition-opacity cursor-pointer">
+														<title>{cat.category}: {formatCurrency(cat.spent)}</title>
+													</path>
+												{/if}
+											{/each}
+											<text x="100" y="95" text-anchor="middle" class="text-[10px] sm:text-xs" style="fill: {isDark ? '#a3a3a3' : '#737373'}">Total</text>
+											<text x="100" y="115" text-anchor="middle" class="font-display font-bold text-sm sm:text-base" style="fill: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(totalSpent)}</text>
+										</svg>
+									{/if}
+								</div>
+								<div class="flex-1 w-full grid grid-cols-2 sm:grid-cols-1 gap-1 sm:gap-2">
+									{#each categorySpending as cat, i}
+										<div class="flex items-center gap-2">
+											<div class="w-2 h-2 sm:w-3 sm:h-3 rounded-sm flex-shrink-0" style="background: {COLORS[i % COLORS.length]}"></div>
+											<span class="flex-1 truncate text-xs sm:text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">{cat.category}</span>
+											<span class="font-mono text-[10px] sm:text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(cat.spent)}</span>
+										</div>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/if}
+
 					<!-- Budget Usage Donut Chart -->
 					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 						<h3 class="font-display font-semibold mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Budget Usage</h3>
@@ -404,13 +466,15 @@
 						</div>
 					</div>
 
-					<!-- Budget vs Spent Bar Chart -->
-					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+				</div>
+				
+				<!-- Budget vs Spent Bar Chart -->
+				{#if budgets.length > 0}
+					{@const chartBudgets = budgets.slice(0, 8)}
+					{@const maxBudget = chartBudgets.length > 0 ? Math.max(...chartBudgets.map(b => Math.max(b.monthlyLimit || 0, b.currentSpent || 0, 1)), 1) : 1}
+					<div class="rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 						<h3 class="font-display font-semibold mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Budget vs Spent</h3>
-						{#if budgets.length > 0}
-							{@const chartBudgets = budgets.slice(0, 8)}
-							{@const maxBudget = chartBudgets.length > 0 ? Math.max(...chartBudgets.map(b => Math.max(b.monthlyLimit || 0, b.currentSpent || 0, 1)), 1) : 1}
-							<div class="h-48 sm:h-56 flex items-end gap-1.5 sm:gap-2">
+						<div class="h-48 sm:h-56 flex items-end gap-1.5 sm:gap-2">
 							{#each chartBudgets as budget}
 								{@const budgetHeight = maxBudget > 0 ? ((budget.monthlyLimit || 0) / maxBudget) * 100 : 0}
 								{@const spentHeight = maxBudget > 0 ? ((budget.currentSpent || 0) / maxBudget) * 100 : 0}
@@ -439,10 +503,9 @@
 									</span>
 								</div>
 							{/each}
-							</div>
-						{/if}
+						</div>
 					</div>
-				</div>
+				{/if}
 			{/if}
 
 			<!-- Budget Cards -->

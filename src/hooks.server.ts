@@ -56,11 +56,12 @@ const authGuard: Handle = async ({ event, resolve }) => {
 		throw redirect(303, '/login');
 	}
 
-	// Redirect logged-in users away from auth pages
+	// Redirect logged-in users away from auth pages (but allow callback)
 	const authRoutes = ['/login', '/signup'];
 	const isAuthRoute = authRoutes.includes(event.url.pathname);
+	const isCallbackRoute = event.url.pathname === '/auth/callback';
 
-	if (isAuthRoute && session) {
+	if (isAuthRoute && session && !isCallbackRoute) {
 		throw redirect(303, '/dashboard');
 	}
 
