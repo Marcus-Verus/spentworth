@@ -33,6 +33,18 @@
 	let recalcMessage = $state<string | null>(null);
 	let merchantView = $state<'frequency' | 'spend'>('frequency');
 	
+	// Monthly trends
+	interface TrendData {
+		currentMonth: { label: string; totalSpent: number; transactionCount: number };
+		previousMonth: { label: string; totalSpent: number; transactionCount: number };
+		change: number;
+		changePercent: number;
+		opportunityCostChange: number;
+		categoryChanges: Array<{ category: string; current: number; previous: number; change: number; changePercent: number }>;
+		streaks: { improving: number; categories: Array<{ category: string; months: number }> };
+	}
+	let trends = $state<TrendData | null>(null);
+	
 	// What-if calculator state
 	let whatIfYears = $state(10);
 	let selectedWhatIf = $state<RecurringCharge | null>(null);
@@ -141,7 +153,7 @@
 		// Load cancelled subscriptions from localStorage
 		loadCancelledSubscriptions();
 		
-		await Promise.all([loadSummary(), loadGoals()]);
+		await Promise.all([loadSummary(), loadGoals(), loadTrends()]);
 	});
 	
 	async function loadGoals() {
@@ -197,6 +209,18 @@
 			}
 		}
 		loading = false;
+	}
+
+	async function loadTrends() {
+		try {
+			const res = await fetch('/api/dashboard/trends');
+			const json = await res.json();
+			if (json.ok) {
+				trends = json.data;
+			}
+		} catch (e) {
+			console.error('Failed to load trends:', e);
+		}
 	}
 
 	async function recalculateWithRealPrices() {
@@ -481,6 +505,84 @@
 						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</p>
 						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.recurringCharges.length} detected</p>
 					</div>
+				</div>
+			{/if}
+
+			<!-- Monthly Trends -->
+			{#if trends}
+				<div class="rounded-xl p-4 sm:p-5 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+						<div>
+							<h3 class="font-display font-semibold text-base sm:text-lg mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+								{trends.currentMonth.label} vs {trends.previousMonth.label}
+							</h3>
+							<div class="flex items-center gap-2">
+								{#if trends.change < 0}
+									<span class="inline-flex items-center gap-1 text-sm font-medium text-green-500">
+										<i class="fa-solid fa-arrow-down"></i>
+										{formatCurrency(Math.abs(trends.change))} less
+									</span>
+									<span class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+										({Math.abs(trends.changePercent)}% decrease)
+									</span>
+								{:else if trends.change > 0}
+									<span class="inline-flex items-center gap-1 text-sm font-medium text-red-500">
+										<i class="fa-solid fa-arrow-up"></i>
+										{formatCurrency(trends.change)} more
+									</span>
+									<span class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+										({trends.changePercent}% increase)
+									</span>
+								{:else}
+									<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">No change</span>
+								{/if}
+							</div>
+						</div>
+						
+						<div class="flex items-center gap-4">
+							<div class="text-center">
+								<p class="text-xs mb-0.5" style="color: {isDark ? '#737373' : '#9ca3af'}">{trends.previousMonth.label}</p>
+								<p class="font-mono text-lg" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(trends.previousMonth.totalSpent)}</p>
+							</div>
+							<i class="fa-solid fa-arrow-right text-xs" style="color: {isDark ? '#525252' : '#d4d4d4'}"></i>
+							<div class="text-center">
+								<p class="text-xs mb-0.5" style="color: {isDark ? '#737373' : '#9ca3af'}">{trends.currentMonth.label}</p>
+								<p class="font-mono text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(trends.currentMonth.totalSpent)}</p>
+							</div>
+						</div>
+					</div>
+					
+					{#if trends.change !== 0}
+						<div class="mt-4 pt-4" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								{#if trends.change < 0}
+									<i class="fa-solid fa-piggy-bank text-sw-accent mr-1"></i>
+									If you invest this {formatCurrency(Math.abs(trends.change))} monthly savings, it could grow to 
+									<span class="font-semibold text-sw-accent">{formatCurrency(trends.opportunityCostChange)}</span> in 10 years.
+								{:else}
+									<i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i>
+									The {formatCurrency(trends.change)} increase costs you 
+									<span class="font-semibold text-amber-500">{formatCurrency(trends.opportunityCostChange)}</span> in lost opportunity over 10 years.
+								{/if}
+							</p>
+						</div>
+					{/if}
+					
+					{#if trends.categoryChanges.length > 0}
+						<div class="mt-4 pt-4" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<p class="text-xs font-medium mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest changes</p>
+							<div class="flex flex-wrap gap-2">
+								{#each trends.categoryChanges.slice(0, 3) as cat}
+									<span 
+										class="text-xs px-2 py-1 rounded-full"
+										style="background: {cat.change < 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; color: {cat.change < 0 ? '#10b981' : '#ef4444'}"
+									>
+										{cat.category}: {cat.change < 0 ? '' : '+'}{formatCurrency(cat.change)}
+									</span>
+								{/each}
+							</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 
