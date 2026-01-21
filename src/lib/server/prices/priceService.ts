@@ -19,10 +19,10 @@ async function fetchFullPriceHistory(ticker: string): Promise<Record<string, num
 	}
 
 	try {
-		// Use TIME_SERIES_DAILY with compact (free) - returns last 100 trading days
-		// full history requires premium subscription
-		const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${ticker}&outputsize=compact&apikey=${ALPHA_VANTAGE_API_KEY}`;
-		console.log(`Fetching Alpha Vantage data for ${ticker} (last 100 days)...`);
+		// Use TIME_SERIES_DAILY_ADJUSTED with full outputsize (premium)
+		// Adjusted prices account for splits and dividends for accurate calculations
+		const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
+		console.log(`Fetching Alpha Vantage premium data for ${ticker} (full history)...`);
 		const response = await fetch(url);
 		const json = await response.json();
 
@@ -47,19 +47,23 @@ async function fetchFullPriceHistory(ticker: string): Promise<Record<string, num
 			return null;
 		}
 
-		if (!json['Time Series (Daily)']) {
+		// Premium endpoint uses 'Time Series (Daily)' key
+		const timeSeries = json['Time Series (Daily)'] || json['Time Series (Daily Adjusted)'];
+		if (!timeSeries) {
 			console.error('Alpha Vantage: No time series data. Full response:', JSON.stringify(json).slice(0, 500));
 			return null;
 		}
 
-		const timeSeries = json['Time Series (Daily)'];
 		const data: Record<string, number> = {};
 
 		for (const [dateKey, values] of Object.entries(timeSeries)) {
-			// Use closing price (field 4) from the free endpoint
+			// Use adjusted close price (field 5) for accurate calculations
+			// Falls back to regular close (field 4) if adjusted not available
+			const adjClose = parseFloat((values as Record<string, string>)['5. adjusted close']);
 			const close = parseFloat((values as Record<string, string>)['4. close']);
-			if (!isNaN(close)) {
-				data[dateKey] = close;
+			const price = !isNaN(adjClose) ? adjClose : (!isNaN(close) ? close : null);
+			if (price !== null) {
+				data[dateKey] = price;
 			}
 		}
 
@@ -69,6 +73,42 @@ async function fetchFullPriceHistory(ticker: string): Promise<Record<string, num
 		return data;
 	} catch (error) {
 		console.error('Alpha Vantage fetch error:', error);
+		return null;
+	}
+}
+
+// Fetch real-time quote for a ticker (premium feature)
+async function fetchRealtimeQuote(ticker: string): Promise<{ price: number; date: string } | null> {
+	if (!ALPHA_VANTAGE_API_KEY) {
+		return null;
+	}
+
+	try {
+		const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${ALPHA_VANTAGE_API_KEY}`;
+		console.log(`Fetching real-time quote for ${ticker}...`);
+		const response = await fetch(url);
+		const json = await response.json();
+
+		if (json['Error Message'] || json['Note'] || json['Information']) {
+			console.error('Alpha Vantage quote error:', json['Error Message'] || json['Note'] || json['Information']);
+			return null;
+		}
+
+		const quote = json['Global Quote'];
+		if (!quote || !quote['05. price']) {
+			return null;
+		}
+
+		const price = parseFloat(quote['05. price']);
+		const date = quote['07. latest trading day'] || format(new Date(), 'yyyy-MM-dd');
+
+		if (!isNaN(price)) {
+			return { price, date };
+		}
+
+		return null;
+	} catch (error) {
+		console.error('Alpha Vantage quote fetch error:', error);
 		return null;
 	}
 }
@@ -183,7 +223,7 @@ export class PriceService {
 		this.dbCacheLoaded.add(ticker);
 	}
 
-	// Fetch and cache price history for a ticker (last 100 trading days on free tier)
+	// Fetch and cache price history for a ticker (full 20+ years with premium API)
 	async ensurePricesLoaded(ticker: string): Promise<boolean> {
 		// Load DB cache
 		await this.loadCacheForTicker(ticker);
@@ -275,12 +315,23 @@ export class PriceService {
 		return { price: null, actualDate: dateStr, source: 'unavailable' };
 	}
 
-	// Get current price (most recent)
+	// Get current price (most recent, with real-time quote fallback)
 	async getCurrentPrice(ticker: string): Promise<{
 		price: number | null;
 		date: string;
 		source: string;
 	}> {
+		// Try real-time quote first (premium feature)
+		const realtimeQuote = await fetchRealtimeQuote(ticker);
+		if (realtimeQuote) {
+			return { 
+				price: realtimeQuote.price, 
+				date: realtimeQuote.date, 
+				source: 'alpha_vantage_realtime' 
+			};
+		}
+
+		// Fallback to cached or historical data
 		await this.loadCacheForTicker(ticker);
 		const tickerCache = this.dbCache.get(ticker);
 

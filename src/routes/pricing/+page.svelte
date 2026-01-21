@@ -240,15 +240,6 @@
 			</div>
 		</div>
 
-		<!-- Bottom CTA -->
-		<div class="mt-16 text-center">
-			<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-				Still not sure? Try the demo first.
-			</p>
-			<a href="/demo" class="text-sw-accent font-medium hover:underline">
-				View demo with sample data <i class="fa-solid fa-arrow-right ml-1"></i>
-			</a>
-		</div>
 	</main>
 </div>
 

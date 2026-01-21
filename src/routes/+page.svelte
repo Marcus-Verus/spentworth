@@ -140,7 +140,7 @@
 								</div>
 								<div class="flex-1">
 									<div class="flex justify-between text-xs mb-1">
-										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Groceries</span>
+										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Entertainment</span>
 										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$642</span>
 									</div>
 									<div class="h-1 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
@@ -268,14 +268,9 @@
 								Go to Dashboard
 							</button>
 						{:else}
-							<div class="flex flex-col sm:flex-row items-center gap-3">
-								<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-semibold">
-									Get Started — It's Free
+							<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-semibold">
+								Get Started — It's Free
 							</button>
-								<a href="/demo" class="text-sm font-medium transition-colors font-display" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-									or try the demo
-								</a>
-							</div>
 							<button onclick={() => goto('/login')} class="bg-neutral-900 dark:bg-sw-surface text-white border border-neutral-800 dark:border-sw-border hover:bg-neutral-800 dark:hover:bg-sw-border px-5 py-3 rounded-lg font-medium text-sm transition-colors font-display">
 								I have an account
 							</button>
@@ -301,43 +296,341 @@
 			</div>
 		</section>
 
-		<!-- What you'll discover -->
-		<section class="border-t border-sw-border/30">
-			<div class="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-				<div class="text-center mb-10 sm:mb-14">
-					<h2 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Finally see the full picture</h2>
-					<p class="max-w-xl mx-auto" style="color: {isDark ? '#a3a3a3' : '#525252'}">Most people have no idea where their money actually goes. SpentWorth changes that.</p>
+		<!-- Visual Demo Section - Spending Breakdown -->
+		<section class="border-t border-sw-border/30 relative overflow-hidden">
+			<!-- Background with app demo -->
+			<div class="absolute inset-0 opacity-5 sm:opacity-10">
+				<div class="absolute inset-0" style="background: linear-gradient(135deg, {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.05)'} 0%, transparent 50%);"></div>
+			</div>
+			
+			<div class="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+				<div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+					<!-- Left: Text content -->
+					<div>
+						<h2 class="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+							See exactly where your money goes
+						</h2>
+						<p class="text-base sm:text-lg mb-6 leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+							Get an effortless breakdown of your finances. See where your money is going and how to improve. We'll show you what your spending could become if invested.
+						</p>
+						<div class="space-y-4">
+							<div class="flex items-start gap-3">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}">
+									<i class="fa-solid fa-chart-pie text-sw-accent text-sm"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Automatic categorization</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Transactions are categorized automatically. No manual tagging required.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.12)'}">
+									<i class="fa-solid fa-seedling text-sm" style="color: #d97706"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Growth potential</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">See what your spending could become if invested. Small changes, big results.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.12)'}">
+									<i class="fa-solid fa-bell text-sm" style="color: #3b82f6"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Smart insights</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Get notified about important patterns and opportunities to save.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Right: App demo card -->
+					<div class="relative">
+						<div class="rounded-2xl p-6 shadow-2xl" style="background: {isDark ? 'rgba(26,26,26,0.98)' : 'rgba(255,255,255,0.98)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
+							<!-- Header -->
+							<div class="flex items-center justify-between mb-6">
+								<div>
+									<h3 class="font-display font-semibold text-lg mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">This month</h3>
+									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Dec 2025 - Jan 2026</p>
+								</div>
+								<span class="text-xs px-2 py-1 rounded-full" style="background: {isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'}; color: #10b981">↓ 12%</span>
+							</div>
+							
+							<!-- Total -->
+							<div class="mb-6">
+								<p class="text-3xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">$2,847</p>
+								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									If invested: <span class="font-semibold text-sw-accent">$3,642</span> in 5 years
+								</p>
+							</div>
+							
+							<!-- Categories -->
+							<div class="space-y-3">
+								<div>
+									<div class="flex justify-between text-xs mb-1.5">
+										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Dining & Restaurants</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$892</span>
+									</div>
+									<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+										<div class="h-full rounded-full bg-orange-500" style="width: 31%"></div>
+									</div>
+								</div>
+								<div>
+									<div class="flex justify-between text-xs mb-1.5">
+										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Entertainment</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$687</span>
+									</div>
+									<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+										<div class="h-full rounded-full bg-blue-500" style="width: 24%"></div>
+									</div>
+								</div>
+								<div>
+									<div class="flex justify-between text-xs mb-1.5">
+										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Subscriptions</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$487</span>
+									</div>
+									<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+										<div class="h-full rounded-full bg-purple-500" style="width: 17%"></div>
+									</div>
+								</div>
+								<div>
+									<div class="flex justify-between text-xs mb-1.5">
+										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Shopping</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$534</span>
+									</div>
+									<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+										<div class="h-full rounded-full bg-teal-500" style="width: 19%"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
+			</div>
+		</section>
 
-				<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-					<div class="rounded-2xl p-6 text-center transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-						<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}">
-							<i class="fa-solid fa-chart-pie text-sw-accent text-xl"></i>
+		<!-- Visual Demo Section - Opportunity Cost -->
+		<section class="border-t border-sw-border/30 relative overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
+			<!-- Background pattern -->
+			<div class="absolute inset-0 opacity-5">
+				<div class="absolute inset-0" style="background: radial-gradient(circle at 30% 50%, {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.05)'} 0%, transparent 50%);"></div>
+			</div>
+			
+			<div class="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+				<div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+					<!-- Left: App demo card -->
+					<div class="order-2 lg:order-1">
+						<div class="rounded-2xl p-6 shadow-2xl" style="background: {isDark ? 'rgba(26,26,26,0.98)' : 'rgba(255,255,255,0.98)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
+							<!-- Header -->
+							<div class="flex items-center gap-3 mb-6">
+								<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}">
+									<i class="fa-solid fa-chart-line text-sw-accent"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">If invested instead</h3>
+									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">5 years at 7% return</p>
+								</div>
+							</div>
+							
+							<!-- Opportunity cost examples -->
+							<div class="space-y-4">
+								<div class="rounded-lg p-4" style="background: {isDark ? '#1a1a1a' : '#f5f0e8'}">
+									<div class="flex items-center justify-between mb-2">
+										<div class="flex items-center gap-2">
+											<i class="fa-solid fa-mug-hot text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+											<span class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Daily coffee</span>
+										</div>
+										<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">$6/day</span>
+									</div>
+									<div class="flex items-baseline gap-2">
+										<span class="text-2xl font-bold text-sw-accent">$15,847</span>
+										<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">opportunity cost</span>
+									</div>
+								</div>
+								
+								<div class="rounded-lg p-4" style="background: {isDark ? '#1a1a1a' : '#f5f0e8'}">
+									<div class="flex items-center justify-between mb-2">
+										<div class="flex items-center gap-2">
+											<i class="fa-solid fa-utensils text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+											<span class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Food delivery</span>
+										</div>
+										<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">$400/mo</span>
+									</div>
+									<div class="flex items-baseline gap-2">
+										<span class="text-2xl font-bold text-sw-accent">$28,000</span>
+										<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">opportunity cost</span>
+									</div>
+								</div>
+								
+								<div class="rounded-lg p-4" style="background: {isDark ? '#1a1a1a' : '#f5f0e8'}">
+									<div class="flex items-center justify-between mb-2">
+										<div class="flex items-center gap-2">
+											<i class="fa-solid fa-bell text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+											<span class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Subscriptions</span>
+										</div>
+										<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">$127/mo</span>
+									</div>
+									<div class="flex items-baseline gap-2">
+										<span class="text-2xl font-bold text-sw-accent">$9,100</span>
+										<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">opportunity cost</span>
+									</div>
+								</div>
+							</div>
+							
+							<div class="mt-4 pt-4" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+								<p class="text-xs text-center" style="color: {isDark ? '#737373' : '#9ca3af'}">
+									<i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>
+									Small changes add up over time
+								</p>
+							</div>
 						</div>
-						<h3 class="font-display text-lg font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Spending breakdown</h3>
-						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-							See exactly how much goes to groceries, subscriptions, dining out, and everything else — categorized automatically.
-						</p>
 					</div>
-
-					<div class="rounded-2xl p-6 text-center transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-						<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto" style="background: {isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.12)'}">
-							<i class="fa-solid fa-seedling text-xl" style="color: #d97706"></i>
-						</div>
-						<h3 class="font-display text-lg font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Growth potential</h3>
-						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-							Discover what your everyday purchases could become if invested. Small changes, big results over time.
+					
+					<!-- Right: Text content -->
+					<div class="order-1 lg:order-2">
+						<h2 class="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+							Discover what your spending could become
+						</h2>
+						<p class="text-base sm:text-lg mb-6 leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+							Every purchase has an opportunity cost. See what your everyday spending could become if invested instead. The numbers might surprise you.
 						</p>
+						<div class="space-y-4">
+							<div class="flex items-start gap-3">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}">
+									<i class="fa-solid fa-calculator text-sw-accent text-sm"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Real opportunity costs</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Calculate what your spending could be worth if invested at 7% annual return.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.12)'}">
+									<i class="fa-solid fa-chart-line text-sm" style="color: #d97706"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Category insights</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">See which spending categories have the biggest impact on your future wealth.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.12)'}">
+									<i class="fa-solid fa-bullseye text-sm" style="color: #3b82f6"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Actionable insights</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Get specific recommendations on where to cut back and invest more.</p>
+								</div>
+							</div>
+						</div>
 					</div>
+				</div>
+			</div>
+		</section>
 
-					<div class="rounded-2xl p-6 text-center sm:col-span-2 lg:col-span-1 transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-						<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto" style="background: {isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.12)'}">
-							<i class="fa-solid fa-bullseye text-xl" style="color: #3b82f6"></i>
-						</div>
-						<h3 class="font-display text-lg font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Personal goals</h3>
-						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-							Set targets for what matters to you. Track progress without judgment, adjust as life changes.
+		<!-- Visual Demo - Subscriptions & Goals -->
+		<section class="border-t border-sw-border/30 relative overflow-hidden">
+			<!-- Background pattern -->
+			<div class="absolute inset-0 opacity-5">
+				<div class="absolute inset-0" style="background: linear-gradient(180deg, transparent 0%, {isDark ? 'rgba(13,148,136,0.05)' : 'rgba(13,148,136,0.02)'} 50%, transparent 100%);"></div>
+			</div>
+			
+			<div class="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+				<div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+					<!-- Left: Text content -->
+					<div>
+						<h2 class="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+							Track subscriptions and set goals
+						</h2>
+						<p class="text-base sm:text-lg mb-6 leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+							We automatically detect recurring subscriptions and help you see their true cost. Set budgets and track your progress toward financial goals.
 						</p>
+						<div class="space-y-4">
+							<div class="flex items-start gap-3">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.12)'}">
+									<i class="fa-solid fa-bell text-sm" style="color: #ef4444"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Subscription detection</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">We find recurring charges automatically. See what you're really spending each month.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}">
+									<i class="fa-solid fa-bullseye text-sw-accent text-sm"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Budget tracking</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Set spending limits by category. Get alerts when you're approaching your budget.</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-3">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(168,85,247,0.15)' : 'rgba(168,85,247,0.12)'}">
+									<i class="fa-solid fa-chart-line text-sm" style="color: #a855f7"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Goal progress</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Track your progress toward financial goals. See how staying on track impacts your future.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Right: App demo cards -->
+					<div class="space-y-4">
+						<!-- Subscriptions card -->
+						<div class="rounded-2xl p-5 shadow-xl" style="background: {isDark ? 'rgba(26,26,26,0.98)' : 'rgba(255,255,255,0.98)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
+							<div class="flex items-center justify-between mb-4">
+								<h3 class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Subscriptions Detected</h3>
+								<span class="text-xs px-2 py-1 rounded-full" style="background: {isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)'}; color: #ef4444">8 found</span>
+							</div>
+							<div class="space-y-2 mb-3">
+								<div class="flex items-center justify-between text-sm">
+									<span style="color: {isDark ? '#ffffff' : '#171717'}">Netflix</span>
+									<span class="font-mono" style="color: {isDark ? '#a3a3a3' : '#737373'}">$15.99/mo</span>
+								</div>
+								<div class="flex items-center justify-between text-sm">
+									<span style="color: {isDark ? '#ffffff' : '#171717'}">Spotify</span>
+									<span class="font-mono" style="color: {isDark ? '#a3a3a3' : '#737373'}">$10.99/mo</span>
+								</div>
+								<div class="flex items-center justify-between text-sm">
+									<span style="color: {isDark ? '#ffffff' : '#171717'}">Adobe Creative Cloud</span>
+									<span class="font-mono" style="color: {isDark ? '#a3a3a3' : '#737373'}">$54.99/mo</span>
+								</div>
+							</div>
+							<div class="pt-3 border-t" style="border-color: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+								<div class="flex items-center justify-between text-xs mb-1">
+									<span style="color: {isDark ? '#a3a3a3' : '#737373'}">Total</span>
+									<span class="font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">$182/mo</span>
+								</div>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+									→ <span class="text-sw-accent font-semibold">$31,000</span> if invested over 10 years
+								</p>
+							</div>
+						</div>
+						
+						<!-- Budget goal card -->
+						<div class="rounded-2xl p-5 shadow-xl" style="background: {isDark ? 'rgba(26,26,26,0.98)' : 'rgba(255,255,255,0.98)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
+							<div class="flex items-center gap-3 mb-4">
+								<div class="relative w-12 h-12">
+									<svg class="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
+										<circle cx="18" cy="18" r="15" fill="none" stroke="{isDark ? '#2a2a2a' : '#e5e5e5'}" stroke-width="3"/>
+										<circle cx="18" cy="18" r="15" fill="none" stroke="#a855f7" stroke-width="3" stroke-dasharray="68, 100" stroke-linecap="round"/>
+									</svg>
+									<span class="absolute inset-0 flex items-center justify-center text-xs font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">68%</span>
+								</div>
+								<div>
+									<h3 class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Coffee Budget</h3>
+									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">$68 of $100</p>
+								</div>
+							</div>
+							<div class="pt-3 border-t" style="border-color: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+									<i class="fa-solid fa-check-circle text-green-500 mr-1"></i>
+									On track • <span class="text-sw-accent font-semibold">$32</span> remaining
+								</p>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -494,44 +787,83 @@
 		</section>
 
 		<!-- How it works -->
-		<section class="border-t border-sw-border/30">
-			<div class="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-				<div class="text-center mb-10 sm:mb-14">
-					<h2 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Simple by design</h2>
-					<p style="color: {isDark ? '#a3a3a3' : '#525252'}">No complicated setup. No account linking required.</p>
+		<section class="border-t border-sw-border/30 relative overflow-hidden">
+			<!-- Background with subtle pattern -->
+			<div class="absolute inset-0 opacity-5">
+				<div class="absolute inset-0" style="background: linear-gradient(45deg, transparent 48%, {isDark ? 'rgba(13,148,136,0.05)' : 'rgba(13,148,136,0.02)'} 50%, transparent 52%); background-size: 40px 40px;"></div>
+			</div>
+			
+			<div class="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+				<div class="text-center mb-12 sm:mb-16">
+					<h2 class="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Simple by design</h2>
+					<p class="text-base sm:text-lg max-w-2xl mx-auto" style="color: {isDark ? '#a3a3a3' : '#525252'}">No complicated setup. No account linking required. Just upload your statements and see your insights.</p>
 				</div>
 				
-				<div class="flex flex-col sm:flex-row items-stretch justify-center gap-4 sm:gap-0">
-					<div class="flex-1 text-center px-4 sm:px-6 py-4">
-						<div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
-							<span class="font-display text-lg font-medium" style="color: {isDark ? '#a3a3a3' : '#525252'}">1</span>
+				<!-- Steps -->
+				<div class="grid md:grid-cols-3 gap-6 lg:gap-8 mb-12">
+					<div class="text-center">
+						<div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 shadow-lg" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 2px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
+							<span class="font-display text-2xl font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">1</span>
 						</div>
-						<h3 class="font-display font-medium mb-1.5" style="color: {isDark ? '#ffffff' : '#171717'}">Export from your bank</h3>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Download your statements as CSV. Most banks make this easy.</p>
+						<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Export from your bank</h3>
+						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">Download your statements as CSV. Most banks make this easy — just a few clicks in your online banking.</p>
 					</div>
 					
-					<div class="hidden sm:flex items-center justify-center px-2">
-						<i class="fa-solid fa-chevron-right text-sm" style="color: {isDark ? '#525252' : '#a3a3a3'}"></i>
-					</div>
-					
-					<div class="flex-1 text-center px-4 sm:px-6 py-4">
-						<div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
-							<span class="font-display text-lg font-medium" style="color: {isDark ? '#a3a3a3' : '#525252'}">2</span>
+					<div class="text-center">
+						<div class="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 shadow-lg" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 2px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
+							<span class="font-display text-2xl font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">2</span>
 						</div>
-						<h3 class="font-display font-medium mb-1.5" style="color: {isDark ? '#ffffff' : '#171717'}">Upload to SpentWorth</h3>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">We automatically categorize your transactions. No manual tagging.</p>
+						<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Upload to SpentWorth</h3>
+						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">We automatically categorize your transactions using smart rules. No manual tagging or setup required.</p>
 					</div>
 					
-					<div class="hidden sm:flex items-center justify-center px-2">
-						<i class="fa-solid fa-chevron-right text-sm" style="color: {isDark ? '#525252' : '#a3a3a3'}"></i>
-					</div>
-					
-					<div class="flex-1 text-center px-4 sm:px-6 py-4">
-						<div class="w-12 h-12 mx-auto rounded-full bg-sw-accent/20 border border-sw-accent/40 flex items-center justify-center mb-4">
-							<span class="font-display text-lg font-medium text-sw-accent">3</span>
+					<div class="text-center">
+						<div class="w-16 h-16 mx-auto rounded-full bg-sw-accent/20 border-2 border-sw-accent/40 flex items-center justify-center mb-4 shadow-lg shadow-sw-accent/20">
+							<span class="font-display text-2xl font-semibold text-sw-accent">3</span>
 						</div>
-						<h3 class="font-display font-medium mb-1.5" style="color: {isDark ? '#ffffff' : '#171717'}">See your insights</h3>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Understand your spending patterns and what they mean for your future.</p>
+						<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">See your insights</h3>
+						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">Understand your spending patterns, see opportunity costs, and discover what your money could become.</p>
+					</div>
+				</div>
+				
+				<!-- Visual demo of dashboard -->
+				<div class="rounded-2xl p-6 lg:p-8 shadow-2xl" style="background: {isDark ? 'rgba(26,26,26,0.95)' : 'rgba(255,255,255,0.95)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
+					<div class="text-center mb-6">
+						<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Your dashboard in 2 minutes</h3>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">See spending breakdowns, opportunity costs, and insights at a glance</p>
+					</div>
+					
+					<div class="grid sm:grid-cols-3 gap-4 mb-6">
+						<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#f5f0e8'}">
+							<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Total Spent</p>
+							<p class="font-mono text-xl font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">$4,847</p>
+						</div>
+						<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#f5f0e8'}">
+							<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">If Invested</p>
+							<p class="font-mono text-xl font-semibold text-sw-accent">$6,203</p>
+						</div>
+						<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#f5f0e8'}">
+							<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Opportunity Cost</p>
+							<p class="font-mono text-xl font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">$1,356</p>
+						</div>
+					</div>
+					
+					<!-- Mini category chart -->
+					<div class="space-y-2">
+						<div class="flex items-center justify-between text-xs">
+							<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Dining & Restaurants</span>
+							<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$892</span>
+						</div>
+						<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<div class="h-full rounded-full bg-orange-500" style="width: 31%"></div>
+						</div>
+						<div class="flex items-center justify-between text-xs">
+							<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Entertainment</span>
+							<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$687</span>
+						</div>
+						<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<div class="h-full rounded-full bg-blue-500" style="width: 24%"></div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -627,14 +959,9 @@
 					Start seeing where your money really goes. Private, simple, and takes just 2 minutes.
 				</p>
 				{#if !data.session}
-					<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-						<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-display font-semibold">
-							Get Started — It's Free
-						</button>
-						<a href="/demo" class="text-sm font-medium transition-colors font-display hover:underline" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-							Try the demo first
-						</a>
-					</div>
+					<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-display font-semibold">
+						Get Started — It's Free
+					</button>
 					<p class="text-xs mt-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">No credit card required • Cancel anytime</p>
 				{:else}
 					<button onclick={() => goto('/dashboard')} class="btn btn-primary text-base px-8 py-3.5 font-display font-semibold">
@@ -675,7 +1002,6 @@
 				<div>
 					<h4 class="font-display font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Product</h4>
 					<ul class="space-y-2.5">
-						<li><a href="/demo" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Demo</a></li>
 						<li><a href="/pricing" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Pricing</a></li>
 						<li><a href="#features" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Features</a></li>
 						<li><a href="#how-it-works" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">How It Works</a></li>
