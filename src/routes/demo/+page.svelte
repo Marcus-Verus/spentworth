@@ -95,6 +95,13 @@
 		}
 	];
 
+	// Sample income for savings rate
+	const sampleIncome = 5500; // $5,500/month take-home
+	const avgMonthlySpend = sampleSummary.totalSpent; // Using total as monthly for demo
+	const monthlySavings = sampleIncome - avgMonthlySpend;
+	const savingsRate = (monthlySavings / sampleIncome) * 100;
+	const savingsFutureValue = calculateOpportunityCost(monthlySavings, 10);
+
 	// Calculate totals
 	const totalSubscriptions = sampleSummary.recurringCharges.reduce((a, b) => a + b.monthlyEstimate, 0);
 	const subscriptionOpportunityCost = calculateOpportunityCost(totalSubscriptions);
@@ -180,6 +187,40 @@
 				</div>
 			</div>
 
+			<!-- Savings Rate -->
+			<div class="rounded-xl p-4 sm:p-5 mb-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<div>
+						<div class="flex items-center gap-2 mb-1">
+							<i class="fa-solid fa-piggy-bank text-sw-accent"></i>
+							<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">
+								Your Savings Rate
+							</h3>
+						</div>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							Based on {formatCurrency(sampleIncome)}/month income
+						</p>
+					</div>
+					
+					<div class="text-right">
+						<p class="font-mono text-3xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">
+							{savingsRate.toFixed(0)}%
+						</p>
+						<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+							{formatCurrency(monthlySavings)}/month saved
+						</p>
+					</div>
+				</div>
+				
+				<div class="mt-4 pt-4" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						<i class="fa-solid fa-chart-line text-sw-accent mr-1"></i>
+						Keep saving {formatCurrency(monthlySavings)}/month and you could have 
+						<span class="font-semibold text-sw-accent">{formatCurrency(savingsFutureValue)}</span> in 10 years.
+					</p>
+				</div>
+			</div>
+
 			<!-- Categories -->
 			<div class="rounded-xl p-5 mb-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 				<h2 class="font-display font-semibold text-lg mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Where Your Money Goes</h2>
@@ -253,8 +294,8 @@
 
 			<!-- Opportunity Cost Banner -->
 			{#if totalRemaining > 0}
-				<div class="rounded-xl p-4 mb-6 flex items-center gap-3" style="background: rgba(13,148,136,0.1); border: 1px solid rgba(13,148,136,0.2)">
-					<div class="w-10 h-10 rounded-lg flex items-center justify-center bg-sw-accent/20">
+				<div class="rounded-xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3" style="background: rgba(13,148,136,0.1); border: 1px solid rgba(13,148,136,0.2)">
+					<div class="w-10 h-10 rounded-lg flex items-center justify-center bg-sw-accent/20 flex-shrink-0">
 						<i class="fa-solid fa-piggy-bank text-sw-accent"></i>
 					</div>
 					<div>
