@@ -339,7 +339,7 @@
 			<div class="flex items-center gap-1 mb-4 overflow-x-auto scrollbar-hide pb-1" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 				{#each [
 					{ id: 'included', label: 'Included', labelShort: 'Incl', count: summary.rowsIncluded },
-					{ id: 'uncategorized', label: 'Uncategorized', labelShort: 'Uncat', count: summary.rowsUncategorized, highlight: true },
+					{ id: 'uncategorized', label: 'Uncategorized', labelShort: 'Uncat', count: summary.rowsUncategorized },
 					{ id: 'excluded', label: 'Excluded', labelShort: 'Excl', count: summary.rowsExcluded - summary.rowsNeedsReview - summary.rowsDuplicates },
 					{ id: 'needs_review', label: 'Needs Review', labelShort: 'Review', count: summary.rowsNeedsReview },
 					{ id: 'duplicates', label: 'Duplicates', labelShort: 'Dupe', count: summary.rowsDuplicates }
@@ -347,13 +347,13 @@
 					<button
 						onclick={() => { tab = tabItem.id as PreviewTab; currentPage = 1; loadRows(); }}
 						class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap -mb-[1px]"
-						style="border-color: {tab === tabItem.id ? '#0d9488' : 'transparent'}; color: {tab === tabItem.id ? '#0d9488' : (isDark ? '#a3a3a3' : '#737373')}"
+						style="border-color: {tab === tabItem.id ? '#0d9488' : 'transparent'}; color: {tab === tabItem.id ? '#0d9488' : (isDark ? '#a3a3a3' : '#525252')}"
 					>
 						<span class="hidden sm:inline">{tabItem.label}</span>
 						<span class="sm:hidden">{tabItem.labelShort}</span>
 						<span 
-							class="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs"
-							style="background: {tabItem.highlight && tabItem.count > 0 ? 'rgba(245,158,11,0.15)' : (isDark ? '#262626' : '#f5f0e8')}; color: {tabItem.highlight && tabItem.count > 0 ? '#f59e0b' : (isDark ? '#a3a3a3' : '#525252')}"
+							class="ml-1.5 px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-normal"
+							style="background: {isDark ? '#262626' : '#e8e4dc'}; color: {isDark ? '#737373' : '#525252'}"
 						>{tabItem.count}</span>
 					</button>
 				{/each}
