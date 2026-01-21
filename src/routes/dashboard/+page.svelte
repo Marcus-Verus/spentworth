@@ -602,7 +602,9 @@
 				<div class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div>
 						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Where Your Money Goes</h3>
-						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Your favorite places to spend</p>
+						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							<span class="hidden sm:inline">See potential growth if invested · </span>7% return over 5 years
+						</p>
 					</div>
 					<div class="flex rounded-lg p-1 self-start sm:self-auto" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
 						<button onclick={() => merchantView = 'frequency'} class="px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs rounded-md transition-colors" style="background: {merchantView === 'frequency' ? (isDark ? '#262626' : '#ffffff') : 'transparent'}; color: {merchantView === 'frequency' ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#a3a3a3' : '#737373')}">Most Visits</button>
@@ -614,6 +616,7 @@
 						{@const maxCount = summary.topMerchants[0]?.count || 1}
 						{@const maxSpend = summary.topMerchantsBySpend[0]?.totalSpent || 1}
 						{@const barWidth = merchantView === 'frequency' ? (merchant.count / maxCount) * 100 : (merchant.totalSpent / maxSpend) * 100}
+						{@const potentialGain = merchant.totalFuture - merchant.totalSpent}
 						
 						<div class="px-3 sm:px-6 py-2.5 sm:py-3 transition-colors" style="border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}">
 							<div class="flex items-start sm:items-center gap-2 sm:gap-4">
@@ -624,7 +627,10 @@
 										<div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-shrink-0">
 											<span style="color: {isDark ? '#a3a3a3' : '#737373'}">{merchant.count}×</span>
 											<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(merchant.totalSpent)}</span>
-											<span class="text-sw-accent text-[10px] sm:text-xs hidden sm:inline">→ {formatCurrency(merchant.totalFuture)}</span>
+											<span class="hidden sm:inline-flex items-center gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full" style="background: rgba(13,148,136,0.1); color: #0d9488" title="Potential growth if invested at 7% for 5 years">
+												<i class="fa-solid fa-arrow-trend-up text-[8px]"></i>
+												+{formatCurrency(potentialGain)}
+											</span>
 										</div>
 									</div>
 									<div class="h-1 sm:h-1.5 rounded-full overflow-hidden" style="background: {isDark ? '#262626' : '#f5f0e8'}">
