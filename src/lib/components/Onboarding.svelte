@@ -11,25 +11,25 @@
 		{
 			title: "Welcome to SpentWorth",
 			subtitle: "See where your money really goes — and what it could become.",
-			icon: "fa-solid fa-hand-wave",
+			icon: "fa-solid fa-coins",
 			content: "We help you understand your spending by showing the opportunity cost of every purchase. What if that $5 coffee was invested instead?"
 		},
 		{
 			title: "Import Your Spending",
 			subtitle: "No account linking required.",
-			icon: "fa-solid fa-file-csv",
+			icon: "fa-solid fa-file-arrow-up",
 			content: "Download a CSV from your bank and upload it here. We automatically categorize your transactions — no manual tagging needed."
 		},
 		{
 			title: "Discover Insights",
 			subtitle: "See patterns you never noticed.",
-			icon: "fa-solid fa-chart-line",
+			icon: "fa-solid fa-chart-pie",
 			content: "Track recurring subscriptions, find your biggest spending categories, and see what your money could have grown to if invested."
 		},
 		{
 			title: "Set Goals & Save",
 			subtitle: "Build the life you want.",
-			icon: "fa-solid fa-bullseye",
+			icon: "fa-solid fa-piggy-bank",
 			content: "Set spending limits on categories or merchants. Watch your potential savings grow as you make mindful choices."
 		}
 	];
@@ -96,8 +96,8 @@
 		<div class="flex items-center justify-between">
 			<button
 				onclick={skip}
-				class="text-sm transition-colors"
-				style="color: {isDark ? '#737373' : '#9ca3af'}"
+				class="text-sm transition-colors hover:opacity-80"
+				style="color: {isDark ? '#a3a3a3' : '#525252'}"
 			>
 				Skip
 			</button>

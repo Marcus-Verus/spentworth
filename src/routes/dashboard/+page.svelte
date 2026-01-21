@@ -529,11 +529,18 @@
 					</div>
 
 					<!-- What-If Calculator -->
-					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? 'linear-gradient(135deg, rgba(168,85,247,0.1), rgba(236,72,153,0.1))' : 'linear-gradient(135deg, rgba(168,85,247,0.08), rgba(236,72,153,0.08))'}; border: 1px solid {isDark ? 'rgba(168,85,247,0.3)' : 'rgba(168,85,247,0.2)'}">
-						<h3 class="font-display font-semibold mb-2 text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">What If Calculator</h3>
-						<p class="text-xs sm:text-sm mb-3 sm:mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-							{selectedWhatIf ? `If you cancelled ${selectedWhatIf.merchant}...` : 'Tap a subscription to see projections'}
-						</p>
+					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<div class="flex items-center gap-3 mb-3">
+							<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(13,148,136,0.1)">
+								<i class="fa-solid fa-calculator text-sw-accent text-sm"></i>
+							</div>
+							<div>
+								<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">What If Calculator</h3>
+								<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									{selectedWhatIf ? `If you cancelled ${selectedWhatIf.merchant}...` : 'Select a subscription'}
+								</p>
+							</div>
+						</div>
 						
 						{#if selectedWhatIf}
 							{@const monthlyAmount = selectedWhatIf.monthlyEstimate}
@@ -544,12 +551,12 @@
 							<div class="space-y-3 sm:space-y-4">
 								<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
 									<label class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Time horizon:</label>
-									<div class="flex rounded-lg p-1 w-full sm:w-auto" style="background: {isDark ? '#0a0a0a' : '#ffffff'}">
+									<div class="flex rounded-lg p-1 w-full sm:w-auto" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
 										{#each [5, 10, 20, 30] as years}
 											<button 
 												onclick={() => whatIfYears = years}
 												class="flex-1 sm:flex-none px-3 py-1.5 sm:py-1 text-xs rounded-md transition-colors"
-												style="background: {whatIfYears === years ? '#a855f7' : 'transparent'}; color: {whatIfYears === years ? '#ffffff' : (isDark ? '#a3a3a3' : '#737373')}"
+												style="background: {whatIfYears === years ? '#0d9488' : 'transparent'}; color: {whatIfYears === years ? '#ffffff' : (isDark ? '#a3a3a3' : '#737373')}"
 											>
 												{years}yr
 											</button>
@@ -557,7 +564,7 @@
 									</div>
 								</div>
 								
-								<div class="rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3 text-sm" style="background: {isDark ? 'rgba(10,10,10,0.5)' : 'rgba(255,255,255,0.7)'}">
+								<div class="rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3 text-sm" style="background: {isDark ? 'rgba(10,10,10,0.5)' : '#f9f6f1'}">
 									<div class="flex justify-between">
 										<span class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly savings</span>
 										<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(monthlyAmount)}</span>
@@ -567,12 +574,12 @@
 										<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(totalContributed)}</span>
 									</div>
 									<div class="flex justify-between">
-										<span class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Gains (7%)</span>
+										<span class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Investment gains (7%)</span>
 										<span class="font-mono text-sw-accent">+{formatCurrency(gains)}</span>
 									</div>
 									<div class="pt-2 sm:pt-3 flex justify-between items-center" style="border-top: 1px solid {isDark ? 'rgba(64,64,64,0.5)' : '#e5e5e5'}">
 										<span class="font-medium text-xs sm:text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">In {whatIfYears} years</span>
-										<span class="font-display text-xl sm:text-2xl font-bold" style="color: #a855f7">{formatCurrency(futureValue)}</span>
+										<span class="font-display text-xl sm:text-2xl font-bold text-sw-accent">{formatCurrency(futureValue)}</span>
 									</div>
 								</div>
 								
@@ -581,8 +588,9 @@
 								</p>
 							</div>
 						{:else}
-							<div class="rounded-xl p-6 sm:p-8 text-center" style="background: {isDark ? 'rgba(10,10,10,0.5)' : 'rgba(255,255,255,0.7)'}">
-								<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">← Tap a recurring charge to calculate savings</p>
+							<div class="rounded-xl p-6 sm:p-8 text-center" style="background: {isDark ? 'rgba(10,10,10,0.5)' : '#f9f6f1'}; border: 1px dashed {isDark ? '#2a2a2a' : '#d4cfc5'}">
+								<i class="fa-solid fa-hand-pointer text-sw-accent text-xl mb-2"></i>
+								<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Tap a subscription above to see projections</p>
 							</div>
 						{/if}
 					</div>
