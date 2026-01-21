@@ -47,7 +47,7 @@
 	}
 </script>
 
-<header class="border-b border-sw-border/50 bg-sw-bg/80 backdrop-blur-sm sticky top-0 z-40">
+<header class="border-b border-sw-border/30 backdrop-blur-md bg-sw-surface/90 sticky top-0 z-50">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
 		{#if showLogo}
 			<a href="/dashboard" class="flex items-center gap-2 sm:gap-3">
@@ -108,7 +108,7 @@
 
 	<!-- Mobile menu dropdown -->
 	{#if mobileMenuOpen}
-		<div class="md:hidden border-t border-sw-border/50 bg-sw-bg/95 backdrop-blur-sm">
+		<div class="md:hidden border-t border-sw-border/30 bg-sw-surface/95 backdrop-blur-md">
 			<nav class="px-4 py-3 space-y-1">
 				{#each navItems as item}
 					<a 
