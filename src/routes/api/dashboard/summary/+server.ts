@@ -222,23 +222,24 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	
 	// Categories that are typically NOT subscriptions (exclude these)
 	const nonSubscriptionCategories = new Set([
-		'Gas & Fuel',
+		'Auto & Transport',
 		'Groceries',
-		'Restaurants',
-		'Fast Food',
-		'Coffee Shops',
-		'Hardware & Home Improvement',
-		'Department Stores',
-		'Convenience Stores',
-		'Automotive',
-		'Clothing',
-		'Electronics',
+		'Dining & Restaurants',
+		'Coffee & Drinks',
+		'Food Delivery',
+		'Shopping',
 		'Home & Garden',
+		'Travel & Vacation',
+		'Entertainment',
+		'Healthcare & Medical',
+		'Housing & Rent',
+		'Personal Care',
+		'Fitness & Gym',
 		'Pets',
-		'Pharmacy',
-		'Travel',
-		'Transportation',
-		'ATM/Cash',
+		'Education',
+		'Gifts & Donations',
+		'Kids & Family',
+		'Electronics',
 		'Uncategorized'
 	]);
 	

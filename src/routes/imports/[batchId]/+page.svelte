@@ -35,7 +35,30 @@
 	let ruleModalExclude = $state(false);
 	let creatingRule = $state(false);
 
-	const categories = ['Groceries', 'Dining', 'Coffee', 'Delivery', 'Shopping', 'Gas/Transport', 'Subscriptions', 'Travel', 'Entertainment', 'Healthcare', 'Utilities', 'Housing', 'Personal Care', 'Education', 'Gifts', 'Uncategorized'];
+	const categories = [
+		'Auto & Transport',
+		'Groceries',
+		'Dining & Restaurants',
+		'Coffee & Drinks',
+		'Food Delivery',
+		'Shopping',
+		'Home & Garden',
+		'Subscriptions',
+		'Travel & Vacation',
+		'Entertainment',
+		'Healthcare & Medical',
+		'Utilities',
+		'Housing & Rent',
+		'Personal Care',
+		'Fitness & Gym',
+		'Pets',
+		'Insurance',
+		'Education',
+		'Gifts & Donations',
+		'Kids & Family',
+		'Electronics',
+		'Uncategorized'
+	];
 
 	const kindOptions: { value: TransactionKind; label: string }[] = [
 		{ value: 'purchase', label: 'Purchase' },

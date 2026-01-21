@@ -299,23 +299,29 @@ export type PreviewTab = 'included' | 'excluded' | 'needs_review' | 'duplicates'
 // Sort options
 export type SortOption = 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
 
-// Default categories
+// Default categories (aligned with Rocket Money / Mint standards)
 export const CATEGORIES = [
+	'Auto & Transport',
 	'Groceries',
-	'Dining',
-	'Coffee',
-	'Delivery',
+	'Dining & Restaurants',
+	'Coffee & Drinks',
+	'Food Delivery',
 	'Shopping',
-	'Gas/Transport',
+	'Home & Garden',
 	'Subscriptions',
-	'Travel',
+	'Travel & Vacation',
 	'Entertainment',
-	'Healthcare',
+	'Healthcare & Medical',
 	'Utilities',
-	'Housing',
+	'Housing & Rent',
 	'Personal Care',
+	'Fitness & Gym',
+	'Pets',
+	'Insurance',
 	'Education',
-	'Gifts',
+	'Gifts & Donations',
+	'Kids & Family',
+	'Electronics',
 	'Uncategorized'
 ] as const;
 
