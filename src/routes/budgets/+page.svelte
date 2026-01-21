@@ -23,6 +23,8 @@
 	let summary = $state<BudgetSummary | null>(null);
 	let loading = $state(true);
 	let showAddModal = $state(false);
+	let showQuickSetup = $state(false);
+	let showQuickAdd = $state(false);
 	let editingBudget = $state<BudgetWithProgress | null>(null);
 	
 	// Form state
@@ -30,9 +32,23 @@
 	let newLimit = $state(500);
 	let saving = $state(false);
 
+	// Quick Setup state - bulk budget creation
+	let quickSetupBudgets = $state<Record<string, number>>({});
+	
+	// Quick Add Transaction state
+	let quickAddAmount = $state<number>(0);
+	let quickAddCategory = $state('');
+	let quickAddMerchant = $state('');
+	let quickAddDate = $state(new Date().toISOString().slice(0, 10));
+
 	// Get categories that don't have budgets yet
 	let availableCategories = $derived(
 		CATEGORIES.filter(cat => cat !== 'Uncategorized' && !budgets.some(b => b.category === cat))
+	);
+	
+	// Get all categories for quick add (including ones with budgets)
+	let allCategories = $derived(
+		CATEGORIES.filter(cat => cat !== 'Uncategorized')
 	);
 
 	function formatCurrency(amount: number): string {
@@ -126,6 +142,77 @@
 		} catch (e) {
 			console.error('Failed to delete budget:', e);
 		}
+	}
+
+	function initQuickSetup() {
+		// Pre-populate with common categories and suggested limits
+		const suggestions: Record<string, number> = {
+			'Groceries': 600,
+			'Dining & Restaurants': 300,
+			'Coffee & Drinks': 100,
+			'Auto & Transport': 400,
+			'Shopping': 200,
+			'Entertainment': 150,
+			'Subscriptions': 100,
+			'Personal Care': 100
+		};
+		
+		quickSetupBudgets = {};
+		for (const cat of availableCategories) {
+			quickSetupBudgets[cat] = suggestions[cat] || 200;
+		}
+		showQuickSetup = true;
+	}
+
+	async function saveQuickSetup() {
+		saving = true;
+		const categoriesToSave = Object.entries(quickSetupBudgets).filter(([_, limit]) => limit > 0);
+		
+		for (const [category, monthlyLimit] of categoriesToSave) {
+			try {
+				await fetch('/api/budgets', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ category, monthlyLimit })
+				});
+			} catch (e) {
+				console.error(`Failed to save budget for ${category}:`, e);
+			}
+		}
+		
+		showQuickSetup = false;
+		quickSetupBudgets = {};
+		await loadBudgets();
+		saving = false;
+	}
+
+	async function saveQuickAdd() {
+		if (!quickAddAmount || quickAddAmount <= 0 || !quickAddCategory) return;
+		
+		saving = true;
+		try {
+			const res = await fetch('/api/transactions/quick-add', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					amount: quickAddAmount,
+					category: quickAddCategory,
+					merchant: quickAddMerchant || quickAddCategory,
+					date: quickAddDate
+				})
+			});
+			
+			if (res.ok) {
+				showQuickAdd = false;
+				quickAddAmount = 0;
+				quickAddMerchant = '';
+				quickAddDate = new Date().toISOString().slice(0, 10);
+				await loadBudgets(); // Refresh to show updated spending
+			}
+		} catch (e) {
+			console.error('Failed to add transaction:', e);
+		}
+		saving = false;
 	}
 
 	onMount(() => {
@@ -348,21 +435,48 @@
 				{/each}
 			</div>
 
-			<!-- Add Budget Button -->
-			{#if availableCategories.length > 0}
+			<!-- Action Buttons -->
+			<div class="flex flex-col sm:flex-row gap-3 mb-6">
+				<!-- Quick Add Transaction -->
 				<button 
-					onclick={() => { showAddModal = true; newCategory = availableCategories[0]; }}
-					class="w-full rounded-2xl p-4 sm:p-5 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
-					style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}; border: 2px dashed {isDark ? 'rgba(13,148,136,0.4)' : 'rgba(13,148,136,0.3)'}"
+					onclick={() => { showQuickAdd = true; quickAddCategory = budgets[0]?.category || allCategories[0]; }}
+					class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
+					style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
 				>
-					<i class="fa-solid fa-plus text-sw-accent"></i>
-					<span class="font-display font-semibold text-sw-accent">Add Budget</span>
+					<i class="fa-solid fa-receipt text-sw-accent"></i>
+					<span class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Log Spending</span>
 				</button>
-			{:else if budgets.length > 0}
-				<div class="text-center py-8">
-					<i class="fa-solid fa-check-circle text-3xl text-sw-accent mb-3"></i>
+				
+				{#if availableCategories.length > 0}
+					<!-- Add Single Budget -->
+					<button 
+						onclick={() => { showAddModal = true; newCategory = availableCategories[0]; }}
+						class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
+						style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}"
+					>
+						<i class="fa-solid fa-plus text-sw-accent"></i>
+						<span class="font-display font-semibold text-sw-accent">Add Budget</span>
+					</button>
+					
+					<!-- Quick Setup (multiple) -->
+					{#if availableCategories.length >= 3}
+						<button 
+							onclick={initQuickSetup}
+							class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
+							style="background: {isDark ? 'rgba(245,158,11,0.1)' : 'rgba(245,158,11,0.08)'}; border: 1px solid {isDark ? 'rgba(245,158,11,0.3)' : 'rgba(245,158,11,0.2)'}"
+						>
+							<i class="fa-solid fa-bolt text-amber-500"></i>
+							<span class="font-display font-semibold text-amber-500">Quick Setup</span>
+						</button>
+					{/if}
+				{/if}
+			</div>
+
+			<!-- All Categories Budgeted -->
+			{#if availableCategories.length === 0 && budgets.length > 0}
+				<div class="text-center py-4 mb-6 rounded-xl" style="background: {isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.08)'}">
+					<i class="fa-solid fa-check-circle text-2xl text-green-500 mb-2"></i>
 					<p class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">All categories budgeted!</p>
-					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">You've got budgets for every spending category</p>
 				</div>
 			{/if}
 
@@ -510,6 +624,160 @@
 						<i class="fa-solid fa-spinner fa-spin mr-2"></i>
 					{/if}
 					Save Changes
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Quick Setup Modal (Bulk Budget Creation) -->
+{#if showQuickSetup}
+	<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+		<div class="rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
+			<div class="p-6 border-b" style="border-color: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+				<h2 class="font-display text-xl font-semibold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+					<i class="fa-solid fa-bolt text-amber-500 mr-2"></i>
+					Quick Setup
+				</h2>
+				<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+					Set limits for multiple categories at once. Set to $0 to skip.
+				</p>
+			</div>
+			
+			<div class="flex-1 overflow-y-auto p-6 space-y-3">
+				{#each Object.entries(quickSetupBudgets) as [category, limit]}
+					<div class="flex items-center gap-3 p-3 rounded-xl" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
+						<span class="flex-1 text-sm font-medium truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{category}</span>
+						<div class="flex items-center rounded-lg overflow-hidden w-28" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
+							<span class="px-2 text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">$</span>
+							<input 
+								type="number" 
+								value={limit}
+								oninput={(e) => quickSetupBudgets[category] = parseInt(e.currentTarget.value) || 0}
+								min="0"
+								step="50"
+								class="w-full px-1 py-2 text-sm bg-transparent outline-none text-right"
+								style="color: {isDark ? '#ffffff' : '#171717'}"
+							/>
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<div class="p-6 border-t" style="border-color: {isDark ? '#2a2a2a' : '#e5e5e5'}; background: {isDark ? 'rgba(10,10,10,0.5)' : '#f9f6f1'}">
+				<div class="mb-4 text-center">
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Total monthly budget: 
+						<span class="font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+							{formatCurrency(Object.values(quickSetupBudgets).reduce((a, b) => a + b, 0))}
+						</span>
+					</p>
+				</div>
+				<div class="flex gap-3">
+					<button 
+						onclick={() => showQuickSetup = false}
+						class="flex-1 px-4 py-3 rounded-xl font-display font-semibold transition-colors"
+						style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					>
+						Cancel
+					</button>
+					<button 
+						onclick={saveQuickSetup}
+						disabled={saving}
+						class="flex-1 btn-primary py-3"
+					>
+						{#if saving}
+							<i class="fa-solid fa-spinner fa-spin mr-2"></i>
+						{/if}
+						Create {Object.values(quickSetupBudgets).filter(v => v > 0).length} Budgets
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Quick Add Transaction Modal -->
+{#if showQuickAdd}
+	<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+		<div class="rounded-2xl max-w-md w-full p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
+			<h2 class="font-display text-xl font-semibold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+				<i class="fa-solid fa-receipt text-sw-accent mr-2"></i>
+				Log Spending
+			</h2>
+			<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+				Quickly add a transaction without importing a CSV
+			</p>
+			
+			<div class="space-y-4">
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Amount</label>
+					<div class="flex items-center rounded-xl overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
+						<span class="px-4 text-lg" style="color: {isDark ? '#737373' : '#9ca3af'}">$</span>
+						<input 
+							type="number" 
+							bind:value={quickAddAmount}
+							min="0.01"
+							step="0.01"
+							placeholder="0.00"
+							class="flex-1 px-2 py-3 text-lg bg-transparent outline-none"
+							style="color: {isDark ? '#ffffff' : '#171717'}"
+						/>
+					</div>
+				</div>
+
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
+					<select 
+						bind:value={quickAddCategory}
+						class="w-full px-4 py-3 rounded-xl text-base"
+						style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					>
+						{#each allCategories as category}
+							<option value={category}>{category}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Merchant (optional)</label>
+					<input 
+						type="text" 
+						bind:value={quickAddMerchant}
+						placeholder="e.g., Kroger, Amazon..."
+						class="w-full px-4 py-3 rounded-xl text-base"
+						style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					/>
+				</div>
+
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Date</label>
+					<input 
+						type="date" 
+						bind:value={quickAddDate}
+						class="w-full px-4 py-3 rounded-xl text-base"
+						style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					/>
+				</div>
+			</div>
+
+			<div class="flex gap-3 mt-6">
+				<button 
+					onclick={() => showQuickAdd = false}
+					class="flex-1 px-4 py-3 rounded-xl font-display font-semibold transition-colors"
+					style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}"
+				>
+					Cancel
+				</button>
+				<button 
+					onclick={saveQuickAdd}
+					disabled={saving || !quickAddAmount || quickAddAmount <= 0 || !quickAddCategory}
+					class="flex-1 btn-primary py-3"
+				>
+					{#if saving}
+						<i class="fa-solid fa-spinner fa-spin mr-2"></i>
+					{/if}
+					Add Transaction
 				</button>
 			</div>
 		</div>
