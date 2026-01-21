@@ -269,21 +269,21 @@
 <div class="min-h-screen flex flex-col">
 	<!-- Header -->
 	<header class="border-b border-sw-border/50 bg-sw-bg/80 backdrop-blur-sm sticky top-0 z-40">
-		<div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-			<div class="flex items-center gap-4">
-				<a href="/imports" class="text-sw-text-dim hover:text-sw-text transition-colors" aria-label="Back to imports">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+			<div class="flex items-center gap-2 sm:gap-4 min-w-0">
+				<a href="/imports" class="text-sw-text-dim hover:text-sw-text transition-colors flex-shrink-0" aria-label="Back to imports">
 					<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 					</svg>
 				</a>
-				<h1 class="font-display text-xl font-semibold">Import Preview</h1>
+				<h1 class="font-display text-base sm:text-xl font-semibold truncate">Import Preview</h1>
 			</div>
 			<button
 				onclick={handleCommit}
 				disabled={committing || !summary || summary.rowsIncluded === 0}
-				class="btn btn-primary"
+				class="btn btn-primary text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 flex-shrink-0"
 			>
-				{committing ? 'Committing...' : 'Commit Import'}
+				{committing ? 'Committing...' : 'Commit'}
 			</button>
 		</div>
 	</header>
@@ -293,82 +293,83 @@
 			<div class="w-8 h-8 rounded-full border-2 border-sw-accent border-t-transparent animate-spin"></div>
 		</div>
 	{:else if summary}
-		<main class="flex-1 max-w-7xl mx-auto px-6 py-6 w-full">
+		<main class="flex-1 max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 w-full">
 			{#if commitError}
-				<div class="p-4 rounded-lg bg-sw-danger/10 border border-sw-danger/30 text-sw-danger mb-6">
+				<div class="p-3 sm:p-4 rounded-lg bg-sw-danger/10 border border-sw-danger/30 text-sw-danger mb-4 sm:mb-6 text-sm">
 					{commitError}
 				</div>
 			{/if}
 
 			<!-- Summary cards -->
-			<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-				<div class="stat-card">
-					<p class="text-sm text-sw-text-dim mb-1">Total Rows</p>
-					<p class="font-display text-2xl font-bold">{summary.rowsTotal}</p>
+			<div class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
+				<div class="stat-card p-2 sm:p-4">
+					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Rows</p>
+					<p class="font-display text-lg sm:text-2xl font-bold">{summary.rowsTotal}</p>
 				</div>
-				<div class="stat-card">
-					<p class="text-sm text-sw-text-dim mb-1">Included Spend</p>
-					<p class="font-display text-2xl font-bold text-sw-accent">{formatCurrency(summary.totalIncludedSpend)}</p>
-					<p class="text-xs text-sw-text-dim">{summary.rowsIncluded} rows</p>
+				<div class="stat-card p-2 sm:p-4">
+					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Included</p>
+					<p class="font-display text-lg sm:text-2xl font-bold text-sw-accent">{formatCurrency(summary.totalIncludedSpend)}</p>
+					<p class="text-[8px] sm:text-xs text-sw-text-dim hidden sm:block">{summary.rowsIncluded} rows</p>
 				</div>
-				<div class="stat-card">
-					<p class="text-sm text-sw-text-dim mb-1">Excluded</p>
-					<p class="font-display text-2xl font-bold">{formatCurrency(summary.totalExcludedAmount)}</p>
-					<p class="text-xs text-sw-text-dim">{summary.rowsExcluded} rows</p>
+				<div class="stat-card p-2 sm:p-4">
+					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Excluded</p>
+					<p class="font-display text-lg sm:text-2xl font-bold">{formatCurrency(summary.totalExcludedAmount)}</p>
+					<p class="text-[8px] sm:text-xs text-sw-text-dim hidden sm:block">{summary.rowsExcluded} rows</p>
 				</div>
-				<div class="stat-card">
-					<p class="text-sm text-sw-text-dim mb-1">Needs Review</p>
-					<p class="font-display text-2xl font-bold text-sw-warning">{summary.rowsNeedsReview}</p>
+				<div class="stat-card p-2 sm:p-4 hidden sm:block">
+					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Review</p>
+					<p class="font-display text-lg sm:text-2xl font-bold text-sw-warning">{summary.rowsNeedsReview}</p>
 				</div>
-				<div class="stat-card">
-					<p class="text-sm text-sw-text-dim mb-1">Duplicates</p>
-					<p class="font-display text-2xl font-bold">{summary.rowsDuplicates}</p>
+				<div class="stat-card p-2 sm:p-4 hidden sm:block">
+					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Duplicates</p>
+					<p class="font-display text-lg sm:text-2xl font-bold">{summary.rowsDuplicates}</p>
 				</div>
 			</div>
 
 			<!-- Tabs -->
-			<div class="flex items-center gap-1 mb-4 border-b border-sw-border overflow-x-auto">
+			<div class="flex items-center gap-0.5 sm:gap-1 mb-3 sm:mb-4 border-b border-sw-border overflow-x-auto scrollbar-hide">
 				{#each [
-					{ id: 'included', label: 'Included', count: summary.rowsIncluded },
-					{ id: 'uncategorized', label: 'Uncategorized', count: summary.rowsUncategorized, highlight: true },
-					{ id: 'excluded', label: 'Excluded', count: summary.rowsExcluded - summary.rowsNeedsReview - summary.rowsDuplicates },
-					{ id: 'needs_review', label: 'Needs Review', count: summary.rowsNeedsReview },
-					{ id: 'duplicates', label: 'Duplicates', count: summary.rowsDuplicates }
+					{ id: 'included', label: 'Included', labelShort: 'Incl', count: summary.rowsIncluded },
+					{ id: 'uncategorized', label: 'Uncategorized', labelShort: 'Uncat', count: summary.rowsUncategorized, highlight: true },
+					{ id: 'excluded', label: 'Excluded', labelShort: 'Excl', count: summary.rowsExcluded - summary.rowsNeedsReview - summary.rowsDuplicates },
+					{ id: 'needs_review', label: 'Needs Review', labelShort: 'Review', count: summary.rowsNeedsReview },
+					{ id: 'duplicates', label: 'Duplicates', labelShort: 'Dupe', count: summary.rowsDuplicates }
 				] as tabItem}
 					<button
 						onclick={() => { tab = tabItem.id as PreviewTab; currentPage = 1; loadRows(); }}
-						class="px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap {tab === tabItem.id ? 'border-sw-accent text-sw-accent' : 'border-transparent text-sw-text-dim hover:text-sw-text'}"
+						class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap {tab === tabItem.id ? 'border-sw-accent text-sw-accent' : 'border-transparent text-sw-text-dim hover:text-sw-text'}"
 					>
-						{tabItem.label}
-						<span class="ml-1.5 px-1.5 py-0.5 rounded-full text-xs {tabItem.highlight && tabItem.count > 0 ? 'bg-amber-500/30 text-amber-300' : 'bg-sw-surface'}">{tabItem.count}</span>
+						<span class="hidden sm:inline">{tabItem.label}</span>
+						<span class="sm:hidden">{tabItem.labelShort}</span>
+						<span class="ml-1 px-1 sm:px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs {tabItem.highlight && tabItem.count > 0 ? 'bg-amber-500/30 text-amber-300' : 'bg-sw-surface'}">{tabItem.count}</span>
 					</button>
 				{/each}
 			</div>
 
 			<!-- Bulk actions -->
 			{#if selected.size > 0}
-				<div class="flex items-center gap-3 mb-4 p-3 rounded-lg bg-sw-surface border border-sw-border">
-					<span class="text-sm text-sw-text-dim">{selected.size} selected</span>
+				<div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg bg-sw-surface border border-sw-border">
+					<span class="text-xs sm:text-sm text-sw-text-dim">{selected.size} selected</span>
 					<div class="flex-1"></div>
-					<button onclick={() => bulkOverride({ includedInSpend: true })} class="btn btn-secondary text-sm">Include</button>
-					<button onclick={() => bulkOverride({ includedInSpend: false })} class="btn btn-secondary text-sm">Exclude</button>
-					<button onclick={() => selected = new Set()} class="text-sm text-sw-text-dim hover:text-sw-text">Clear</button>
+					<button onclick={() => bulkOverride({ includedInSpend: true })} class="btn btn-secondary text-xs sm:text-sm px-2 sm:px-3">Include</button>
+					<button onclick={() => bulkOverride({ includedInSpend: false })} class="btn btn-secondary text-xs sm:text-sm px-2 sm:px-3">Exclude</button>
+					<button onclick={() => selected = new Set()} class="text-xs sm:text-sm text-sw-text-dim hover:text-sw-text">Clear</button>
 				</div>
 			{/if}
 
 			<!-- Search -->
-			<div class="mb-4">
+			<div class="mb-3 sm:mb-4">
 				<input
 					type="text"
 					bind:value={searchQuery}
 					onkeyup={(e) => { if (e.key === 'Enter') { currentPage = 1; loadRows(); }}}
-					placeholder="Search merchant or description..."
-					class="input max-w-sm"
+					placeholder="Search..."
+					class="input text-sm w-full sm:max-w-sm"
 				/>
 			</div>
 
-			<!-- Table -->
-			<div class="table-container bg-sw-surface/50">
+			<!-- Desktop Table -->
+			<div class="table-container bg-sw-surface/50 hidden md:block">
 				<table class="table w-full">
 					<thead>
 						<tr>
@@ -472,24 +473,88 @@
 				</table>
 			</div>
 
+			<!-- Mobile Card View -->
+			<div class="md:hidden space-y-2">
+				{#if loading}
+					<div class="flex items-center justify-center py-8">
+						<div class="w-6 h-6 rounded-full border-2 border-sw-accent border-t-transparent animate-spin"></div>
+					</div>
+				{:else if rows.length === 0}
+					<div class="text-center py-8 text-sw-text-dim text-sm">
+						No transactions in this view
+					</div>
+				{:else}
+					{#each rows as row}
+						<div class="bg-sw-surface/60 rounded-xl border border-sw-border/50 p-3 {selected.has(row.id) ? 'border-sw-accent/50 bg-sw-accent/5' : ''}">
+							<div class="flex items-start gap-2 mb-2">
+								<input
+									type="checkbox"
+									checked={selected.has(row.id)}
+									onchange={() => toggleSelect(row.id)}
+									class="rounded border-sw-border mt-0.5"
+								/>
+								<div class="flex-1 min-w-0">
+									<div class="flex items-start justify-between gap-2">
+										<div class="min-w-0">
+											<p class="font-medium text-sm truncate">{row.merchantRaw || row.descriptionRaw || '-'}</p>
+											<p class="text-[10px] text-sw-text-dim">{formatDate(row.dateChosen)}</p>
+										</div>
+										<p class="font-mono text-sm flex-shrink-0 {getAmountColor(row.amountSigned)}">{formatCurrency(row.amountSigned, true)}</p>
+									</div>
+								</div>
+							</div>
+							<div class="flex items-center gap-2 ml-6">
+								<select
+									value={row.effectiveKind}
+									onchange={(e) => handleKindChange(row, e.currentTarget.value as TransactionKind)}
+									class="text-[10px] bg-sw-bg text-sw-text border border-sw-border rounded px-1.5 py-1 cursor-pointer flex-1"
+								>
+									{#each kindOptions as opt}
+										<option value={opt.value} class="bg-sw-bg text-sw-text">{opt.label}</option>
+									{/each}
+								</select>
+								{#if row.effectiveKind === 'purchase'}
+									<select
+										value={row.effectiveCategory || 'Uncategorized'}
+										onchange={(e) => handleCategoryChange(row, e.currentTarget.value)}
+										class="text-[10px] bg-sw-bg text-sw-text border border-sw-border rounded px-1.5 py-1 cursor-pointer flex-1"
+									>
+										{#each categories as cat}
+											<option value={cat} class="bg-sw-bg text-sw-text">{cat}</option>
+										{/each}
+									</select>
+								{/if}
+								<button
+									onclick={() => updateOverride(row.id, { includedInSpend: !row.effectiveIncludedInSpend })}
+									class="toggle scale-75 origin-right {row.effectiveIncludedInSpend ? 'toggle-checked' : 'toggle-unchecked'}"
+									aria-label="Toggle included"
+								>
+									<span class="toggle-dot"></span>
+								</button>
+							</div>
+						</div>
+					{/each}
+				{/if}
+			</div>
+
 			<!-- Pagination -->
 			{#if totalRows > pageSize}
-				<div class="flex items-center justify-between mt-4">
-					<p class="text-sm text-sw-text-dim">
-						Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalRows)} of {totalRows}
+				<div class="flex flex-col sm:flex-row items-center justify-between mt-3 sm:mt-4 gap-2">
+					<p class="text-xs sm:text-sm text-sw-text-dim">
+						{(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalRows)} of {totalRows}
 					</p>
 					<div class="flex items-center gap-2">
 						<button
 							onclick={() => { currentPage--; loadRows(); }}
 							disabled={currentPage === 1}
-							class="btn btn-secondary text-sm"
+							class="btn btn-secondary text-xs sm:text-sm px-2 sm:px-3"
 						>
-							Previous
+							Prev
 						</button>
 						<button
 							onclick={() => { currentPage++; loadRows(); }}
 							disabled={currentPage * pageSize >= totalRows}
-							class="btn btn-secondary text-sm"
+							class="btn btn-secondary text-xs sm:text-sm px-2 sm:px-3"
 						>
 							Next
 						</button>
@@ -499,15 +564,14 @@
 		</main>
 
 		<!-- Footer with reconciliation info -->
-		<footer class="border-t border-sw-border/50 bg-sw-surface/50 py-4">
-			<div class="max-w-7xl mx-auto px-6 flex items-center justify-between text-sm">
-				<div class="flex items-center gap-6 text-sw-text-dim">
-					<span>Date range: {summary.dateMin ? formatDate(summary.dateMin) : '-'} - {summary.dateMax ? formatDate(summary.dateMax) : '-'}</span>
-					<span>•</span>
-					<span>Currency: {summary.currency}</span>
+		<footer class="border-t border-sw-border/50 bg-sw-surface/50 py-3 sm:py-4">
+			<div class="max-w-7xl mx-auto px-3 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-sm gap-1 sm:gap-0">
+				<div class="text-sw-text-dim text-center sm:text-left">
+					<span>{summary.dateMin ? formatDate(summary.dateMin) : '-'} - {summary.dateMax ? formatDate(summary.dateMax) : '-'}</span>
+					<span class="hidden sm:inline"> • {summary.currency}</span>
 				</div>
 				<div class="text-sw-text-dim">
-					Investment delay: 1 trading day • Ticker: SPY
+					Delay: 1 day • SPY
 				</div>
 			</div>
 		</footer>

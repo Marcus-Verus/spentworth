@@ -3,56 +3,98 @@
 @tailwind utilities;
 
 @layer base {
+	:root {
+		/* Light theme */
+		--sw-bg: #f5f0e8;
+		--sw-surface: #ffffff;
+		--sw-border: #d1ccc2;
+		--sw-accent: #0d9488;
+		--sw-accent-dim: #0f766e;
+		--sw-gold: #b45309;
+		--sw-text: #1a1a1a;
+		--sw-text-dim: #525252;
+		--sw-text-warm: #404040;
+	}
+	
+	:root.dark {
+		/* Dark theme */
+		--sw-bg: #0f0f0f;
+		--sw-surface: #1a1a1a;
+		--sw-border: #2a2a2a;
+		--sw-accent: #14b8a6;
+		--sw-accent-dim: #0d9488;
+		--sw-gold: #d4a574;
+		--sw-text: #fafafa;
+		--sw-text-dim: #a3a3a3;
+		--sw-text-warm: #d4d4d4;
+	}
+	
 	html {
 		scroll-behavior: smooth;
 	}
 	
 	body {
-		background-color: #0a0e17;
-		background-image: 
-			radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
-			linear-gradient(rgba(16, 185, 129, 0.02) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(16, 185, 129, 0.02) 1px, transparent 1px);
-		background-size: 100% 100%, 40px 40px, 40px 40px;
+		background-color: var(--sw-bg);
+		color: var(--sw-text);
 		min-height: 100vh;
+		transition: background-color 0.3s ease, color 0.3s ease;
+	}
+	
+	/* Light theme */
+	:root:not(.dark) body {
+		background-color: #f5f0e8;
+		background-image: none;
+		color: #1a1a1a !important;
+	}
+	
+	/* Dark theme - dark with subtle gradients */
+	:root.dark body {
+		background-color: #0f0f0f;
+		background-image: 
+			radial-gradient(ellipse at 50% 0%, rgba(20, 184, 166, 0.06) 0%, transparent 60%),
+			radial-gradient(ellipse at 80% 80%, rgba(212, 165, 116, 0.04) 0%, transparent 50%);
 	}
 
 	::selection {
-		background-color: rgba(16, 185, 129, 0.3);
-		color: #f9fafb;
+		background-color: rgba(13, 148, 136, 0.25);
+		color: var(--sw-text);
+	}
+	
+	:root.dark ::selection {
+		background-color: rgba(20, 184, 166, 0.3);
 	}
 
 	/* Custom scrollbar */
 	::-webkit-scrollbar {
-		width: 8px;
-		height: 8px;
+		width: 6px;
+		height: 6px;
 	}
 
 	::-webkit-scrollbar-track {
-		background: #111827;
+		background: var(--sw-surface);
 	}
 
 	::-webkit-scrollbar-thumb {
-		background: #374151;
-		border-radius: 4px;
+		background: var(--sw-border);
+		border-radius: 3px;
 	}
 
 	::-webkit-scrollbar-thumb:hover {
-		background: #4b5563;
+		background: var(--sw-text-dim);
 	}
 }
 
 @layer components {
 	.btn {
-		@apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-sw-bg disabled:opacity-50 disabled:cursor-not-allowed;
+		@apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-sw-bg disabled:opacity-50 disabled:cursor-not-allowed font-display;
 	}
 
 	.btn-primary {
-		@apply bg-sw-accent text-sw-bg hover:bg-emerald-400 focus:ring-sw-accent;
+		@apply bg-sw-accent text-white hover:opacity-90 focus:ring-sw-accent;
 	}
 
 	.btn-secondary {
-		@apply bg-sw-surface border border-sw-border text-sw-text hover:bg-sw-border focus:ring-sw-border;
+		@apply bg-sw-surface border border-sw-border text-sw-text hover:bg-sw-bg focus:ring-sw-border;
 	}
 
 	.btn-danger {
@@ -60,11 +102,39 @@
 	}
 
 	.card {
-		@apply bg-sw-surface/80 backdrop-blur-sm border border-sw-border rounded-xl p-6;
+		@apply bg-sw-surface border border-sw-border rounded-xl p-6;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.1);
+	}
+	
+	:root.dark .card {
+		@apply bg-sw-surface/80 backdrop-blur-sm border-sw-border;
+		box-shadow: none;
+	}
+	
+	/* Elevated card for light theme - white cards on cream background */
+	.card-elevated {
+		@apply bg-sw-surface border border-sw-border;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.1);
+		transition: box-shadow 0.2s ease, transform 0.2s ease;
+	}
+	
+	.card-elevated:hover {
+		box-shadow: 0 2px 4px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.14);
+		transform: translateY(-2px);
+	}
+	
+	:root.dark .card-elevated {
+		@apply bg-sw-surface/60 backdrop-blur-sm border-sw-border/40;
+		box-shadow: none;
+	}
+	
+	:root.dark .card-elevated:hover {
+		@apply border-sw-border/60;
+		box-shadow: none;
 	}
 
 	.input {
-		@apply w-full px-4 py-2.5 bg-sw-bg border border-sw-border rounded-lg text-sw-text placeholder:text-sw-text-dim focus:outline-none focus:ring-2 focus:ring-sw-accent/50 focus:border-sw-accent transition-colors;
+		@apply w-full px-4 py-2.5 bg-sw-surface border border-sw-border rounded-lg text-sw-text placeholder:text-sw-text-dim focus:outline-none focus:ring-2 focus:ring-sw-accent/50 focus:border-sw-accent transition-colors;
 	}
 
 	.label {
@@ -76,7 +146,7 @@
 	}
 
 	.badge-success {
-		@apply bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+		@apply bg-teal-500/20 text-teal-400 border border-teal-500/30;
 	}
 
 	.badge-warning {
@@ -151,14 +221,72 @@
 
 @layer utilities {
 	.text-gradient {
-		@apply bg-gradient-to-r from-sw-accent to-emerald-400 bg-clip-text text-transparent;
+		background: linear-gradient(to right, #0f766e, #0d9488);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+	
+	:root.dark .text-gradient {
+		background: linear-gradient(to right, #14b8a6, #5eead4);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+	
+	.text-gradient-warm {
+		@apply bg-gradient-to-r from-sw-gold to-amber-300 bg-clip-text text-transparent;
 	}
 
+	/* Light theme glows */
 	.glow {
-		box-shadow: 0 0 40px rgba(16, 185, 129, 0.15);
+		box-shadow: 0 4px 40px rgba(13, 148, 136, 0.2);
 	}
 
 	.glow-sm {
-		box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+		box-shadow: 0 2px 20px rgba(13, 148, 136, 0.15);
+	}
+	
+	/* Dark theme glows */
+	:root.dark .glow {
+		box-shadow: 0 0 60px rgba(20, 184, 166, 0.12);
+	}
+
+	:root.dark .glow-sm {
+		box-shadow: 0 0 30px rgba(20, 184, 166, 0.08);
+	}
+	
+	.glow-warm {
+		box-shadow: 0 0 60px rgba(212, 165, 116, 0.12);
+	}
+	
+	/* Card shadows for light theme */
+	.card-shadow {
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+	}
+	
+	:root.dark .card-shadow {
+		box-shadow: none;
+	}
+
+	/* Hide scrollbar for horizontal scroll containers on mobile */
+	.scrollbar-hide {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+	
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
+	}
+	
+	/* Hide number input spinners */
+	input[type="number"]::-webkit-inner-spin-button,
+	input[type="number"]::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+	
+	input[type="number"] {
+		-moz-appearance: textfield;
 	}
 }

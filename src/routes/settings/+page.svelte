@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Header from '$lib/components/Header.svelte';
 
 	let { data } = $props();
 
@@ -43,27 +44,10 @@
 </script>
 
 <div class="min-h-screen">
-	<!-- Header -->
-	<header class="border-b border-sw-border/50 bg-sw-bg/80 backdrop-blur-sm sticky top-0 z-40">
-		<div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-			<div class="flex items-center gap-4">
-				<a href="/dashboard" class="flex items-center gap-3">
-					<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sw-accent to-emerald-600 flex items-center justify-center text-sw-bg font-bold text-xl">
-						$
-					</div>
-					<span class="font-display text-xl font-semibold">SpentWorth</span>
-				</a>
-			</div>
-			<nav class="flex items-center gap-6">
-				<a href="/dashboard" class="text-sw-text-dim hover:text-sw-text transition-colors">Dashboard</a>
-				<a href="/imports" class="text-sw-text-dim hover:text-sw-text transition-colors">Imports</a>
-				<a href="/settings" class="text-sw-accent font-medium">Settings</a>
-			</nav>
-		</div>
-	</header>
+	<Header />
 
-	<main class="max-w-2xl mx-auto px-6 py-8">
-		<h1 class="font-display text-3xl font-bold mb-8">Settings</h1>
+	<main class="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+		<h1 class="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Settings</h1>
 
 		{#if loading}
 			<div class="flex items-center justify-center py-16">
