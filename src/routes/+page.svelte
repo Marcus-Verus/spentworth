@@ -123,7 +123,7 @@
 			<div class="hidden lg:block">
 				<!-- Decorative gradient orbs -->
 				<div class="absolute left-[10%] top-[30%] w-64 h-64 bg-sw-accent/10 rounded-full blur-3xl"></div>
-				<div class="absolute right-[15%] top-[20%] w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
+				<div class="absolute right-[15%] top-[20%] w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
 				
 				<!-- Left card - Spending breakdown with mini chart -->
 				<div class="absolute left-[4%] top-[18%] animate-float-slow">
@@ -163,8 +163,8 @@
 								</div>
 							</div>
 							<div class="flex items-center gap-2">
-								<div class="w-6 h-6 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(168,85,247,0.15)' : 'rgba(168,85,247,0.1)'}">
-									<i class="fa-solid fa-car text-purple-500 text-[10px]"></i>
+								<div class="w-6 h-6 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)'}">
+									<i class="fa-solid fa-car text-blue-500 text-[10px]"></i>
 								</div>
 								<div class="flex-1">
 									<div class="flex justify-between text-xs mb-1">
@@ -172,7 +172,7 @@
 										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$156</span>
 									</div>
 									<div class="h-1 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
-										<div class="h-full rounded-full bg-purple-500" style="width: 11%"></div>
+										<div class="h-full rounded-full bg-blue-500" style="width: 11%"></div>
 									</div>
 								</div>
 							</div>
@@ -242,7 +242,7 @@
 							<div>
 								<p class="text-xs font-medium mb-0.5" style="color: {isDark ? '#ffffff' : '#171717'}">Coffee budget</p>
 								<p class="text-[11px]" style="color: {isDark ? '#a3a3a3' : '#737373'}">$68 of $100</p>
-								<p class="text-[10px] text-purple-500 font-medium">On track ✓</p>
+								<p class="text-[10px] text-blue-500 font-medium">On track</p>
 							</div>
 						</div>
 					</div>
@@ -311,9 +311,9 @@
 				</div>
 				
 				<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-					<div class="rounded-2xl p-6 transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-						<div class="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}">
-							<i class="fa-solid fa-chart-pie text-sw-accent text-lg"></i>
+					<div class="rounded-2xl p-6 text-center transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
+						<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}">
+							<i class="fa-solid fa-chart-pie text-sw-accent text-xl"></i>
 						</div>
 						<h3 class="font-display text-lg font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Spending breakdown</h3>
 						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
@@ -321,9 +321,9 @@
 						</p>
 					</div>
 
-					<div class="rounded-2xl p-6 transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-						<div class="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style="background: {isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.12)'}">
-							<i class="fa-solid fa-seedling text-lg" style="color: #d97706"></i>
+					<div class="rounded-2xl p-6 text-center transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
+						<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto" style="background: {isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.12)'}">
+							<i class="fa-solid fa-seedling text-xl" style="color: #d97706"></i>
 						</div>
 						<h3 class="font-display text-lg font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Growth potential</h3>
 						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
@@ -331,9 +331,9 @@
 						</p>
 					</div>
 
-					<div class="rounded-2xl p-6 sm:col-span-2 lg:col-span-1 transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-						<div class="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style="background: {isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)'}">
-							<i class="fa-solid fa-bullseye text-lg" style="color: #7c3aed"></i>
+					<div class="rounded-2xl p-6 text-center sm:col-span-2 lg:col-span-1 transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
+						<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto" style="background: {isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.12)'}">
+							<i class="fa-solid fa-bullseye text-xl" style="color: #3b82f6"></i>
 						</div>
 						<h3 class="font-display text-lg font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Personal goals</h3>
 						<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
@@ -383,7 +383,7 @@
 							"Seeing my $6 daily coffee as a <span class="font-semibold text-sw-accent">$15,847 opportunity cost</span> over 5 years was the wake-up call I needed. I still get coffee, just not every day. My future self thanks me."
 						</p>
 						<div class="flex items-center gap-3">
-							<div class="w-9 h-9 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-500 font-medium text-sm">S</div>
+							<div class="w-9 h-9 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 font-medium text-sm">S</div>
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Sarah K.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Freelance Designer</p>
@@ -613,7 +613,7 @@
 				<div class="flex items-center justify-center gap-2 mb-6">
 					<div class="flex -space-x-2">
 						<div class="w-8 h-8 rounded-full bg-sw-accent/20 border-2 flex items-center justify-center text-sw-accent text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">M</div>
-						<div class="w-8 h-8 rounded-full bg-purple-500/20 border-2 flex items-center justify-center text-purple-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">S</div>
+						<div class="w-8 h-8 rounded-full bg-blue-500/20 border-2 flex items-center justify-center text-blue-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">S</div>
 						<div class="w-8 h-8 rounded-full bg-amber-500/20 border-2 flex items-center justify-center text-amber-600 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">J</div>
 						<div class="w-8 h-8 rounded-full bg-teal-500/20 border-2 flex items-center justify-center text-teal-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">A</div>
 						<div class="w-8 h-8 rounded-full bg-rose-500/20 border-2 flex items-center justify-center text-rose-500 text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}">+</div>

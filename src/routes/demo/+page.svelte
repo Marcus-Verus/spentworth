@@ -226,46 +226,130 @@
 
 		<!-- Budgets Tab -->
 		{#if activeTab === 'budgets'}
-			<div class="space-y-4">
+			<!-- Budget Summary -->
+			{@const totalBudgeted = sampleBudgets.reduce((a, b) => a + b.limit, 0)}
+			{@const totalSpent = sampleBudgets.reduce((a, b) => a + b.spent, 0)}
+			{@const totalRemaining = totalBudgeted - totalSpent}
+			{@const budgetsOnTrack = sampleBudgets.filter(b => b.spent <= b.limit).length}
+			
+			<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+				<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Total Budgeted</p>
+					<p class="font-mono text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(totalBudgeted)}</p>
+				</div>
+				<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Spent So Far</p>
+					<p class="font-mono text-lg font-semibold" style="color: {totalSpent > totalBudgeted ? '#ef4444' : (isDark ? '#ffffff' : '#171717')}">{formatCurrency(totalSpent)}</p>
+				</div>
+				<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Remaining</p>
+					<p class="font-mono text-lg font-semibold" style="color: {totalRemaining >= 0 ? '#10b981' : '#ef4444'}">{formatCurrency(totalRemaining)}</p>
+				</div>
+				<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">On Track</p>
+					<p class="font-mono text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{budgetsOnTrack}/{sampleBudgets.length}</p>
+				</div>
+			</div>
+
+			<!-- Opportunity Cost Banner -->
+			{#if totalRemaining > 0}
+				<div class="rounded-xl p-4 mb-6 flex items-center gap-3" style="background: rgba(13,148,136,0.1); border: 1px solid rgba(13,148,136,0.2)">
+					<div class="w-10 h-10 rounded-lg flex items-center justify-center bg-sw-accent/20">
+						<i class="fa-solid fa-piggy-bank text-sw-accent"></i>
+					</div>
+					<div>
+						<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">
+							Stay within budget and invest the {formatCurrency(totalRemaining)} remaining
+						</p>
+						<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							That's <span class="text-sw-accent font-semibold">{formatCurrency(calculateOpportunityCost(totalRemaining))}</span> in 10 years at 7% return
+						</p>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Budget Cards -->
+			<div class="space-y-3">
 				{#each sampleBudgets as budget}
 					{@const percent = Math.round((budget.spent / budget.limit) * 100)}
 					{@const overUnder = budget.limit - budget.spent}
 					{@const trend = budget.previous - budget.spent}
-					<div class="rounded-xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-						<div class="flex items-start justify-between mb-3">
-							<div>
-								<h3 class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{budget.category}</h3>
-								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-									{formatCurrency(budget.spent)} of {formatCurrency(budget.limit)}
-								</p>
-							</div>
-							{#if trend > 0}
-								<span class="text-xs px-2 py-1 rounded-full" style="background: rgba(16,185,129,0.1); color: #10b981">
-									<i class="fa-solid fa-arrow-down mr-1"></i>{formatCurrency(trend)} vs last month
-								</span>
-							{:else if trend < 0}
-								<span class="text-xs px-2 py-1 rounded-full" style="background: rgba(239,68,68,0.1); color: #ef4444">
-									<i class="fa-solid fa-arrow-up mr-1"></i>{formatCurrency(Math.abs(trend))} vs last month
-								</span>
-							{/if}
-						</div>
-						<div class="h-3 rounded-full overflow-hidden mb-3" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="rounded-xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+						<!-- Progress bar at top -->
+						<div class="h-1.5" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
 							<div 
-								class="h-full rounded-full transition-all"
+								class="h-full transition-all"
 								style="width: {Math.min(percent, 100)}%; background: {getProgressColor(percent)}"
 							></div>
 						</div>
-						<div class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-							{#if overUnder >= 0}
-								<i class="fa-solid fa-piggy-bank text-sw-accent mr-1"></i>
-								{formatCurrency(overUnder)} left → {formatCurrency(calculateOpportunityCost(overUnder))} potential in 10 years
-							{:else}
-								<i class="fa-solid fa-triangle-exclamation text-red-500 mr-1"></i>
-								{formatCurrency(Math.abs(overUnder))} over → {formatCurrency(calculateOpportunityCost(Math.abs(overUnder)))} lost opportunity
-							{/if}
+						
+						<div class="p-4">
+							<div class="flex items-center justify-between mb-2">
+								<div class="flex items-center gap-3">
+									<div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}">
+										{#if budget.category === 'Dining & Restaurants'}
+											<i class="fa-solid fa-utensils text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+										{:else if budget.category === 'Groceries'}
+											<i class="fa-solid fa-cart-shopping text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+										{:else if budget.category === 'Coffee & Drinks'}
+											<i class="fa-solid fa-mug-hot text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+										{:else if budget.category === 'Shopping'}
+											<i class="fa-solid fa-bag-shopping text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+										{:else}
+											<i class="fa-solid fa-ticket text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+										{/if}
+									</div>
+									<div>
+										<h3 class="font-display font-semibold text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">{budget.category}</h3>
+										<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+											{formatCurrency(budget.spent)} of {formatCurrency(budget.limit)}
+										</p>
+									</div>
+								</div>
+								<div class="text-right">
+									<p class="font-mono text-lg font-semibold" style="color: {percent >= 100 ? '#ef4444' : (isDark ? '#ffffff' : '#171717')}">{percent}%</p>
+									{#if trend !== 0}
+										<p class="text-xs" style="color: {trend > 0 ? '#10b981' : '#ef4444'}">
+											<i class="fa-solid fa-arrow-{trend > 0 ? 'down' : 'up'} mr-0.5"></i>
+											{formatCurrency(Math.abs(trend))}
+										</p>
+									{/if}
+								</div>
+							</div>
+							
+							<!-- Bottom info row -->
+							<div class="flex items-center justify-between pt-2" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#f0f0f0'}">
+								{#if overUnder >= 0}
+									<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										<i class="fa-solid fa-coins text-sw-accent mr-1"></i>
+										{formatCurrency(overUnder)} left this month
+									</span>
+									<span class="text-xs px-2 py-0.5 rounded" style="background: rgba(13,148,136,0.1); color: #0d9488">
+										+{formatCurrency(calculateOpportunityCost(overUnder, 10))} potential
+									</span>
+								{:else}
+									<span class="text-xs" style="color: #ef4444">
+										<i class="fa-solid fa-triangle-exclamation mr-1"></i>
+										{formatCurrency(Math.abs(overUnder))} over budget
+									</span>
+									<span class="text-xs px-2 py-0.5 rounded" style="background: rgba(239,68,68,0.1); color: #ef4444">
+										-{formatCurrency(calculateOpportunityCost(Math.abs(overUnder), 10))} lost
+									</span>
+								{/if}
+							</div>
 						</div>
 					</div>
 				{/each}
+			</div>
+
+			<!-- Quick Tips -->
+			<div class="mt-6 rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+				<p class="text-xs font-medium mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+					<i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>Quick tip
+				</p>
+				<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
+					Your coffee habit is 134% of budget. Cutting just 2 coffees/week would save {formatCurrency(56)}/month — that's {formatCurrency(calculateOpportunityCost(56, 10))} in 10 years.
+				</p>
 			</div>
 		{/if}
 
