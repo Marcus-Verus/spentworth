@@ -1,11 +1,19 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import type { BatchSummary, RawRowEffective, PreviewTab, TransactionKind, Category, CATEGORIES } from '$lib/types';
+	import { initTheme, getTheme } from '$lib/stores/theme';
 
 	let { data } = $props();
+	let isDark = $state(false);
 
 	const batchId = $derived($page.params.batchId);
+	
+	onMount(() => {
+		initTheme();
+		isDark = getTheme() === 'dark';
+	});
 
 	let tab = $state<PreviewTab>('included');
 	let rows = $state<RawRowEffective[]>([]);
@@ -268,21 +276,22 @@
 
 <div class="min-h-screen flex flex-col">
 	<!-- Header -->
-	<header class="border-b border-sw-border/50 bg-sw-bg/80 backdrop-blur-sm sticky top-0 z-40">
+	<header class="border-b border-sw-border/30 backdrop-blur-md bg-sw-surface/90 sticky top-0 z-50">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
-			<div class="flex items-center gap-2 sm:gap-4 min-w-0">
-				<a href="/imports" class="text-sw-text-dim hover:text-sw-text transition-colors flex-shrink-0" aria-label="Back to imports">
-					<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-					</svg>
+			<div class="flex items-center gap-3 sm:gap-4 min-w-0">
+				<a href="/imports" class="p-1.5 rounded-lg transition-colors flex-shrink-0" style="color: {isDark ? '#a3a3a3' : '#525252'}" aria-label="Back to imports">
+					<i class="fa-solid fa-arrow-left"></i>
 				</a>
-				<h1 class="font-display text-base sm:text-xl font-semibold truncate">Import Preview</h1>
+				<h1 class="font-display text-lg sm:text-xl font-semibold truncate" style="color: {isDark ? '#ffffff' : '#171717'}">Import Preview</h1>
 			</div>
 			<button
 				onclick={handleCommit}
 				disabled={committing || !summary || summary.rowsIncluded === 0}
-				class="btn btn-primary text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 flex-shrink-0"
+				class="btn btn-primary text-sm px-4 py-2 flex-shrink-0"
 			>
+				{#if committing}
+					<i class="fa-solid fa-spinner fa-spin mr-2"></i>
+				{/if}
 				{committing ? 'Committing...' : 'Commit'}
 			</button>
 		</div>
@@ -301,33 +310,33 @@
 			{/if}
 
 			<!-- Summary cards -->
-			<div class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
-				<div class="stat-card p-2 sm:p-4">
-					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Rows</p>
-					<p class="font-display text-lg sm:text-2xl font-bold">{summary.rowsTotal}</p>
+			<div class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mb-4 sm:mb-6">
+				<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#737373' : '#737373'}">Rows</p>
+					<p class="font-display text-lg sm:text-2xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">{summary.rowsTotal}</p>
 				</div>
-				<div class="stat-card p-2 sm:p-4">
-					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Included</p>
+				<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#737373' : '#737373'}">Included</p>
 					<p class="font-display text-lg sm:text-2xl font-bold text-sw-accent">{formatCurrency(summary.totalIncludedSpend)}</p>
-					<p class="text-[8px] sm:text-xs text-sw-text-dim hidden sm:block">{summary.rowsIncluded} rows</p>
+					<p class="text-[10px] hidden sm:block" style="color: {isDark ? '#525252' : '#9ca3af'}">{summary.rowsIncluded} rows</p>
 				</div>
-				<div class="stat-card p-2 sm:p-4">
-					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Excluded</p>
-					<p class="font-display text-lg sm:text-2xl font-bold">{formatCurrency(summary.totalExcludedAmount)}</p>
-					<p class="text-[8px] sm:text-xs text-sw-text-dim hidden sm:block">{summary.rowsExcluded} rows</p>
+				<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#737373' : '#737373'}">Excluded</p>
+					<p class="font-display text-lg sm:text-2xl font-bold" style="color: {isDark ? '#a3a3a3' : '#525252'}">{formatCurrency(summary.totalExcludedAmount)}</p>
+					<p class="text-[10px] hidden sm:block" style="color: {isDark ? '#525252' : '#9ca3af'}">{summary.rowsExcluded} rows</p>
 				</div>
-				<div class="stat-card p-2 sm:p-4 hidden sm:block">
-					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Review</p>
-					<p class="font-display text-lg sm:text-2xl font-bold text-sw-warning">{summary.rowsNeedsReview}</p>
+				<div class="rounded-xl p-3 sm:p-4 hidden sm:block" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#737373' : '#737373'}">Review</p>
+					<p class="font-display text-lg sm:text-2xl font-bold" style="color: #f59e0b">{summary.rowsNeedsReview}</p>
 				</div>
-				<div class="stat-card p-2 sm:p-4 hidden sm:block">
-					<p class="text-[10px] sm:text-sm text-sw-text-dim mb-0.5 sm:mb-1">Duplicates</p>
-					<p class="font-display text-lg sm:text-2xl font-bold">{summary.rowsDuplicates}</p>
+				<div class="rounded-xl p-3 sm:p-4 hidden sm:block" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#737373' : '#737373'}">Duplicates</p>
+					<p class="font-display text-lg sm:text-2xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">{summary.rowsDuplicates}</p>
 				</div>
 			</div>
 
 			<!-- Tabs -->
-			<div class="flex items-center gap-0.5 sm:gap-1 mb-3 sm:mb-4 border-b border-sw-border overflow-x-auto scrollbar-hide">
+			<div class="flex items-center gap-1 mb-4 overflow-x-auto scrollbar-hide pb-1" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 				{#each [
 					{ id: 'included', label: 'Included', labelShort: 'Incl', count: summary.rowsIncluded },
 					{ id: 'uncategorized', label: 'Uncategorized', labelShort: 'Uncat', count: summary.rowsUncategorized, highlight: true },
@@ -337,11 +346,15 @@
 				] as tabItem}
 					<button
 						onclick={() => { tab = tabItem.id as PreviewTab; currentPage = 1; loadRows(); }}
-						class="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap {tab === tabItem.id ? 'border-sw-accent text-sw-accent' : 'border-transparent text-sw-text-dim hover:text-sw-text'}"
+						class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap -mb-[1px]"
+						style="border-color: {tab === tabItem.id ? '#0d9488' : 'transparent'}; color: {tab === tabItem.id ? '#0d9488' : (isDark ? '#a3a3a3' : '#737373')}"
 					>
 						<span class="hidden sm:inline">{tabItem.label}</span>
 						<span class="sm:hidden">{tabItem.labelShort}</span>
-						<span class="ml-1 px-1 sm:px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs {tabItem.highlight && tabItem.count > 0 ? 'bg-amber-500/30 text-amber-300' : 'bg-sw-surface'}">{tabItem.count}</span>
+						<span 
+							class="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs"
+							style="background: {tabItem.highlight && tabItem.count > 0 ? 'rgba(245,158,11,0.15)' : (isDark ? '#262626' : '#f5f0e8')}; color: {tabItem.highlight && tabItem.count > 0 ? '#f59e0b' : (isDark ? '#a3a3a3' : '#525252')}"
+						>{tabItem.count}</span>
 					</button>
 				{/each}
 			</div>
@@ -358,35 +371,40 @@
 			{/if}
 
 			<!-- Search -->
-			<div class="mb-3 sm:mb-4">
-				<input
-					type="text"
-					bind:value={searchQuery}
-					onkeyup={(e) => { if (e.key === 'Enter') { currentPage = 1; loadRows(); }}}
-					placeholder="Search..."
-					class="input text-sm w-full sm:max-w-sm"
-				/>
+			<div class="mb-4">
+				<div class="relative w-full sm:max-w-sm">
+					<i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color: {isDark ? '#525252' : '#9ca3af'}"></i>
+					<input
+						type="text"
+						bind:value={searchQuery}
+						onkeyup={(e) => { if (e.key === 'Enter') { currentPage = 1; loadRows(); }}}
+						placeholder="Search merchants..."
+						class="w-full pl-9 pr-3 py-2 rounded-lg text-sm"
+						style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					/>
+				</div>
 			</div>
 
 			<!-- Desktop Table -->
-			<div class="table-container bg-sw-surface/50 hidden md:block">
-				<table class="table w-full">
+			<div class="rounded-xl overflow-hidden hidden md:block" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"">
+				<table class="w-full">
 					<thead>
-						<tr>
-							<th class="w-10">
+						<tr style="background: {isDark ? '#0f0f0f' : '#f9f6f1'}; border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<th class="w-10 px-3 py-3">
 								<input
 									type="checkbox"
 									checked={selected.size === rows.length && rows.length > 0}
 									onchange={selectAll}
-									class="rounded border-sw-border"
+									class="rounded accent-sw-accent"
+									style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}"
 								/>
 							</th>
-							<th class="w-20">Date</th>
-							<th class="text-left">Merchant</th>
-							<th class="w-24 text-right pr-4">Amount</th>
-							<th class="w-28 text-center">Type</th>
-							<th class="w-36 text-center">Category</th>
-							<th class="w-20 text-center">Included</th>
+							<th class="w-20 px-3 py-3 text-xs font-medium" style="color: {isDark ? '#737373' : '#737373'}">Date</th>
+							<th class="px-3 py-3 text-xs font-medium text-left" style="color: {isDark ? '#737373' : '#737373'}">Merchant</th>
+							<th class="w-24 px-3 py-3 text-xs font-medium text-right" style="color: {isDark ? '#737373' : '#737373'}">Amount</th>
+							<th class="w-28 px-3 py-3 text-xs font-medium text-center" style="color: {isDark ? '#737373' : '#737373'}">Type</th>
+							<th class="w-36 px-3 py-3 text-xs font-medium text-center" style="color: {isDark ? '#737373' : '#737373'}">Category</th>
+							<th class="w-20 px-3 py-3 text-xs font-medium text-center" style="color: {isDark ? '#737373' : '#737373'}">Include</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -404,58 +422,61 @@
 							</tr>
 						{:else}
 							{#each rows as row}
-								<tr class="{selected.has(row.id) ? 'bg-sw-accent/5' : ''}">
-									<td>
+								<tr style="background: {selected.has(row.id) ? 'rgba(13,148,136,0.05)' : 'transparent'}; border-bottom: 1px solid {isDark ? '#1f1f1f' : '#f0f0f0'}">
+									<td class="px-3 py-2.5">
 										<div class="flex justify-center">
 											<input
 												type="checkbox"
 												checked={selected.has(row.id)}
 												onchange={() => toggleSelect(row.id)}
-												class="rounded border-sw-border"
+												class="rounded accent-sw-accent"
+												style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}"
 											/>
 										</div>
 									</td>
-									<td class="font-mono text-sm">{formatDate(row.dateChosen)}</td>
-									<td>
-										<div class="truncate" title={row.descriptionRaw || ''}>
+									<td class="px-3 py-2.5 font-mono text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">{formatDate(row.dateChosen)}</td>
+									<td class="px-3 py-2.5">
+										<div class="truncate text-sm" title={row.descriptionRaw || ''} style="color: {isDark ? '#ffffff' : '#171717'}">
 											{row.merchantRaw || row.descriptionRaw || '-'}
 										</div>
 										{#if row.parseStatus === 'error'}
-											<span class="text-xs text-sw-danger">{row.parseError}</span>
+											<span class="text-xs text-red-500">{row.parseError}</span>
 										{/if}
 									</td>
-									<td class="text-right font-mono pr-4 {getAmountColor(row.amountSigned)}">{formatCurrency(row.amountSigned, true)}</td>
-									<td>
+									<td class="px-3 py-2.5 text-right font-mono text-sm" style="color: {row.amountSigned && row.amountSigned > 0 ? '#22c55e' : (isDark ? '#ffffff' : '#171717')}">{formatCurrency(row.amountSigned, true)}</td>
+									<td class="px-3 py-2.5">
 										<div class="flex justify-center">
 											<select
 												value={row.effectiveKind}
 												onchange={(e) => handleKindChange(row, e.currentTarget.value as TransactionKind)}
-												class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
+												class="text-xs rounded px-2 py-1.5 cursor-pointer"
+												style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 											>
 												{#each kindOptions as opt}
-													<option value={opt.value} class="bg-sw-bg text-sw-text">{opt.label}</option>
+													<option value={opt.value}>{opt.label}</option>
 												{/each}
 											</select>
 										</div>
 									</td>
-									<td>
+									<td class="px-3 py-2.5">
 										<div class="flex justify-center">
 											{#if row.effectiveKind === 'purchase'}
 												<select
 													value={row.effectiveCategory || 'Uncategorized'}
 													onchange={(e) => handleCategoryChange(row, e.currentTarget.value)}
-													class="text-xs bg-sw-bg text-sw-text border border-sw-border rounded px-2 py-1 cursor-pointer"
+													class="text-xs rounded px-2 py-1.5 cursor-pointer"
+													style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 												>
 													{#each categories as cat}
-														<option value={cat} class="bg-sw-bg text-sw-text">{cat}</option>
+														<option value={cat}>{cat}</option>
 													{/each}
 												</select>
 											{:else}
-												<span class="text-sw-text-dim">-</span>
+												<span style="color: {isDark ? '#525252' : '#9ca3af'}">-</span>
 											{/if}
 										</div>
 									</td>
-									<td>
+									<td class="px-3 py-2.5">
 										<div class="flex justify-center">
 											<button
 												onclick={() => updateOverride(row.id, { includedInSpend: !row.effectiveIncludedInSpend })}
@@ -480,53 +501,61 @@
 						<div class="w-6 h-6 rounded-full border-2 border-sw-accent border-t-transparent animate-spin"></div>
 					</div>
 				{:else if rows.length === 0}
-					<div class="text-center py-8 text-sw-text-dim text-sm">
+					<div class="text-center py-8 text-sm" style="color: {isDark ? '#737373' : '#737373'}">
 						No transactions in this view
 					</div>
 				{:else}
 					{#each rows as row}
-						<div class="bg-sw-surface/60 rounded-xl border border-sw-border/50 p-3 {selected.has(row.id) ? 'border-sw-accent/50 bg-sw-accent/5' : ''}">
-							<div class="flex items-start gap-2 mb-2">
+						<div 
+							class="rounded-xl p-3"
+							style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {selected.has(row.id) ? 'rgba(13,148,136,0.5)' : (isDark ? '#2a2a2a' : '#e5e5e5')}; {selected.has(row.id) ? 'background: rgba(13,148,136,0.03)' : ''}"
+						>
+							<!-- Top row: checkbox, merchant, amount -->
+							<div class="flex items-start gap-3 mb-3">
 								<input
 									type="checkbox"
 									checked={selected.has(row.id)}
 									onchange={() => toggleSelect(row.id)}
-									class="rounded border-sw-border mt-0.5"
+									class="rounded accent-sw-accent mt-1"
+									style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}"
 								/>
 								<div class="flex-1 min-w-0">
 									<div class="flex items-start justify-between gap-2">
 										<div class="min-w-0">
-											<p class="font-medium text-sm truncate">{row.merchantRaw || row.descriptionRaw || '-'}</p>
-											<p class="text-[10px] text-sw-text-dim">{formatDate(row.dateChosen)}</p>
+											<p class="font-medium text-sm truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{row.merchantRaw || row.descriptionRaw || '-'}</p>
+											<p class="text-[10px]" style="color: {isDark ? '#525252' : '#9ca3af'}">{formatDate(row.dateChosen)}</p>
 										</div>
-										<p class="font-mono text-sm flex-shrink-0 {getAmountColor(row.amountSigned)}">{formatCurrency(row.amountSigned, true)}</p>
+										<p class="font-mono text-sm font-medium flex-shrink-0" style="color: {row.amountSigned && row.amountSigned > 0 ? '#22c55e' : (isDark ? '#ffffff' : '#171717')}">{formatCurrency(row.amountSigned, true)}</p>
 									</div>
 								</div>
 							</div>
-							<div class="flex items-center gap-2 ml-6">
+							<!-- Bottom row: dropdowns and toggle -->
+							<div class="flex items-center gap-2 ml-7">
 								<select
 									value={row.effectiveKind}
 									onchange={(e) => handleKindChange(row, e.currentTarget.value as TransactionKind)}
-									class="text-[10px] bg-sw-bg text-sw-text border border-sw-border rounded px-1.5 py-1 cursor-pointer flex-1"
+									class="text-[11px] rounded px-2 py-1.5 cursor-pointer flex-1"
+									style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 								>
 									{#each kindOptions as opt}
-										<option value={opt.value} class="bg-sw-bg text-sw-text">{opt.label}</option>
+										<option value={opt.value}>{opt.label}</option>
 									{/each}
 								</select>
 								{#if row.effectiveKind === 'purchase'}
 									<select
 										value={row.effectiveCategory || 'Uncategorized'}
 										onchange={(e) => handleCategoryChange(row, e.currentTarget.value)}
-										class="text-[10px] bg-sw-bg text-sw-text border border-sw-border rounded px-1.5 py-1 cursor-pointer flex-1"
+										class="text-[11px] rounded px-2 py-1.5 cursor-pointer flex-1"
+										style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 									>
 										{#each categories as cat}
-											<option value={cat} class="bg-sw-bg text-sw-text">{cat}</option>
+											<option value={cat}>{cat}</option>
 										{/each}
 									</select>
 								{/if}
 								<button
 									onclick={() => updateOverride(row.id, { includedInSpend: !row.effectiveIncludedInSpend })}
-									class="toggle scale-75 origin-right {row.effectiveIncludedInSpend ? 'toggle-checked' : 'toggle-unchecked'}"
+									class="toggle scale-90 {row.effectiveIncludedInSpend ? 'toggle-checked' : 'toggle-unchecked'}"
 									aria-label="Toggle included"
 								>
 									<span class="toggle-dot"></span>
@@ -564,14 +593,14 @@
 		</main>
 
 		<!-- Footer with reconciliation info -->
-		<footer class="border-t border-sw-border/50 bg-sw-surface/50 py-3 sm:py-4">
-			<div class="max-w-7xl mx-auto px-3 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-[10px] sm:text-sm gap-1 sm:gap-0">
-				<div class="text-sw-text-dim text-center sm:text-left">
-					<span>{summary.dateMin ? formatDate(summary.dateMin) : '-'} - {summary.dateMax ? formatDate(summary.dateMax) : '-'}</span>
+		<footer style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; background: {isDark ? 'rgba(26,26,26,0.5)' : 'rgba(249,246,241,0.5)'}">
+			<div class="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between text-xs gap-1 sm:gap-0">
+				<div style="color: {isDark ? '#737373' : '#737373'}" class="text-center sm:text-left">
+					<span>Date range: {summary.dateMin ? formatDate(summary.dateMin) : '-'} – {summary.dateMax ? formatDate(summary.dateMax) : '-'}</span>
 					<span class="hidden sm:inline"> • {summary.currency}</span>
 				</div>
-				<div class="text-sw-text-dim">
-					Delay: 1 day • SPY
+				<div style="color: {isDark ? '#525252' : '#9ca3af'}">
+					Investment delay: 1 day • Ticker: SPY
 				</div>
 			</div>
 		</footer>
