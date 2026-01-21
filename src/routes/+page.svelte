@@ -109,7 +109,7 @@
 						<span>Dark mode</span>
 					{/if}
 				</button>
-			</div>
+		</div>
 		{/if}
 	</nav>
 
@@ -271,7 +271,7 @@
 							<div class="flex flex-col sm:flex-row items-center gap-3">
 								<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-semibold">
 									Get Started — It's Free
-								</button>
+							</button>
 								<a href="/demo" class="text-sm font-medium transition-colors font-display" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 									or try the demo
 								</a>
@@ -308,7 +308,7 @@
 					<h2 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Finally see the full picture</h2>
 					<p class="max-w-xl mx-auto" style="color: {isDark ? '#a3a3a3' : '#525252'}">Most people have no idea where their money actually goes. SpentWorth changes that.</p>
 				</div>
-				
+
 				<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
 					<div class="rounded-2xl p-6 text-center transition-transform hover:-translate-y-1" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
 						<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}">
@@ -363,7 +363,7 @@
 							"SpentWorth showed me my $400/month food delivery habit would be worth <span class="font-semibold text-sw-accent">$28,000</span> in 5 years if invested. That hit different. Now I cook more and actually invest the savings."
 						</p>
 						<div class="flex items-center gap-3">
-							<img src="https://i.pravatar.cc/36?img=12" alt="" class="w-9 h-9 rounded-full object-cover" />
+							<img src="https://i.pravatar.cc/36?img=68" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Michael T.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Now investing $350/mo</p>
@@ -382,7 +382,7 @@
 							"Seeing my $6 daily coffee as a <span class="font-semibold text-sw-accent">$15,847 opportunity cost</span> over 5 years was the wake-up call I needed. I still get coffee, just not every day. My future self thanks me."
 						</p>
 						<div class="flex items-center gap-3">
-							<img src="https://i.pravatar.cc/36?img=25" alt="" class="w-9 h-9 rounded-full object-cover" />
+							<img src="https://i.pravatar.cc/36?img=32" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Sarah K.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Freelance Designer</p>
@@ -401,7 +401,7 @@
 							"I found 8 forgotten subscriptions totaling $127/mo. SpentWorth calculated that's <span class="font-semibold text-sw-accent">$9,100 lost</span> in potential growth over just 5 years. Cancelled them all that same day."
 						</p>
 						<div class="flex items-center gap-3">
-							<img src="https://i.pravatar.cc/36?img=33" alt="" class="w-9 h-9 rounded-full object-cover" />
+							<img src="https://i.pravatar.cc/36?img=92" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">James L.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Cut 8 subscriptions</p>
@@ -420,7 +420,7 @@
 							"We uploaded 2 years of statements. Seeing that our impulse Amazon purchases could've been <span class="font-semibold text-sw-accent">$12,000 in investments</span> by now... it changed how we shop together."
 						</p>
 						<div class="flex items-center gap-3">
-							<img src="https://i.pravatar.cc/36?img=47" alt="" class="w-9 h-9 rounded-full object-cover" />
+							<img src="https://i.pravatar.cc/36?img=44" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Amanda & Chris R.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Couple, Austin TX</p>
@@ -439,26 +439,26 @@
 							"The 'what if you invested instead' view is brutal but necessary. My bar tabs from last year? Would've been <span class="font-semibold text-sw-accent">$4,200 richer</span> today. Still go out, just smarter now."
 						</p>
 						<div class="flex items-center gap-3">
-							<img src="https://i.pravatar.cc/36?img=53" alt="" class="w-9 h-9 rounded-full object-cover" />
+							<img src="https://i.pravatar.cc/36?img=11" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">David P.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Software Engineer</p>
 							</div>
+							</div>
 						</div>
-					</div>
 					
 					<!-- Testimonial 6 -->
 					<div class="rounded-2xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
 						<div class="flex gap-1 mb-3">
 							{#each Array(5) as _}
 								<i class="fa-solid fa-star text-xs text-amber-400"></i>
-							{/each}
+					{/each}
 						</div>
 						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
 							"As a new grad, seeing my small daily expenses add up to <span class="font-semibold text-sw-accent">$47,000</span> in missed growth over 10 years was mind-blowing. Started investing immediately. Wish I had this sooner."
 						</p>
 						<div class="flex items-center gap-3">
-							<img src="https://i.pravatar.cc/36?img=5" alt="" class="w-9 h-9 rounded-full object-cover" />
+							<img src="https://i.pravatar.cc/36?img=9" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Emily W.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Recent Graduate</p>
@@ -611,10 +611,10 @@
 			<div class="max-w-2xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
 				<div class="flex items-center justify-center gap-2 mb-6">
 					<div class="flex -space-x-2">
-						<img src="https://i.pravatar.cc/32?img=12" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
-						<img src="https://i.pravatar.cc/32?img=25" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
-						<img src="https://i.pravatar.cc/32?img=33" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
-						<img src="https://i.pravatar.cc/32?img=47" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
+						<img src="https://i.pravatar.cc/32?img=68" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
+						<img src="https://i.pravatar.cc/32?img=32" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
+						<img src="https://i.pravatar.cc/32?img=52" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
+						<img src="https://i.pravatar.cc/32?img=44" alt="" class="w-8 h-8 rounded-full border-2 object-cover" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}" />
 						<div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium" style="border-color: {isDark ? '#0f0f0f' : '#f5f0e8'}; background: {isDark ? '#262626' : '#e5e5e5'}; color: {isDark ? '#a3a3a3' : '#737373'}">+</div>
 					</div>
 					<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Join 2,500+ users</span>
