@@ -64,6 +64,7 @@
 				{#if data.session}
 					<a href="/dashboard" class="btn btn-primary">Dashboard</a>
 				{:else}
+					<a href="/pricing" class="text-sw-text-dim hover:text-sw-text transition-colors text-sm font-display font-medium">Pricing</a>
 					<a href="/login" class="text-sw-text-dim hover:text-sw-text transition-colors text-sm font-display font-medium">Log in</a>
 					<a href="/signup" class="btn btn-primary font-display font-semibold">Get Started</a>
 				{/if}
@@ -92,6 +93,7 @@
 				{#if data.session}
 					<a href="/dashboard" class="block py-2 text-sw-accent font-medium">Dashboard</a>
 				{:else}
+					<a href="/pricing" class="block py-2 text-sw-text-dim hover:text-sw-text">Pricing</a>
 					<a href="/login" class="block py-2 text-sw-text-dim hover:text-sw-text">Log in</a>
 					<a href="/signup" class="block py-2 text-sw-accent font-medium">Get Started</a>
 				{/if}

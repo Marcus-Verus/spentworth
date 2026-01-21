@@ -1,0 +1,254 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { initTheme, getTheme, toggleTheme } from '$lib/stores/theme';
+
+	let isDark = $state(false);
+	let billingCycle = $state<'monthly' | 'yearly'>('yearly');
+
+	onMount(() => {
+		initTheme();
+		isDark = getTheme() === 'dark';
+	});
+
+	function handleThemeToggle() {
+		toggleTheme();
+		isDark = getTheme() === 'dark';
+	}
+
+	const plans = {
+		free: {
+			name: 'Free',
+			description: 'Get started with the basics',
+			monthlyPrice: 0,
+			yearlyPrice: 0,
+			features: [
+				'3 CSV imports per month',
+				'Basic spending dashboard',
+				'Opportunity cost calculator',
+				'5 budget categories',
+				'90-day transaction history'
+			],
+			cta: 'Get Started',
+			ctaHref: '/signup',
+			highlighted: false
+		},
+		pro: {
+			name: 'Pro',
+			description: 'For serious wealth builders',
+			monthlyPrice: 8,
+			yearlyPrice: 6,
+			features: [
+				'Unlimited CSV imports',
+				'Full spending dashboard',
+				'Advanced insights & recommendations',
+				'Unlimited budget categories',
+				'Unlimited transaction history',
+				'Monthly trend analysis',
+				'CSV & PDF export',
+				'Email digest (coming soon)',
+				'Priority support'
+			],
+			cta: 'Start Free Trial',
+			ctaHref: '/signup?plan=pro',
+			highlighted: true
+		}
+	};
+
+	function getPrice(plan: typeof plans.free | typeof plans.pro) {
+		if (plan.monthlyPrice === 0) return 'Free';
+		const price = billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
+		return `$${price}`;
+	}
+
+	function getSavings() {
+		const monthly = plans.pro.monthlyPrice * 12;
+		const yearly = plans.pro.yearlyPrice * 12;
+		return Math.round(((monthly - yearly) / monthly) * 100);
+	}
+</script>
+
+<svelte:head>
+	<title>Pricing | SpentWorth</title>
+</svelte:head>
+
+<div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
+	<!-- Header -->
+	<header class="border-b backdrop-blur-md sticky top-0 z-50" style="border-color: {isDark ? 'rgba(42,42,42,0.3)' : 'rgba(0,0,0,0.1)'}; background: {isDark ? 'rgba(10,10,10,0.9)' : 'rgba(245,240,232,0.9)'}">
+		<div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+			<a href="/" class="flex items-center gap-2">
+				<div class="w-8 h-8 rounded-xl bg-sw-accent flex items-center justify-center text-white font-bold text-lg">
+					$
+				</div>
+				<span class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
+			</a>
+			<div class="flex items-center gap-4">
+				<button
+					onclick={handleThemeToggle}
+					class="p-2 rounded-lg transition-colors"
+					style="color: {isDark ? '#a3a3a3' : '#737373'}"
+				>
+					{#if isDark}
+						<i class="fa-solid fa-sun"></i>
+					{:else}
+						<i class="fa-solid fa-moon"></i>
+					{/if}
+				</button>
+				<a href="/login" class="text-sm font-medium" style="color: {isDark ? '#a3a3a3' : '#737373'}">Log in</a>
+				<a href="/signup" class="btn-primary text-sm px-4 py-2">Sign up</a>
+			</div>
+		</div>
+	</header>
+
+	<main class="max-w-4xl mx-auto px-4 py-12 sm:py-16">
+		<!-- Header -->
+		<div class="text-center mb-10">
+			<h1 class="font-display text-3xl sm:text-4xl font-bold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
+				Simple, transparent pricing
+			</h1>
+			<p class="text-base sm:text-lg" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+				Start free. Upgrade when you're ready.
+			</p>
+		</div>
+
+		<!-- Billing Toggle -->
+		<div class="flex items-center justify-center gap-3 mb-10">
+			<span 
+				class="text-sm font-medium"
+				style="color: {billingCycle === 'monthly' ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#737373' : '#9ca3af')}"
+			>
+				Monthly
+			</span>
+			<button
+				onclick={() => billingCycle = billingCycle === 'monthly' ? 'yearly' : 'monthly'}
+				class="relative w-14 h-8 rounded-full transition-colors"
+				style="background: {billingCycle === 'yearly' ? '#0d9488' : (isDark ? '#2a2a2a' : '#d4d4d4')}"
+			>
+				<span 
+					class="absolute top-1 w-6 h-6 rounded-full bg-white transition-transform shadow-sm"
+					style="left: {billingCycle === 'yearly' ? '30px' : '4px'}"
+				></span>
+			</button>
+			<span 
+				class="text-sm font-medium"
+				style="color: {billingCycle === 'yearly' ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#737373' : '#9ca3af')}"
+			>
+				Yearly
+			</span>
+			{#if billingCycle === 'yearly'}
+				<span class="text-xs px-2 py-1 rounded-full bg-sw-accent text-white font-medium">
+					Save {getSavings()}%
+				</span>
+			{/if}
+		</div>
+
+		<!-- Pricing Cards -->
+		<div class="grid md:grid-cols-2 gap-6">
+			{#each Object.values(plans) as plan}
+				<div 
+					class="rounded-2xl p-6 sm:p-8 relative"
+					style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: {plan.highlighted ? '2px solid #0d9488' : `1px solid ${isDark ? '#2a2a2a' : '#e5e5e5'}`}"
+				>
+					{#if plan.highlighted}
+						<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-sw-accent text-white text-xs font-medium">
+							Most Popular
+						</div>
+					{/if}
+
+					<div class="mb-6">
+						<h2 class="font-display text-xl font-semibold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+							{plan.name}
+						</h2>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							{plan.description}
+						</p>
+					</div>
+
+					<div class="mb-6">
+						<span class="font-display text-4xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">
+							{getPrice(plan)}
+						</span>
+						{#if plan.monthlyPrice > 0}
+							<span class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
+								/month
+							</span>
+							{#if billingCycle === 'yearly'}
+								<p class="text-xs mt-1" style="color: {isDark ? '#737373' : '#9ca3af'}">
+									Billed annually (${plan.yearlyPrice * 12}/year)
+								</p>
+							{/if}
+						{:else}
+							<span class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
+								forever
+							</span>
+						{/if}
+					</div>
+
+					<a 
+						href={plan.ctaHref}
+						class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6"
+						style="background: {plan.highlighted ? '#0d9488' : (isDark ? '#2a2a2a' : '#f5f0e8')}; color: {plan.highlighted ? '#ffffff' : (isDark ? '#ffffff' : '#171717')}"
+					>
+						{plan.cta}
+					</a>
+
+					<ul class="space-y-3">
+						{#each plan.features as feature}
+							<li class="flex items-start gap-3 text-sm">
+								<i class="fa-solid fa-check text-sw-accent mt-0.5"></i>
+								<span style="color: {isDark ? '#a3a3a3' : '#525252'}">{feature}</span>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/each}
+		</div>
+
+		<!-- FAQ Section -->
+		<div class="mt-16">
+			<h2 class="font-display text-2xl font-semibold text-center mb-8" style="color: {isDark ? '#ffffff' : '#171717'}">
+				Questions?
+			</h2>
+			<div class="space-y-4 max-w-2xl mx-auto">
+				{#each [
+					{
+						q: 'Can I cancel anytime?',
+						a: 'Yes, you can cancel your Pro subscription at any time. You\'ll continue to have access until the end of your billing period.'
+					},
+					{
+						q: 'Is my financial data secure?',
+						a: 'Your data never leaves your browser during CSV import. We don\'t have access to your bank credentials or account numbers.'
+					},
+					{
+						q: 'What happens when I hit the free tier limits?',
+						a: 'You can still view your existing data, but you won\'t be able to import new transactions until you upgrade or the next month.'
+					},
+					{
+						q: 'Do you offer refunds?',
+						a: 'Yes, if you\'re not satisfied within the first 14 days, we\'ll refund your payment in full.'
+					}
+				] as faq}
+					<div class="rounded-xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+						<h3 class="font-display font-semibold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+							{faq.q}
+						</h3>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							{faq.a}
+						</p>
+					</div>
+				{/each}
+			</div>
+		</div>
+
+		<!-- Bottom CTA -->
+		<div class="mt-16 text-center">
+			<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+				Still not sure? Try the demo first.
+			</p>
+			<a href="/demo" class="text-sw-accent font-medium hover:underline">
+				View demo with sample data <i class="fa-solid fa-arrow-right ml-1"></i>
+			</a>
+		</div>
+	</main>
+</div>
+
