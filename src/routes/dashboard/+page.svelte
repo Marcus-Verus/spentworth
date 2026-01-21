@@ -281,29 +281,34 @@
 			<!-- Empty state -->
 			<EmptyState type="no-data" />
 		{:else}
-			<!-- Date Range Header + How it works -->
-			<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-				{#if summary.dateMin && summary.dateMax}
-					<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						Tracking <span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMin)}</span> to <span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMax)}</span>
-						<span class="text-sw-accent">({getDateRangeText()})</span>
-					</p>
-				{/if}
-				<button 
-					onclick={() => showHowItWorks = !showHowItWorks}
-					class="text-xs flex items-center gap-1 self-start sm:self-auto transition-colors"
-					style="color: {isDark ? '#a3a3a3' : '#737373'}"
-				>
-					<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-					</svg>
-					How it works
-				</button>
+			<!-- Page Title -->
+			<div class="mb-6 sm:mb-8">
+				<h1 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+					Your Spending <span class="text-gradient">Dashboard</span>
+				</h1>
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+					{#if summary.dateMin && summary.dateMax}
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMin)}</span> to <span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMax)}</span>
+							<span class="text-sw-accent ml-1">({getDateRangeText()})</span>
+						</p>
+					{/if}
+					<button 
+						onclick={() => showHowItWorks = !showHowItWorks}
+						class="text-xs flex items-center gap-1 self-start sm:self-auto transition-colors"
+						style="color: {isDark ? '#a3a3a3' : '#737373'}"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						How it works
+					</button>
+				</div>
 			</div>
 			
 			{#if showHowItWorks}
 				<div class="mb-8 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h3 class="font-display font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">How SpentWorth Works</h3>
+					<h3 class="font-display text-lg sm:text-xl font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">How SpentWorth Works</h3>
 					<div class="grid md:grid-cols-3 gap-6 text-sm">
 						<div>
 							<div class="w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-white mb-2" style="background: #0d9488">1</div>
@@ -412,7 +417,7 @@
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
 				<!-- Donut Chart -->
 				<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h3 class="font-display font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Spending by Category</h3>
+					<h3 class="font-display font-semibold mb-3 sm:mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Spending by Category</h3>
 					<div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
 						<div class="relative flex-shrink-0">
 							<svg viewBox="0 0 200 200" class="w-32 h-32 sm:w-44 sm:h-44">
@@ -444,7 +449,7 @@
 
 				<!-- Day of Week Chart -->
 				<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h3 class="font-display font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Spending by Day</h3>
+					<h3 class="font-display font-semibold mb-3 sm:mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Spending by Day</h3>
 					<div class="h-36 sm:h-44 flex items-end gap-1 sm:gap-2">
 						{#each summary.dayOfWeek as day}
 							{@const height = (day.spent / maxDaySpend) * 100}
@@ -470,7 +475,7 @@
 
 			<!-- Monthly Spending -->
 			<div class="rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-				<h3 class="font-display font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Monthly Spending</h3>
+				<h3 class="font-display font-semibold mb-3 sm:mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Monthly Spending</h3>
 				{#if summary.monthly.length > 0}
 					<div class="h-28 sm:h-32 flex items-end gap-0.5 sm:gap-1 overflow-x-auto pb-1">
 						{#each summary.monthly as month}
@@ -502,7 +507,7 @@
 					<!-- Recurring Charges -->
 					<div class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 						<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Recurring Charges</h3>
+							<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Recurring Charges</h3>
 							<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subscriptions and regular payments</p>
 						</div>
 						<div class="max-h-64 sm:max-h-80 overflow-y-auto" style="border-color: {isDark ? 'rgba(64,64,64,0.3)' : '#e5e5e5'}">
@@ -538,7 +543,7 @@
 								<i class="fa-solid fa-calculator text-sw-accent text-sm"></i>
 							</div>
 							<div>
-								<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">What If Calculator</h3>
+								<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">What If Calculator</h3>
 								<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 									{selectedWhatIf ? `If you cancelled ${selectedWhatIf.merchant}...` : 'Select a subscription'}
 								</p>
@@ -608,7 +613,7 @@
 			<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 				<div class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div>
-						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Where Your Money Goes</h3>
+						<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Where Your Money Goes</h3>
 						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 							<span class="hidden sm:inline">See potential growth if invested · </span>7% return over 5 years
 						</p>
@@ -654,7 +659,7 @@
 			{#if summary.yoyComparison}
 				<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 					<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Year-over-Year</h3>
+						<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Year-over-Year</h3>
 						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Compared to same period last year</p>
 					</div>
 					<div class="p-4 sm:p-6">
@@ -707,7 +712,7 @@
 			<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 				<div class="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div>
-						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Spending Goals</h3>
+						<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Spending Goals</h3>
 						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Set limits and track progress</p>
 					</div>
 					<button onclick={() => showGoalForm = !showGoalForm} class="btn btn-secondary text-xs sm:text-sm px-2 sm:px-4">
@@ -833,7 +838,7 @@
 			{#if summary.topTransactions.length > 0}
 				<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 					<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Your Costliest Choices</h3>
+						<h3 class="font-display font-semibold text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Your Costliest Choices</h3>
 						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest opportunity cost · 7% return over 5 years</p>
 					</div>
 					<div>
@@ -860,7 +865,7 @@
 			<!-- Category Details (collapsible) -->
 			<details class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 				<summary class="px-4 sm:px-6 py-3 sm:py-4 cursor-pointer transition-colors" style="color: {isDark ? '#ffffff' : '#171717'}">
-					<span class="font-display font-semibold text-sm sm:text-base">Full Category Breakdown</span>
+					<span class="font-display font-semibold text-base sm:text-lg">Full Category Breakdown</span>
 					<span class="text-xs sm:text-sm ml-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">({summary.categories.length}) · 7% return over 5 years</span>
 				</summary>
 				<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
