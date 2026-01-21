@@ -386,7 +386,7 @@
 			</div>
 
 			<!-- Desktop Table -->
-			<div class="rounded-xl overflow-hidden hidden md:block" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"">
+			<div class="rounded-xl overflow-hidden hidden md:block" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 				<table class="w-full">
 					<thead>
 						<tr style="background: {isDark ? '#0f0f0f' : '#f9f6f1'}; border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
