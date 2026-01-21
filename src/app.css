@@ -98,7 +98,13 @@
 	}
 
 	.btn-danger {
-		@apply bg-sw-danger/20 text-sw-danger border border-sw-danger/30 hover:bg-sw-danger/30 focus:ring-sw-danger;
+		@apply text-red-400 focus:ring-red-500;
+		background-color: rgba(239, 68, 68, 0.2);
+		border: 1px solid rgba(239, 68, 68, 0.3);
+	}
+	
+	.btn-danger:hover {
+		background-color: rgba(239, 68, 68, 0.3);
 	}
 
 	.card {
@@ -107,7 +113,8 @@
 	}
 	
 	:root.dark .card {
-		@apply bg-sw-surface/80 backdrop-blur-sm border-sw-border;
+		@apply backdrop-blur-sm border-sw-border;
+		background-color: rgba(26, 26, 26, 0.8);
 		box-shadow: none;
 	}
 	
@@ -124,17 +131,20 @@
 	}
 	
 	:root.dark .card-elevated {
-		@apply bg-sw-surface/60 backdrop-blur-sm border-sw-border/40;
+		@apply backdrop-blur-sm;
+		background-color: rgba(26, 26, 26, 0.6);
+		border: 1px solid rgba(42, 42, 42, 0.4);
 		box-shadow: none;
 	}
 	
 	:root.dark .card-elevated:hover {
-		@apply border-sw-border/60;
+		border: 1px solid rgba(42, 42, 42, 0.6);
 		box-shadow: none;
 	}
 
 	.input {
-		@apply w-full px-4 py-2.5 bg-sw-surface border border-sw-border rounded-lg text-sw-text placeholder:text-sw-text-dim focus:outline-none focus:ring-2 focus:ring-sw-accent/50 focus:border-sw-accent transition-colors;
+		@apply w-full px-4 py-2.5 bg-sw-surface border border-sw-border rounded-lg text-sw-text placeholder:text-sw-text-dim focus:outline-none focus:ring-2 focus:border-sw-accent transition-colors;
+		--tw-ring-color: rgba(13, 148, 136, 0.5);
 	}
 
 	.label {
@@ -171,7 +181,8 @@
 
 	.stat-card::before {
 		content: '';
-		@apply absolute inset-0 bg-gradient-to-br from-sw-accent/5 to-transparent pointer-events-none;
+		@apply absolute inset-0 pointer-events-none;
+		background: linear-gradient(135deg, rgba(13, 148, 136, 0.05) 0%, transparent 100%);
 	}
 
 	.table-container {
@@ -183,19 +194,35 @@
 	}
 
 	.table th {
-		@apply px-4 py-3 text-left font-semibold text-sw-text-dim bg-sw-surface/50 border-b border-sw-border;
+		@apply px-4 py-3 text-left font-semibold text-sw-text-dim border-b border-sw-border;
+		background-color: rgba(255, 255, 255, 0.5);
+	}
+	
+	:root.dark .table th {
+		background-color: rgba(26, 26, 26, 0.5);
 	}
 
 	.table td {
-		@apply px-4 py-3 border-b border-sw-border/50;
+		@apply px-4 py-3;
+		border-bottom: 1px solid rgba(209, 204, 194, 0.5);
+	}
+	
+	:root.dark .table td {
+		border-bottom: 1px solid rgba(42, 42, 42, 0.5);
 	}
 
 	.table tr:hover td {
-		@apply bg-sw-surface/30;
+		background-color: rgba(255, 255, 255, 0.3);
+	}
+	
+	:root.dark .table tr:hover td {
+		background-color: rgba(26, 26, 26, 0.3);
 	}
 
 	.toggle {
-		@apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sw-accent/50 focus:ring-offset-2 focus:ring-offset-sw-bg;
+		@apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+		--tw-ring-color: rgba(13, 148, 136, 0.5);
+		--tw-ring-offset-color: var(--sw-bg);
 	}
 
 	.toggle-checked {
