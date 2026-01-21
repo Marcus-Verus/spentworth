@@ -4,3 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Prevent git-related errors during build
+  GIT_LFS_SKIP_SMUDGE = "1"
+
+[functions]
+  # Increase function timeout if needed
+  node_bundler = "esbuild"
