@@ -8,10 +8,24 @@ const supabase: Handle = async ({ event, resolve }) => {
 		cookies: {
 			getAll: () => event.cookies.getAll(),
 			setAll: (cookiesToSet) => {
-				cookiesToSet.forEach(({ name, value, options }) => {
-					event.cookies.set(name, value, { ...options, path: '/' });
-				});
+				// Wrap in try-catch to prevent errors if response has already been sent
+				try {
+					cookiesToSet.forEach(({ name, value, options }) => {
+						try {
+							event.cookies.set(name, value, { ...options, path: '/' });
+						} catch (error) {
+							// Silently ignore cookie errors (e.g., after response is sent)
+							// This can happen with Supabase's async token refresh callbacks
+						}
+					});
+				} catch (error) {
+					// Ignore errors from cookie operations after response
+				}
 			}
+		},
+		auth: {
+			autoRefreshToken: false,
+			persistSession: false
 		}
 	});
 
