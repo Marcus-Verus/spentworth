@@ -191,6 +191,10 @@
 
 		if (json.ok) {
 			summary = json.data;
+			// Auto-select the first subscription for the What-If calculator
+			if (summary.recurringCharges && summary.recurringCharges.length > 0) {
+				selectedWhatIf = summary.recurringCharges[0];
+			}
 		}
 		loading = false;
 	}
