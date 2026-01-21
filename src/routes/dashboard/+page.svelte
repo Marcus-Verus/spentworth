@@ -302,28 +302,28 @@
 			</div>
 			
 			{#if showHowItWorks}
-				<div class="mb-8 rounded-2xl p-6" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.05), rgba(6,182,212,0.05))' : 'linear-gradient(135deg, rgba(13,148,136,0.08), rgba(6,182,212,0.08))'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}">
-					<h3 class="font-display font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">How SpentWorth Works</h3>
+				<div class="mb-8 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<h3 class="font-display font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">How SpentWorth Works</h3>
 					<div class="grid md:grid-cols-3 gap-6 text-sm">
 						<div>
-							<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sw-accent mb-2" style="background: rgba(13,148,136,0.2)">1</div>
+							<div class="w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-white mb-2" style="background: #0d9488">1</div>
 							<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Track Your Spending</p>
 							<p style="color: {isDark ? '#a3a3a3' : '#737373'}">Import your bank statements and we categorize your purchases automatically.</p>
 						</div>
 						<div>
-							<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sw-accent mb-2" style="background: rgba(13,148,136,0.2)">2</div>
+							<div class="w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-white mb-2" style="background: #0d9488">2</div>
 							<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Calculate Opportunity Cost</p>
 							<p style="color: {isDark ? '#a3a3a3' : '#737373'}">For each purchase, we calculate what it would be worth today if you'd invested in {summary.ticker} instead.</p>
 						</div>
 						<div>
-							<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sw-accent mb-2" style="background: rgba(13,148,136,0.2)">3</div>
+							<div class="w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-white mb-2" style="background: #0d9488">3</div>
 							<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Make Smarter Choices</p>
 							<p style="color: {isDark ? '#a3a3a3' : '#737373'}">See which spending habits cost you the most, set goals, and watch your potential savings grow.</p>
 						</div>
 					</div>
-					<p class="mt-4 text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						<i class="fa-solid fa-lightbulb mr-1 text-sw-accent"></i><strong style="color: {isDark ? '#ffffff' : '#171717'}">Example:</strong> You spent $100 at Amazon 6 months ago. If you'd invested that in SPY instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.
-					</p>
+					<div class="mt-4 p-3 rounded-lg text-xs" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
+						<i class="fa-solid fa-lightbulb mr-1 text-sw-accent"></i><strong style="color: {isDark ? '#ffffff' : '#171717'}">Example:</strong> <span style="color: {isDark ? '#a3a3a3' : '#525252'}">You spent $100 at Amazon 6 months ago. If you'd invested that in SPY instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.</span>
+					</div>
 				</div>
 			{/if}
 
