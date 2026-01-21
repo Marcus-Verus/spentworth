@@ -64,11 +64,8 @@
 
 	onMount(() => {
 		initTheme();
-		const unsubscribe = getTheme().subscribe(value => {
-			isDark = value;
-		});
+		isDark = getTheme() === 'dark';
 		loadInsights();
-		return unsubscribe;
 	});
 
 	function getTypeLabel(type: string): string {

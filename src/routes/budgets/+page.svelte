@@ -121,11 +121,8 @@
 
 	onMount(() => {
 		initTheme();
-		const unsubscribe = getTheme().subscribe(value => {
-			isDark = value;
-		});
+		isDark = getTheme() === 'dark';
 		loadBudgets();
-		return unsubscribe;
 	});
 
 	// Get encouraging message based on overall status
