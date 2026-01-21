@@ -3,6 +3,11 @@
 	import { onMount } from 'svelte';
 	import type { DashboardSummary, RecurringCharge } from '$lib/types';
 	import Header from '$lib/components/Header.svelte';
+	import Onboarding from '$lib/components/Onboarding.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { initTheme, getTheme } from '$lib/stores/theme';
+
+	let isDark = $state(false);
 
 	interface Goal {
 		id: string;
@@ -42,8 +47,20 @@
 	
 	// How it works
 	let showHowItWorks = $state(false);
+	
+	// Onboarding
+	let showOnboarding = $state(false);
 
 	onMount(async () => {
+		initTheme();
+		isDark = getTheme() === 'dark';
+		
+		// Check if user has completed onboarding
+		const onboardingCompleted = localStorage.getItem('sw_onboarding_completed');
+		if (!onboardingCompleted) {
+			showOnboarding = true;
+		}
+		
 		await Promise.all([loadSummary(), loadGoals()]);
 	});
 	
@@ -262,28 +279,20 @@
 			</div>
 		{:else if !summary || summary.totalSpent === 0}
 			<!-- Empty state -->
-			<div class="text-center py-24">
-				<div class="w-20 h-20 mx-auto rounded-2xl bg-sw-surface flex items-center justify-center mb-6">
-					<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-sw-text-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-					</svg>
-				</div>
-				<h2 class="font-display text-2xl font-bold mb-2">No data yet</h2>
-				<p class="text-sw-text-dim mb-6">Import your first bank statement to see your opportunity cost</p>
-				<a href="/imports" class="btn btn-primary">Import CSV</a>
-			</div>
+			<EmptyState type="no-data" />
 		{:else}
 			<!-- Date Range Header + How it works -->
 			<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 				{#if summary.dateMin && summary.dateMax}
-					<p class="text-xs sm:text-sm text-sw-text-dim">
-						Tracking <span class="text-sw-text font-medium">{formatDate(summary.dateMin)}</span> to <span class="text-sw-text font-medium">{formatDate(summary.dateMax)}</span>
+					<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Tracking <span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMin)}</span> to <span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMax)}</span>
 						<span class="text-sw-accent">({getDateRangeText()})</span>
 					</p>
 				{/if}
 				<button 
 					onclick={() => showHowItWorks = !showHowItWorks}
-					class="text-xs text-sw-text-dim hover:text-sw-text flex items-center gap-1 self-start sm:self-auto"
+					class="text-xs flex items-center gap-1 self-start sm:self-auto transition-colors"
+					style="color: {isDark ? '#a3a3a3' : '#737373'}"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -293,127 +302,100 @@
 			</div>
 			
 			{#if showHowItWorks}
-				<div class="mb-8 bg-gradient-to-br from-sw-accent/5 to-cyan-500/5 rounded-2xl border border-sw-accent/20 p-6">
-					<h3 class="font-display font-semibold mb-3">How SpentWorth Works</h3>
+				<div class="mb-8 rounded-2xl p-6" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.05), rgba(6,182,212,0.05))' : 'linear-gradient(135deg, rgba(13,148,136,0.08), rgba(6,182,212,0.08))'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}">
+					<h3 class="font-display font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">How SpentWorth Works</h3>
 					<div class="grid md:grid-cols-3 gap-6 text-sm">
 						<div>
-							<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center text-sw-accent mb-2">1</div>
-							<p class="font-medium mb-1">Track Your Spending</p>
-							<p class="text-sw-text-dim">Import your bank statements and we categorize your purchases automatically.</p>
+							<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sw-accent mb-2" style="background: rgba(13,148,136,0.2)">1</div>
+							<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Track Your Spending</p>
+							<p style="color: {isDark ? '#a3a3a3' : '#737373'}">Import your bank statements and we categorize your purchases automatically.</p>
 						</div>
 						<div>
-							<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center text-sw-accent mb-2">2</div>
-							<p class="font-medium mb-1">Calculate Opportunity Cost</p>
-							<p class="text-sw-text-dim">For each purchase, we calculate what it would be worth today if you'd invested in {summary.ticker} instead.</p>
+							<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sw-accent mb-2" style="background: rgba(13,148,136,0.2)">2</div>
+							<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Calculate Opportunity Cost</p>
+							<p style="color: {isDark ? '#a3a3a3' : '#737373'}">For each purchase, we calculate what it would be worth today if you'd invested in {summary.ticker} instead.</p>
 						</div>
 						<div>
-							<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center text-sw-accent mb-2">3</div>
-							<p class="font-medium mb-1">Make Smarter Choices</p>
-							<p class="text-sw-text-dim">See which spending habits cost you the most, set goals, and watch your potential savings grow.</p>
+							<div class="w-8 h-8 rounded-lg flex items-center justify-center text-sw-accent mb-2" style="background: rgba(13,148,136,0.2)">3</div>
+							<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Make Smarter Choices</p>
+							<p style="color: {isDark ? '#a3a3a3' : '#737373'}">See which spending habits cost you the most, set goals, and watch your potential savings grow.</p>
 						</div>
 					</div>
-					<p class="mt-4 text-xs text-sw-text-dim">
-						<i class="fa-solid fa-lightbulb mr-1 text-sw-accent"></i><strong>Example:</strong> You spent $100 at Amazon 6 months ago. If you'd invested that in SPY instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.
+					<p class="mt-4 text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						<i class="fa-solid fa-lightbulb mr-1 text-sw-accent"></i><strong style="color: {isDark ? '#ffffff' : '#171717'}">Example:</strong> You spent $100 at Amazon 6 months ago. If you'd invested that in SPY instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.
 					</p>
 				</div>
 			{/if}
 
 			<!-- Hero Stats -->
 			<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-				<div class="bg-sw-surface/60 rounded-2xl p-4 sm:p-6 border border-sw-border/50 group relative">
-					<p class="text-xs sm:text-sm text-sw-text-dim mb-1 sm:mb-2 flex items-center gap-1">
+				<div class="rounded-2xl p-4 sm:p-6 group relative" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<p class="text-xs sm:text-sm mb-1 sm:mb-2 flex items-center gap-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 						Total Spent
-						<span class="cursor-help text-sw-text-dim/50 hover:text-sw-text-dim hidden sm:inline">
-							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-							</svg>
-						</span>
 					</p>
-					<p class="font-display text-2xl sm:text-4xl font-bold tracking-tight">{formatCurrency(summary.totalSpent)}</p>
-					<p class="text-[10px] sm:text-xs text-sw-text-dim mt-1 sm:mt-2">{summary.transactionCount} purchases • avg {formatCurrency(summary.avgTransaction)}</p>
-					<!-- Tooltip (desktop only) -->
-					<div class="hidden sm:block absolute left-0 right-0 top-full mt-2 p-3 bg-sw-bg border border-sw-border rounded-lg text-xs text-sw-text-dim opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
-						The total amount you spent on purchases (excluding transfers, payments, refunds, etc.)
-					</div>
+					<p class="font-display text-2xl sm:text-4xl font-bold tracking-tight" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.totalSpent)}</p>
+					<p class="text-[10px] sm:text-xs mt-1 sm:mt-2" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.transactionCount} purchases • avg {formatCurrency(summary.avgTransaction)}</p>
 				</div>
 				
-				<div class="bg-sw-surface/60 rounded-2xl p-4 sm:p-6 border border-sw-border/50 group relative">
-					<p class="text-xs sm:text-sm text-sw-text-dim mb-1 sm:mb-2 flex items-center gap-1">
+				<div class="rounded-2xl p-4 sm:p-6 group relative" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<p class="text-xs sm:text-sm mb-1 sm:mb-2 flex items-center gap-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 						Today's Value
-						<span class="cursor-help text-sw-text-dim/50 hover:text-sw-text-dim hidden sm:inline">
-							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-							</svg>
-						</span>
 					</p>
 					<p class="font-display text-2xl sm:text-4xl font-bold tracking-tight text-sw-accent">{formatCurrency(summary.totalFutureValue)}</p>
-					<p class="text-[10px] sm:text-xs text-sw-text-dim mt-1 sm:mt-2">If invested in {summary.ticker}</p>
-					<!-- Tooltip (desktop only) -->
-					<div class="hidden sm:block absolute left-0 right-0 top-full mt-2 p-3 bg-sw-bg border border-sw-border rounded-lg text-xs text-sw-text-dim opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
-						What your money would be worth today if you had invested each purchase amount into {summary.ticker} (S&P 500 ETF) on the day you made that purchase.
-					</div>
+					<p class="text-[10px] sm:text-xs mt-1 sm:mt-2" style="color: {isDark ? '#737373' : '#9ca3af'}">If invested in {summary.ticker}</p>
 				</div>
 				
-				<div class="bg-gradient-to-br from-sw-accent/20 to-sw-accent/5 rounded-2xl p-4 sm:p-6 border border-sw-accent/30 group relative">
-					<p class="text-xs sm:text-sm text-sw-text-dim mb-1 sm:mb-2 flex items-center gap-1">
+				<div class="rounded-2xl p-4 sm:p-6 group relative" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.15), rgba(13,148,136,0.05))' : 'linear-gradient(135deg, rgba(13,148,136,0.1), rgba(13,148,136,0.02))'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
+					<p class="text-xs sm:text-sm mb-1 sm:mb-2 flex items-center gap-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 						Left on the Table
-						<span class="cursor-help text-sw-text-dim/50 hover:text-sw-text-dim hidden sm:inline">
-							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-							</svg>
-						</span>
 					</p>
 					<p class="font-display text-2xl sm:text-4xl font-bold tracking-tight text-sw-accent">
 						{summary.totalDelta >= 0 ? '+' : ''}{formatCurrency(summary.totalDelta)}
 					</p>
-					<p class="text-[10px] sm:text-xs text-sw-text-dim mt-1">
+					<p class="text-[10px] sm:text-xs mt-1" style="color: {isDark ? '#737373' : '#9ca3af'}">
 						{formatPercent(summary.totalSpent > 0 ? summary.totalDelta / summary.totalSpent : 0)} growth over {getDateRangeText()}
 					</p>
-					<!-- Tooltip (desktop only) -->
-					<div class="hidden sm:block absolute left-0 right-0 top-full mt-2 p-3 bg-sw-bg border border-sw-border rounded-lg text-xs text-sw-text-dim opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
-						This is your "opportunity cost" — the potential gains you missed by spending instead of investing. It's the difference between Today's Value and what you actually spent.
-					</div>
 				</div>
 			</div>
 
 			<!-- Quick Stats Row -->
 			{#if summary.biggestPurchase}
 				<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-					<div class="bg-sw-surface/40 rounded-xl p-3 sm:p-4 border border-sw-border/30">
-						<p class="text-[10px] sm:text-xs text-sw-text-dim mb-1">Biggest Splurge</p>
-						<p class="font-mono text-base sm:text-lg">{formatCurrency(summary.biggestPurchase.amount)}</p>
-						<p class="text-[10px] sm:text-xs text-sw-text-dim truncate">{summary.biggestPurchase.merchant}</p>
+					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
+						<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest Splurge</p>
+						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.biggestPurchase.amount)}</p>
+						<p class="text-[10px] sm:text-xs truncate" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.biggestPurchase.merchant}</p>
 					</div>
-					<div class="bg-sw-surface/40 rounded-xl p-3 sm:p-4 border border-sw-border/30">
-						<p class="text-[10px] sm:text-xs text-sw-text-dim mb-1">Spendy Day</p>
-						<p class="font-mono text-base sm:text-lg">{summary.biggestSpendingDay.day}s</p>
-						<p class="text-[10px] sm:text-xs text-sw-text-dim">{formatCurrency(summary.biggestSpendingDay.spent)}</p>
+					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
+						<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Spendy Day</p>
+						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{summary.biggestSpendingDay.day}s</p>
+						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatCurrency(summary.biggestSpendingDay.spent)}</p>
 					</div>
-					<div class="bg-sw-surface/40 rounded-xl p-3 sm:p-4 border border-sw-border/30">
-						<p class="text-[10px] sm:text-xs text-sw-text-dim mb-1">Monthly Avg</p>
-						<p class="font-mono text-base sm:text-lg">{formatCurrency(summary.totalSpent / Math.max(summary.monthly.length, 1))}</p>
-						<p class="text-[10px] sm:text-xs text-sw-text-dim">{summary.monthly.length} months</p>
+					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
+						<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly Avg</p>
+						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.totalSpent / Math.max(summary.monthly.length, 1))}</p>
+						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.monthly.length} months</p>
 					</div>
-					<div class="bg-sw-surface/40 rounded-xl p-3 sm:p-4 border border-sw-border/30">
-						<p class="text-[10px] sm:text-xs text-sw-text-dim mb-1">Subscriptions</p>
-						<p class="font-mono text-base sm:text-lg">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</p>
-						<p class="text-[10px] sm:text-xs text-sw-text-dim">{summary.recurringCharges.length} detected</p>
+					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
+						<p class="text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subscriptions</p>
+						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</p>
+						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.recurringCharges.length} detected</p>
 					</div>
 				</div>
 			{/if}
 
 			<!-- Calculation Method Banner -->
 			{#if summary.usingFallback > 0}
-				<div class="mb-8 rounded-xl border bg-amber-500/5 border-amber-500/30 p-4 flex items-center justify-between">
+				<div class="mb-8 rounded-xl p-4 flex items-center justify-between" style="background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.3)">
 					<div class="flex items-center gap-3">
-						<div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(245,158,11,0.2)">
 							<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 						</div>
 						<div>
-							<p class="text-sm font-medium">{summary.usingRealPrices > 0 ? 'Mixed calculation' : 'Using estimates'}</p>
-							<p class="text-xs text-sw-text-dim">{summary.usingRealPrices} real prices, {summary.usingFallback} estimated</p>
+							<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{summary.usingRealPrices > 0 ? 'Mixed calculation' : 'Using estimates'}</p>
+							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{summary.usingRealPrices} real prices, {summary.usingFallback} estimated</p>
 						</div>
 					</div>
 					<button onclick={recalculateWithRealPrices} disabled={recalculating} class="btn btn-secondary text-sm">
@@ -423,14 +405,14 @@
 			{/if}
 			
 			{#if recalcMessage}
-				<div class="mb-6 rounded-lg bg-sw-surface/60 border border-sw-border/50 p-4 text-sm">{recalcMessage}</div>
+				<div class="mb-6 rounded-lg p-4 text-sm" style="background: {isDark ? 'rgba(38,38,38,0.6)' : '#ffffff'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.5)' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}">{recalcMessage}</div>
 			{/if}
 
 			<!-- Charts Row -->
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
 				<!-- Donut Chart -->
-				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 p-4 sm:p-6">
-					<h3 class="font-display font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Spending by Category</h3>
+				<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<h3 class="font-display font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Spending by Category</h3>
 					<div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
 						<div class="relative flex-shrink-0">
 							<svg viewBox="0 0 200 200" class="w-32 h-32 sm:w-44 sm:h-44">
@@ -444,16 +426,16 @@
 										</path>
 									{/if}
 								{/each}
-								<text x="100" y="95" text-anchor="middle" class="fill-sw-text-dim text-[10px] sm:text-xs">Total</text>
-								<text x="100" y="115" text-anchor="middle" class="fill-sw-text font-display font-bold text-sm sm:text-base">{formatCurrency(summary.totalSpent)}</text>
+								<text x="100" y="95" text-anchor="middle" class="text-[10px] sm:text-xs" style="fill: {isDark ? '#a3a3a3' : '#737373'}">Total</text>
+								<text x="100" y="115" text-anchor="middle" class="font-display font-bold text-sm sm:text-base" style="fill: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.totalSpent)}</text>
 							</svg>
 						</div>
 						<div class="flex-1 w-full grid grid-cols-2 sm:grid-cols-1 gap-1 sm:gap-2">
 							{#each displayCategories as cat, i}
 								<div class="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
 									<div class="w-2 h-2 sm:w-3 sm:h-3 rounded-sm flex-shrink-0" style="background: {COLORS[i % COLORS.length]}"></div>
-									<span class="flex-1 truncate">{cat.category}</span>
-									<span class="font-mono text-sw-text-dim text-[10px] sm:text-xs">{formatCurrency(cat.spent)}</span>
+									<span class="flex-1 truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{cat.category}</span>
+									<span class="font-mono text-[10px] sm:text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(cat.spent)}</span>
 								</div>
 							{/each}
 						</div>
@@ -461,8 +443,8 @@
 				</div>
 
 				<!-- Day of Week Chart -->
-				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 p-4 sm:p-6">
-					<h3 class="font-display font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Spending by Day</h3>
+				<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<h3 class="font-display font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Spending by Day</h3>
 					<div class="h-36 sm:h-44 flex items-end gap-1 sm:gap-2">
 						{#each summary.dayOfWeek as day}
 							{@const height = (day.spent / maxDaySpend) * 100}
@@ -470,16 +452,16 @@
 							<div class="flex-1 flex flex-col items-center gap-1">
 								<div class="w-full flex flex-col items-center justify-end" style="height: 110px;">
 									<div 
-										class="w-full rounded-t transition-all cursor-pointer relative group {isMax ? 'bg-gradient-to-t from-sw-accent to-sw-accent/80' : 'bg-gradient-to-t from-sw-accent/50 to-sw-accent/30'}"
-										style="height: {Math.max(height, 4)}%;"
+										class="w-full rounded-t transition-all cursor-pointer relative group"
+										style="height: {Math.max(height, 4)}%; background: linear-gradient(to top, {isMax ? '#0d9488' : 'rgba(13,148,136,0.5)'}, {isMax ? 'rgba(13,148,136,0.8)' : 'rgba(13,148,136,0.3)'});"
 									>
-										<div class="absolute -top-16 left-1/2 -translate-x-1/2 bg-sw-bg border border-sw-border rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none hidden sm:block">
-											<p class="font-medium">{formatCurrency(day.spent)}</p>
-											<p class="text-sw-text-dim">{day.count} transactions</p>
+										<div class="absolute -top-16 left-1/2 -translate-x-1/2 rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none hidden sm:block" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+											<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(day.spent)}</p>
+											<p style="color: {isDark ? '#a3a3a3' : '#737373'}">{day.count} transactions</p>
 										</div>
 									</div>
 								</div>
-								<span class="text-[10px] sm:text-xs text-sw-text-dim {isMax ? 'text-sw-accent font-medium' : ''}">{day.dayShort}</span>
+								<span class="text-[10px] sm:text-xs" style="color: {isMax ? '#0d9488' : (isDark ? '#a3a3a3' : '#737373')}; font-weight: {isMax ? '500' : '400'}">{day.dayShort}</span>
 							</div>
 						{/each}
 					</div>
@@ -487,27 +469,27 @@
 			</div>
 
 			<!-- Monthly Spending -->
-			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 p-4 sm:p-6 mb-6 sm:mb-8">
-				<h3 class="font-display font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Monthly Spending</h3>
+			<div class="rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+				<h3 class="font-display font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Monthly Spending</h3>
 				{#if summary.monthly.length > 0}
 					<div class="h-28 sm:h-32 flex items-end gap-0.5 sm:gap-1 overflow-x-auto pb-1">
 						{#each summary.monthly as month}
 							{@const height = (month.spent / maxMonthlySpend) * 100}
 							<div class="flex-1 flex flex-col items-center gap-1 min-w-[20px] sm:min-w-0">
 								<div class="w-full flex flex-col items-center justify-end" style="height: 90px;">
-									<div class="w-full bg-gradient-to-t from-sw-accent to-sw-accent/60 rounded-t transition-all hover:from-sw-accent/80 cursor-pointer relative group" style="height: {Math.max(height, 4)}%;">
-										<div class="absolute -top-16 left-1/2 -translate-x-1/2 bg-sw-bg border border-sw-border rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none hidden sm:block">
-											<p class="font-medium">{formatCurrency(month.spent)}</p>
+									<div class="w-full rounded-t transition-all cursor-pointer relative group" style="height: {Math.max(height, 4)}%; background: linear-gradient(to top, #0d9488, rgba(13,148,136,0.6));">
+										<div class="absolute -top-16 left-1/2 -translate-x-1/2 rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none hidden sm:block" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+											<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(month.spent)}</p>
 											<p class="text-sw-accent text-[10px]">→ {formatCurrency(month.future)}</p>
 										</div>
 									</div>
 								</div>
-								<span class="text-[8px] sm:text-[10px] text-sw-text-dim truncate w-full text-center">{formatMonth(month.month)}</span>
+								<span class="text-[8px] sm:text-[10px] truncate w-full text-center" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatMonth(month.month)}</span>
 							</div>
 						{/each}
 					</div>
 				{:else}
-					<p class="text-sw-text-dim text-sm">Not enough data</p>
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Not enough data</p>
 				{/if}
 			</div>
 
@@ -515,40 +497,41 @@
 			{#if summary.recurringCharges.length > 0}
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
 					<!-- Recurring Charges -->
-					<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden">
-						<div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-sw-border/50">
-							<h3 class="font-display font-semibold text-sm sm:text-base">Recurring Charges</h3>
-							<p class="text-xs sm:text-sm text-sw-text-dim">Subscriptions and regular payments</p>
+					<div class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Recurring Charges</h3>
+							<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subscriptions and regular payments</p>
 						</div>
-						<div class="divide-y divide-sw-border/30 max-h-64 sm:max-h-80 overflow-y-auto">
+						<div class="max-h-64 sm:max-h-80 overflow-y-auto" style="border-color: {isDark ? 'rgba(64,64,64,0.3)' : '#e5e5e5'}">
 							{#each summary.recurringCharges as charge}
 								<button 
 									onclick={() => selectedWhatIf = charge}
-									class="w-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between hover:bg-sw-bg/30 transition-colors text-left {selectedWhatIf?.merchant === charge.merchant ? 'bg-sw-accent/10' : ''}"
+									class="w-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between transition-colors text-left"
+									style="background: {selectedWhatIf?.merchant === charge.merchant ? 'rgba(13,148,136,0.1)' : 'transparent'}; border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}"
 								>
 									<div class="min-w-0 flex-1 mr-3">
-										<p class="font-medium text-sm sm:text-base truncate">{charge.merchant}</p>
-										<p class="text-[10px] sm:text-xs text-sw-text-dim">{charge.frequency} • {charge.count}×</p>
+										<p class="font-medium text-sm sm:text-base truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{charge.merchant}</p>
+										<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{charge.frequency} • {charge.count}×</p>
 									</div>
 									<div class="text-right flex-shrink-0">
-										<p class="font-mono text-sm sm:text-base">{formatCurrency(charge.avgAmount)}</p>
-										<p class="text-[10px] sm:text-xs text-sw-text-dim">{formatCurrency(charge.yearlyEstimate)}/yr</p>
+										<p class="font-mono text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(charge.avgAmount)}</p>
+										<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatCurrency(charge.yearlyEstimate)}/yr</p>
 									</div>
 								</button>
 							{/each}
 						</div>
-						<div class="px-4 sm:px-6 py-2.5 sm:py-3 bg-sw-bg/30 border-t border-sw-border/50">
+						<div class="px-4 sm:px-6 py-2.5 sm:py-3" style="background: {isDark ? 'rgba(10,10,10,0.3)' : 'rgba(245,240,232,0.5)'}; border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 							<div class="flex justify-between text-xs sm:text-sm">
-								<span class="text-sw-text-dim">Total recurring</span>
-								<span class="font-mono font-medium">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</span>
+								<span style="color: {isDark ? '#a3a3a3' : '#737373'}">Total recurring</span>
+								<span class="font-mono font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</span>
 							</div>
 						</div>
 					</div>
 
 					<!-- What-If Calculator -->
-					<div class="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl border border-purple-500/30 p-4 sm:p-6">
-						<h3 class="font-display font-semibold mb-2 text-sm sm:text-base">What If Calculator</h3>
-						<p class="text-xs sm:text-sm text-sw-text-dim mb-3 sm:mb-4">
+					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? 'linear-gradient(135deg, rgba(168,85,247,0.1), rgba(236,72,153,0.1))' : 'linear-gradient(135deg, rgba(168,85,247,0.08), rgba(236,72,153,0.08))'}; border: 1px solid {isDark ? 'rgba(168,85,247,0.3)' : 'rgba(168,85,247,0.2)'}">
+						<h3 class="font-display font-semibold mb-2 text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">What If Calculator</h3>
+						<p class="text-xs sm:text-sm mb-3 sm:mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 							{selectedWhatIf ? `If you cancelled ${selectedWhatIf.merchant}...` : 'Tap a subscription to see projections'}
 						</p>
 						
@@ -560,12 +543,13 @@
 							
 							<div class="space-y-3 sm:space-y-4">
 								<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-									<label class="text-xs sm:text-sm text-sw-text-dim">Time horizon:</label>
-									<div class="flex rounded-lg bg-sw-bg p-1 w-full sm:w-auto">
+									<label class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Time horizon:</label>
+									<div class="flex rounded-lg p-1 w-full sm:w-auto" style="background: {isDark ? '#0a0a0a' : '#ffffff'}">
 										{#each [5, 10, 20, 30] as years}
 											<button 
 												onclick={() => whatIfYears = years}
-												class="flex-1 sm:flex-none px-3 py-1.5 sm:py-1 text-xs rounded-md transition-colors {whatIfYears === years ? 'bg-purple-500 text-white' : 'text-sw-text-dim hover:text-sw-text'}"
+												class="flex-1 sm:flex-none px-3 py-1.5 sm:py-1 text-xs rounded-md transition-colors"
+												style="background: {whatIfYears === years ? '#a855f7' : 'transparent'}; color: {whatIfYears === years ? '#ffffff' : (isDark ? '#a3a3a3' : '#737373')}"
 											>
 												{years}yr
 											</button>
@@ -573,32 +557,32 @@
 									</div>
 								</div>
 								
-								<div class="bg-sw-bg/50 rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3 text-sm">
+								<div class="rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3 text-sm" style="background: {isDark ? 'rgba(10,10,10,0.5)' : 'rgba(255,255,255,0.7)'}">
 									<div class="flex justify-between">
-										<span class="text-sw-text-dim text-xs sm:text-sm">Monthly savings</span>
-										<span class="font-mono">{formatCurrency(monthlyAmount)}</span>
+										<span class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly savings</span>
+										<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(monthlyAmount)}</span>
 									</div>
 									<div class="flex justify-between">
-										<span class="text-sw-text-dim text-xs sm:text-sm">Total contributed</span>
-										<span class="font-mono">{formatCurrency(totalContributed)}</span>
+										<span class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Total contributed</span>
+										<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(totalContributed)}</span>
 									</div>
 									<div class="flex justify-between">
-										<span class="text-sw-text-dim text-xs sm:text-sm">Gains (7%)</span>
+										<span class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Gains (7%)</span>
 										<span class="font-mono text-sw-accent">+{formatCurrency(gains)}</span>
 									</div>
-									<div class="border-t border-sw-border/50 pt-2 sm:pt-3 flex justify-between items-center">
-										<span class="font-medium text-xs sm:text-sm">In {whatIfYears} years</span>
-										<span class="font-display text-xl sm:text-2xl font-bold text-purple-400">{formatCurrency(futureValue)}</span>
+									<div class="pt-2 sm:pt-3 flex justify-between items-center" style="border-top: 1px solid {isDark ? 'rgba(64,64,64,0.5)' : '#e5e5e5'}">
+										<span class="font-medium text-xs sm:text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">In {whatIfYears} years</span>
+										<span class="font-display text-xl sm:text-2xl font-bold" style="color: #a855f7">{formatCurrency(futureValue)}</span>
 									</div>
 								</div>
 								
-								<p class="text-[10px] sm:text-xs text-sw-text-dim text-center">
+								<p class="text-[10px] sm:text-xs text-center" style="color: {isDark ? '#737373' : '#9ca3af'}">
 									Cancel & invest {formatCurrency(monthlyAmount)}/mo → {formatCurrency(futureValue)}
 								</p>
 							</div>
 						{:else}
-							<div class="bg-sw-bg/50 rounded-xl p-6 sm:p-8 text-center">
-								<p class="text-sw-text-dim text-xs sm:text-sm">← Tap a recurring charge to calculate savings</p>
+							<div class="rounded-xl p-6 sm:p-8 text-center" style="background: {isDark ? 'rgba(10,10,10,0.5)' : 'rgba(255,255,255,0.7)'}">
+								<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">← Tap a recurring charge to calculate savings</p>
 							</div>
 						{/if}
 					</div>
@@ -606,37 +590,37 @@
 			{/if}
 
 			<!-- Merchant Frequency -->
-			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-6 sm:mb-8">
-				<div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-sw-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+			<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+				<div class="px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div>
-						<h3 class="font-display font-semibold text-sm sm:text-base">Where Your Money Goes</h3>
-						<p class="text-xs sm:text-sm text-sw-text-dim">Your favorite places to spend</p>
+						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Where Your Money Goes</h3>
+						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Your favorite places to spend</p>
 					</div>
-					<div class="flex rounded-lg bg-sw-bg p-1 self-start sm:self-auto">
-						<button onclick={() => merchantView = 'frequency'} class="px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs rounded-md transition-colors {merchantView === 'frequency' ? 'bg-sw-surface text-sw-text' : 'text-sw-text-dim hover:text-sw-text'}">Most Visits</button>
-						<button onclick={() => merchantView = 'spend'} class="px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs rounded-md transition-colors {merchantView === 'spend' ? 'bg-sw-surface text-sw-text' : 'text-sw-text-dim hover:text-sw-text'}">Most Spent</button>
+					<div class="flex rounded-lg p-1 self-start sm:self-auto" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
+						<button onclick={() => merchantView = 'frequency'} class="px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs rounded-md transition-colors" style="background: {merchantView === 'frequency' ? (isDark ? '#262626' : '#ffffff') : 'transparent'}; color: {merchantView === 'frequency' ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#a3a3a3' : '#737373')}">Most Visits</button>
+						<button onclick={() => merchantView = 'spend'} class="px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs rounded-md transition-colors" style="background: {merchantView === 'spend' ? (isDark ? '#262626' : '#ffffff') : 'transparent'}; color: {merchantView === 'spend' ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#a3a3a3' : '#737373')}">Most Spent</button>
 					</div>
 				</div>
-				<div class="divide-y divide-sw-border/30">
+				<div>
 					{#each (merchantView === 'frequency' ? summary.topMerchants : summary.topMerchantsBySpend).slice(0, 10) as merchant, i}
 						{@const maxCount = summary.topMerchants[0]?.count || 1}
 						{@const maxSpend = summary.topMerchantsBySpend[0]?.totalSpent || 1}
 						{@const barWidth = merchantView === 'frequency' ? (merchant.count / maxCount) * 100 : (merchant.totalSpent / maxSpend) * 100}
 						
-						<div class="px-3 sm:px-6 py-2.5 sm:py-3 hover:bg-sw-bg/30 transition-colors">
+						<div class="px-3 sm:px-6 py-2.5 sm:py-3 transition-colors" style="border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}">
 							<div class="flex items-start sm:items-center gap-2 sm:gap-4">
-								<div class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-sw-accent/10 flex items-center justify-center text-sw-accent font-mono text-xs sm:text-sm flex-shrink-0">{i + 1}</div>
+								<div class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-sw-accent font-mono text-xs sm:text-sm flex-shrink-0" style="background: rgba(13,148,136,0.1)">{i + 1}</div>
 								<div class="flex-1 min-w-0">
 									<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-0 mb-1">
-										<p class="font-medium text-sm sm:text-base truncate">{merchant.merchant}</p>
+										<p class="font-medium text-sm sm:text-base truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{merchant.merchant}</p>
 										<div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-shrink-0">
-											<span class="text-sw-text-dim">{merchant.count}×</span>
-											<span class="font-mono">{formatCurrency(merchant.totalSpent)}</span>
+											<span style="color: {isDark ? '#a3a3a3' : '#737373'}">{merchant.count}×</span>
+											<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(merchant.totalSpent)}</span>
 											<span class="text-sw-accent text-[10px] sm:text-xs hidden sm:inline">→ {formatCurrency(merchant.totalFuture)}</span>
 										</div>
 									</div>
-									<div class="h-1 sm:h-1.5 bg-sw-bg rounded-full overflow-hidden">
-										<div class="h-full bg-sw-accent/60 rounded-full transition-all" style="width: {barWidth}%;"></div>
+									<div class="h-1 sm:h-1.5 rounded-full overflow-hidden" style="background: {isDark ? '#262626' : '#f5f0e8'}">
+										<div class="h-full rounded-full transition-all" style="width: {barWidth}%; background: rgba(13,148,136,0.6);"></div>
 									</div>
 								</div>
 							</div>
@@ -647,25 +631,25 @@
 
 			<!-- Year-over-Year Comparison -->
 			{#if summary.yoyComparison}
-				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-6 sm:mb-8">
-					<div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-sw-border/50">
-						<h3 class="font-display font-semibold text-sm sm:text-base">Year-over-Year</h3>
-						<p class="text-xs sm:text-sm text-sw-text-dim">Compared to same period last year</p>
+				<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Year-over-Year</h3>
+						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Compared to same period last year</p>
 					</div>
 					<div class="p-4 sm:p-6">
 						<div class="grid grid-cols-3 gap-2 sm:gap-6 mb-4 sm:mb-6">
 							<div class="text-center">
-								<p class="text-[10px] sm:text-sm text-sw-text-dim mb-1">Last Year</p>
-								<p class="font-display text-base sm:text-2xl font-bold">{formatCurrency(summary.yoyComparison.lastYearTotal)}</p>
-								<p class="text-[10px] sm:text-xs text-sw-text-dim">{summary.yoyComparison.lastYearTxCount} txns</p>
+								<p class="text-[10px] sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Last Year</p>
+								<p class="font-display text-base sm:text-2xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.yoyComparison.lastYearTotal)}</p>
+								<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.yoyComparison.lastYearTxCount} txns</p>
 							</div>
 							<div class="text-center">
-								<p class="text-[10px] sm:text-sm text-sw-text-dim mb-1">This Year</p>
-								<p class="font-display text-base sm:text-2xl font-bold">{formatCurrency(summary.yoyComparison.currentYearTotal)}</p>
-								<p class="text-[10px] sm:text-xs text-sw-text-dim">{summary.transactionCount} txns</p>
+								<p class="text-[10px] sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">This Year</p>
+								<p class="font-display text-base sm:text-2xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.yoyComparison.currentYearTotal)}</p>
+								<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.transactionCount} txns</p>
 							</div>
 							<div class="text-center">
-								<p class="text-[10px] sm:text-sm text-sw-text-dim mb-1">Change</p>
+								<p class="text-[10px] sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Change</p>
 								<p class="font-display text-base sm:text-2xl font-bold {summary.yoyComparison.changeAmount > 0 ? 'text-red-400' : 'text-sw-accent'}">
 									{summary.yoyComparison.changeAmount > 0 ? '+' : ''}{formatCurrency(summary.yoyComparison.changeAmount)}
 								</p>
@@ -676,15 +660,15 @@
 						</div>
 						
 						{#if summary.yoyComparison.categoryChanges.length > 0}
-							<div class="border-t border-sw-border/50 pt-3 sm:pt-4">
-								<p class="text-xs sm:text-sm font-medium mb-2 sm:mb-3">Biggest Changes</p>
+							<div class="pt-3 sm:pt-4" style="border-top: 1px solid {isDark ? 'rgba(64,64,64,0.5)' : '#e5e5e5'}">
+								<p class="text-xs sm:text-sm font-medium mb-2 sm:mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Biggest Changes</p>
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 									{#each summary.yoyComparison.categoryChanges.slice(0, 6) as change}
-										<div class="flex items-center justify-between px-2 sm:px-3 py-1.5 sm:py-2 bg-sw-bg/30 rounded-lg text-xs sm:text-sm">
-											<span class="truncate flex-1 mr-2">{change.category}</span>
+										<div class="flex items-center justify-between px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm" style="background: {isDark ? 'rgba(10,10,10,0.3)' : 'rgba(245,240,232,0.5)'}">
+											<span class="truncate flex-1 mr-2" style="color: {isDark ? '#ffffff' : '#171717'}">{change.category}</span>
 											<div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-												<span class="hidden sm:inline text-sw-text-dim">{formatCurrency(change.lastYear)} →</span>
-												<span class="font-mono">{formatCurrency(change.currentYear)}</span>
+												<span class="hidden sm:inline" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(change.lastYear)} →</span>
+												<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(change.currentYear)}</span>
 												<span class="text-[10px] sm:text-xs font-mono px-1 sm:px-1.5 py-0.5 rounded {change.change > 0 ? 'bg-red-400/10 text-red-400' : 'bg-sw-accent/10 text-sw-accent'}">
 													{change.change > 0 ? '+' : ''}{change.changePct}%
 												</span>
@@ -699,11 +683,11 @@
 			{/if}
 
 			<!-- Goals Section -->
-			<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-6 sm:mb-8">
-				<div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-sw-border/50 flex items-center justify-between">
+			<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+				<div class="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div>
-						<h3 class="font-display font-semibold text-sm sm:text-base">Spending Goals</h3>
-						<p class="text-xs sm:text-sm text-sw-text-dim">Set limits and track progress</p>
+						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Spending Goals</h3>
+						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Set limits and track progress</p>
 					</div>
 					<button onclick={() => showGoalForm = !showGoalForm} class="btn btn-secondary text-xs sm:text-sm px-2 sm:px-4">
 						{showGoalForm ? 'Cancel' : '+ New'}
@@ -711,30 +695,31 @@
 				</div>
 				
 				{#if showGoalForm}
-					<div class="px-4 sm:px-6 py-3 sm:py-4 bg-sw-bg/30 border-b border-sw-border/50">
+					<div class="px-4 sm:px-6 py-3 sm:py-4" style="background: {isDark ? 'rgba(10,10,10,0.3)' : 'rgba(245,240,232,0.5)'}; border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 							<div>
-								<label class="block text-[10px] sm:text-xs text-sw-text-dim mb-1">Goal Name</label>
+								<label class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Goal Name</label>
 								<input 
 									type="text" 
 									bind:value={newGoalName}
 									placeholder="e.g., Cut dining out"
-									class="w-full px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm"
+									class="w-full px-3 py-2 rounded-lg text-sm"
+									style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 								/>
 							</div>
 							<div>
-								<label class="block text-[10px] sm:text-xs text-sw-text-dim mb-1">Type</label>
-								<select bind:value={newGoalType} class="w-full px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm">
+								<label class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Type</label>
+								<select bind:value={newGoalType} class="w-full px-3 py-2 rounded-lg text-sm" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}">
 									<option value="reduce_category">Limit Category</option>
 									<option value="reduce_merchant">Limit Merchant</option>
 								</select>
 							</div>
 							<div>
-								<label class="block text-[10px] sm:text-xs text-sw-text-dim mb-1">
+								<label class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 									{newGoalType === 'reduce_category' ? 'Category' : 'Merchant'}
 								</label>
 								{#if newGoalType === 'reduce_category'}
-									<select bind:value={newGoalTarget} class="w-full px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm">
+									<select bind:value={newGoalTarget} class="w-full px-3 py-2 rounded-lg text-sm" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}">
 										<option value="">Select...</option>
 										{#each displayCategories as cat}
 											<option value={cat.category}>{cat.category}</option>
@@ -745,18 +730,20 @@
 										type="text" 
 										bind:value={newGoalTarget}
 										placeholder="e.g., Starbucks"
-										class="w-full px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm"
+										class="w-full px-3 py-2 rounded-lg text-sm"
+										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 									/>
 								{/if}
 							</div>
 							<div>
-								<label class="block text-[10px] sm:text-xs text-sw-text-dim mb-1">Monthly Limit ($)</label>
+								<label class="block text-[10px] sm:text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly Limit ($)</label>
 								<div class="flex gap-2">
 									<input 
 										type="number" 
 										bind:value={newGoalAmount}
 										min="1"
-										class="flex-1 px-3 py-2 bg-sw-bg border border-sw-border rounded-lg text-sm"
+										class="flex-1 px-3 py-2 rounded-lg text-sm"
+										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 									/>
 									<button onclick={createGoal} class="btn btn-primary text-sm">Add</button>
 								</div>
@@ -766,13 +753,13 @@
 				{/if}
 				
 				{#if goals.length > 0}
-					<div class="divide-y divide-sw-border/30">
+					<div>
 						{#each goals as goal}
-							<div class="px-4 sm:px-6 py-3 sm:py-4 hover:bg-sw-bg/30 transition-colors">
+							<div class="px-4 sm:px-6 py-3 sm:py-4 transition-colors" style="border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}">
 								<div class="flex items-start sm:items-center justify-between mb-2 gap-2">
 									<div class="min-w-0 flex-1">
-										<p class="font-medium text-sm sm:text-base truncate">{goal.name}</p>
-										<p class="text-[10px] sm:text-xs text-sw-text-dim truncate">
+										<p class="font-medium text-sm sm:text-base truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{goal.name}</p>
+										<p class="text-[10px] sm:text-xs truncate" style="color: {isDark ? '#737373' : '#9ca3af'}">
 											{goal.goal_type === 'reduce_category' ? goal.target_category : goal.target_merchant}
 										</p>
 									</div>
@@ -781,7 +768,7 @@
 											<p class="font-mono text-xs sm:text-sm {goal.over_budget ? 'text-red-400' : 'text-sw-accent'}">
 												{formatCurrency(goal.current_period_spent)} / {formatCurrency(goal.target_amount)}
 											</p>
-											<p class="text-[10px] sm:text-xs text-sw-text-dim">
+											<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
 												{goal.over_budget ? 'Over!' : `${formatCurrency(goal.remaining)} left`}
 											</p>
 										</div>
@@ -793,14 +780,14 @@
 									</div>
 								</div>
 								<!-- Progress bar -->
-								<div class="h-1.5 sm:h-2 bg-sw-bg rounded-full overflow-hidden">
+								<div class="h-1.5 sm:h-2 rounded-full overflow-hidden" style="background: {isDark ? '#262626' : '#f5f0e8'}">
 									<div 
 										class="h-full rounded-full transition-all {goal.over_budget ? 'bg-red-400' : 'bg-sw-accent'}"
 										style="width: {Math.min(goal.progress_pct, 100)}%;"
 									></div>
 								</div>
 								{#if goal.projected_value > 0}
-									<p class="text-[10px] sm:text-xs text-sw-text-dim mt-1.5 sm:mt-2 hidden sm:block">
+									<p class="text-[10px] sm:text-xs mt-1.5 sm:mt-2 hidden sm:block" style="color: {isDark ? '#737373' : '#9ca3af'}">
 										If under budget: Save {formatCurrency(goal.target_amount - goal.current_period_spent)}/mo → {formatCurrency(goal.projected_value)} in {goal.project_years}yr
 									</p>
 								{/if}
@@ -808,31 +795,31 @@
 						{/each}
 					</div>
 				{:else if !showGoalForm}
-					<div class="px-4 sm:px-6 py-6 sm:py-8 text-center text-sw-text-dim">
-						<p class="text-xs sm:text-sm">No goals yet. Create one to track spending limits!</p>
+					<div class="px-4 sm:px-6 py-6 sm:py-8 text-center">
+						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">No goals yet. Create one to track spending limits!</p>
 					</div>
 				{/if}
 			</div>
 
 			<!-- Top Transactions -->
 			{#if summary.topTransactions.length > 0}
-				<div class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden mb-6 sm:mb-8">
-					<div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-sw-border/50">
-						<h3 class="font-display font-semibold text-sm sm:text-base">Your Costliest Choices</h3>
-						<p class="text-xs sm:text-sm text-sw-text-dim">Biggest opportunity cost purchases</p>
+				<div class="rounded-2xl overflow-hidden mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<div class="px-4 sm:px-6 py-3 sm:py-4" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+						<h3 class="font-display font-semibold text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Your Costliest Choices</h3>
+						<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest opportunity cost purchases</p>
 					</div>
-					<div class="divide-y divide-sw-border/30">
+					<div>
 						{#each summary.topTransactions.slice(0, 8) as tx, i}
-							<div class="px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4 hover:bg-sw-bg/30 transition-colors">
-								<div class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-sw-accent/10 flex items-center justify-center text-sw-accent font-mono text-xs sm:text-sm flex-shrink-0">{i + 1}</div>
+							<div class="px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4 transition-colors" style="border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}">
+								<div class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-sw-accent font-mono text-xs sm:text-sm flex-shrink-0" style="background: rgba(13,148,136,0.1)">{i + 1}</div>
 								<div class="flex-1 min-w-0">
-									<p class="font-medium text-sm sm:text-base truncate">{tx.merchant}</p>
-									<p class="text-[10px] sm:text-xs text-sw-text-dim">{formatShortDate(tx.date)}</p>
+									<p class="font-medium text-sm sm:text-base truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{tx.merchant}</p>
+									<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatShortDate(tx.date)}</p>
 								</div>
 								<div class="text-right flex-shrink-0">
-									<p class="font-mono text-xs sm:text-sm">{formatCurrency(tx.amount)}</p>
+									<p class="font-mono text-xs sm:text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(tx.amount)}</p>
 								</div>
-								<div class="text-sw-text-dim hidden sm:block">→</div>
+								<div class="hidden sm:block" style="color: {isDark ? '#a3a3a3' : '#737373'}">→</div>
 								<div class="text-right flex-shrink-0">
 									<p class="font-mono text-xs sm:text-sm text-sw-accent">{formatCurrency(tx.futureValue)}</p>
 									<p class="text-[10px] sm:text-xs text-sw-accent">+{formatCurrency(tx.growth)}</p>
@@ -844,28 +831,28 @@
 			{/if}
 
 			<!-- Category Details (collapsible) -->
-			<details class="bg-sw-surface/60 rounded-2xl border border-sw-border/50 overflow-hidden">
-				<summary class="px-4 sm:px-6 py-3 sm:py-4 cursor-pointer hover:bg-sw-bg/30 transition-colors">
+			<details class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+				<summary class="px-4 sm:px-6 py-3 sm:py-4 cursor-pointer transition-colors" style="color: {isDark ? '#ffffff' : '#171717'}">
 					<span class="font-display font-semibold text-sm sm:text-base">Full Category Breakdown</span>
-					<span class="text-xs sm:text-sm text-sw-text-dim ml-2">({summary.categories.length})</span>
+					<span class="text-xs sm:text-sm ml-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">({summary.categories.length})</span>
 				</summary>
-				<div class="border-t border-sw-border/50 divide-y divide-sw-border/30">
+				<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					{#each summary.categories as cat, i}
 						{@const barWidth = summary.totalSpent > 0 ? (cat.spent / summary.totalSpent) * 100 : 0}
-						<div class="px-3 sm:px-6 py-2.5 sm:py-3 hover:bg-sw-bg/30 transition-colors">
+						<div class="px-3 sm:px-6 py-2.5 sm:py-3 transition-colors" style="border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}">
 							<div class="flex items-center justify-between mb-1 gap-2">
 								<div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
 									<div class="w-2 h-2 sm:w-3 sm:h-3 rounded-sm flex-shrink-0" style="background: {COLORS[i % COLORS.length]}"></div>
-									<span class="font-medium text-xs sm:text-sm truncate">{cat.category}</span>
+									<span class="font-medium text-xs sm:text-sm truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{cat.category}</span>
 								</div>
 								<div class="flex items-center gap-1.5 sm:gap-3 text-xs sm:text-sm flex-shrink-0">
-									<span class="text-sw-text-dim">{formatCurrency(cat.spent)}</span>
+									<span style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(cat.spent)}</span>
 									<span class="text-sw-accent hidden sm:inline">→</span>
-									<span class="hidden sm:inline">{formatCurrency(cat.future)}</span>
+									<span class="hidden sm:inline" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(cat.future)}</span>
 									<span class="text-sw-accent font-mono text-[10px] sm:text-xs">+{formatCurrency(cat.delta)}</span>
 								</div>
 							</div>
-							<div class="h-1 sm:h-1.5 bg-sw-bg rounded-full overflow-hidden">
+							<div class="h-1 sm:h-1.5 rounded-full overflow-hidden" style="background: {isDark ? '#262626' : '#f5f0e8'}">
 								<div class="h-full rounded-full transition-all" style="width: {barWidth}%; background: {COLORS[i % COLORS.length]};"></div>
 							</div>
 						</div>
@@ -874,9 +861,14 @@
 			</details>
 
 			<!-- Info footer -->
-			<div class="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-sw-text-dim">
+			<div class="mt-6 sm:mt-8 text-center text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 				<p>Tracking {summary.ticker} • <a href="/settings" class="text-sw-accent hover:underline">Change ticker</a></p>
 			</div>
 		{/if}
 	</main>
 </div>
+
+<!-- Onboarding Modal -->
+{#if showOnboarding}
+	<Onboarding onComplete={() => showOnboarding = false} />
+{/if}

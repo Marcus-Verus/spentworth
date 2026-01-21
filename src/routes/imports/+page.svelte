@@ -1,15 +1,24 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import type { ImportBatch, BatchSummary } from '$lib/types';
 	import Header from '$lib/components/Header.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { initTheme, getTheme } from '$lib/stores/theme';
 
 	let { data } = $props();
+	let isDark = $state(false);
 
 	let batches = $state<ImportBatch[]>([]);
 	let loading = $state(true);
 	let uploading = $state(false);
 	let uploadError = $state<string | null>(null);
 	let dragOver = $state(false);
+
+	onMount(() => {
+		initTheme();
+		isDark = getTheme() === 'dark';
+	});
 
 	$effect(() => {
 		loadBatches();
@@ -107,13 +116,14 @@
 
 	<main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 		<div class="mb-6 sm:mb-8">
-			<h1 class="font-display text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Import History</h1>
-			<p class="text-sw-text-dim text-sm sm:text-base">Upload statements and review imports</p>
+			<h1 class="font-display text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Import History</h1>
+			<p class="text-sm sm:text-base" style="color: {isDark ? '#a3a3a3' : '#737373'}">Upload statements and review imports</p>
 		</div>
 
 		<!-- Upload area -->
 		<div
-			class="card mb-6 sm:mb-8 border-2 border-dashed transition-colors cursor-pointer p-4 sm:p-6 {dragOver ? 'border-sw-accent bg-sw-accent/5' : 'border-sw-border hover:border-sw-text-dim'}"
+			class="rounded-2xl mb-6 sm:mb-8 border-2 border-dashed transition-colors cursor-pointer p-4 sm:p-6"
+			style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border-color: {dragOver ? '#0d9488' : (isDark ? '#2a2a2a' : '#d4cfc5')}; {dragOver ? 'background: rgba(13,148,136,0.05);' : ''}"
 			ondrop={handleDrop}
 			ondragover={handleDragOver}
 			ondragleave={handleDragLeave}
@@ -131,19 +141,19 @@
 				
 				{#if uploading}
 					<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-sw-accent border-t-transparent animate-spin mb-3 sm:mb-4"></div>
-					<p class="text-sw-text-dim text-sm sm:text-base">Processing...</p>
+					<p class="text-sm sm:text-base" style="color: {isDark ? '#a3a3a3' : '#737373'}">Processing...</p>
 				{:else}
-					<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 sm:w-12 sm:h-12 text-sw-text-dim mb-3 sm:mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 sm:w-12 sm:h-12 mb-3 sm:mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
 					</svg>
-					<p class="font-medium mb-1 text-sm sm:text-base">Drop CSV file here</p>
-					<p class="text-xs sm:text-sm text-sw-text-dim">or tap to browse</p>
+					<p class="font-medium mb-1 text-sm sm:text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Drop CSV file here</p>
+					<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">or tap to browse</p>
 				{/if}
 			</label>
 		</div>
 
 		{#if uploadError}
-			<div class="p-3 sm:p-4 rounded-lg bg-sw-danger/10 border border-sw-danger/30 text-sw-danger mb-4 sm:mb-6 text-sm">
+			<div class="p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 text-sm" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444;">
 				{uploadError}
 			</div>
 		{/if}
@@ -154,25 +164,27 @@
 				<div class="w-8 h-8 rounded-full border-2 border-sw-accent border-t-transparent animate-spin"></div>
 			</div>
 		{:else if batches.length === 0}
-			<div class="text-center py-12 sm:py-16 text-sw-text-dim">
-				<p class="text-sm sm:text-base">No imports yet. Upload a CSV file to get started.</p>
-			</div>
+			<EmptyState 
+				type="no-imports" 
+				description="Your uploaded bank statements will appear here"
+				actionLabel=""
+			/>
 		{:else}
 			<div class="space-y-3 sm:space-y-4">
 				{#each batches as batch}
-					<div class="card p-3 sm:p-6">
+					<div class="rounded-2xl p-3 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 						<!-- Mobile layout -->
 						<div class="flex flex-col gap-3 sm:hidden">
 							<div class="flex items-start justify-between gap-3">
 								<div class="flex items-center gap-3 min-w-0 flex-1">
-									<div class="w-10 h-10 rounded-lg bg-sw-surface flex items-center justify-center flex-shrink-0">
-										<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-sw-text-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {isDark ? '#262626' : '#f5f0e8'}">
+										<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" style="color: {isDark ? '#a3a3a3' : '#737373'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 										</svg>
 									</div>
 									<div class="min-w-0">
-										<h3 class="font-medium text-sm truncate">{batch.originalFilename || batch.sourceName || 'Import'}</h3>
-										<p class="text-xs text-sw-text-dim">{formatDate(batch.uploadedAt)}</p>
+										<h3 class="font-medium text-sm truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{batch.originalFilename || batch.sourceName || 'Import'}</h3>
+										<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatDate(batch.uploadedAt)}</p>
 									</div>
 								</div>
 								<span class="badge text-[10px] {batch.status === 'committed' ? 'badge-success' : 'badge-info'}">
@@ -182,7 +194,7 @@
 							<div class="flex items-center justify-between">
 								<div>
 									<p class="font-mono font-medium text-sw-accent text-sm">{formatCurrency(batch.totalIncludedSpend)}</p>
-									<p class="text-[10px] text-sw-text-dim">{batch.rowsIncluded} transactions</p>
+									<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">{batch.rowsIncluded} transactions</p>
 								</div>
 								<div class="flex items-center gap-2">
 									{#if batch.status === 'parsed'}
@@ -192,7 +204,8 @@
 									{/if}
 									<button
 										onclick={() => deleteBatch(batch.id)}
-										class="p-1.5 rounded-lg text-sw-text-dim hover:text-sw-danger hover:bg-sw-danger/10 transition-colors"
+										class="p-1.5 rounded-lg transition-colors hover:bg-red-400/10"
+										style="color: {isDark ? '#a3a3a3' : '#737373'}"
 										aria-label="Delete import"
 									>
 										<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -206,14 +219,14 @@
 						<!-- Desktop layout -->
 						<div class="hidden sm:flex items-center justify-between">
 							<div class="flex items-center gap-4">
-								<div class="w-12 h-12 rounded-lg bg-sw-surface flex items-center justify-center">
-									<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-sw-text-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background: {isDark ? '#262626' : '#f5f0e8'}">
+									<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" style="color: {isDark ? '#a3a3a3' : '#737373'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 									</svg>
 								</div>
 								<div>
-									<h3 class="font-medium">{batch.originalFilename || batch.sourceName || 'Import'}</h3>
-									<p class="text-sm text-sw-text-dim">
+									<h3 class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{batch.originalFilename || batch.sourceName || 'Import'}</h3>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 										{formatDate(batch.uploadedAt)}
 										{#if batch.dateMin && batch.dateMax}
 											• {formatDate(batch.dateMin)} - {formatDate(batch.dateMax)}
@@ -225,7 +238,7 @@
 							<div class="flex items-center gap-6">
 								<div class="text-right">
 									<p class="font-mono font-medium text-sw-accent">{formatCurrency(batch.totalIncludedSpend)}</p>
-									<p class="text-xs text-sw-text-dim">{batch.rowsIncluded} transactions</p>
+									<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{batch.rowsIncluded} transactions</p>
 								</div>
 
 								<span class="badge {batch.status === 'committed' ? 'badge-success' : 'badge-info'}">
@@ -240,7 +253,8 @@
 									{/if}
 									<button
 										onclick={() => deleteBatch(batch.id)}
-										class="p-2 rounded-lg text-sw-text-dim hover:text-sw-danger hover:bg-sw-danger/10 transition-colors"
+										class="p-2 rounded-lg transition-colors hover:bg-red-400/10"
+										style="color: {isDark ? '#a3a3a3' : '#737373'}"
 										aria-label="Delete import"
 									>
 										<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
