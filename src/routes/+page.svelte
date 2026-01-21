@@ -119,58 +119,130 @@
 			
 			<!-- Floating cards - desktop only -->
 			<div class="hidden lg:block">
-				<!-- Left card - Spending breakdown -->
-				<div class="absolute left-[5%] top-[20%] animate-float-slow">
-					<div class="rounded-2xl p-4 w-48 shadow-xl" style="background: {isDark ? 'rgba(26,26,26,0.9)' : 'rgba(255,255,255,0.95)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(8px)">
-						<p class="text-xs mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">This month</p>
-						<p class="text-2xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">$2,847</p>
-						<div class="space-y-2">
-							<div class="flex justify-between text-xs">
-								<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Groceries</span>
-								<span style="color: {isDark ? '#ffffff' : '#171717'}">$642</span>
+				<!-- Decorative gradient orbs -->
+				<div class="absolute left-[10%] top-[30%] w-64 h-64 bg-sw-accent/10 rounded-full blur-3xl"></div>
+				<div class="absolute right-[15%] top-[20%] w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
+				
+				<!-- Left card - Spending breakdown with mini chart -->
+				<div class="absolute left-[4%] top-[18%] animate-float-slow">
+					<div class="rounded-2xl p-5 w-56 shadow-2xl" style="background: {isDark ? 'rgba(26,26,26,0.95)' : 'rgba(255,255,255,0.98)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
+						<div class="flex items-center justify-between mb-3">
+							<p class="text-xs font-medium" style="color: {isDark ? '#a3a3a3' : '#737373'}">This month</p>
+							<span class="text-[10px] px-2 py-0.5 rounded-full" style="background: {isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'}; color: #10b981">↓ 12%</span>
+						</div>
+						<p class="text-3xl font-bold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">$2,847</p>
+						<div class="space-y-3">
+							<div class="flex items-center gap-2">
+								<div class="w-6 h-6 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)'}">
+									<i class="fa-solid fa-basket-shopping text-blue-500 text-[10px]"></i>
+								</div>
+								<div class="flex-1">
+									<div class="flex justify-between text-xs mb-1">
+										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Groceries</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$642</span>
+									</div>
+									<div class="h-1 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+										<div class="h-full rounded-full bg-blue-500" style="width: 45%"></div>
+									</div>
+								</div>
 							</div>
-							<div class="flex justify-between text-xs">
-								<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Dining</span>
-								<span style="color: {isDark ? '#ffffff' : '#171717'}">$389</span>
+							<div class="flex items-center gap-2">
+								<div class="w-6 h-6 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.1)'}">
+									<i class="fa-solid fa-utensils text-orange-500 text-[10px]"></i>
+								</div>
+								<div class="flex-1">
+									<div class="flex justify-between text-xs mb-1">
+										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Dining out</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$389</span>
+									</div>
+									<div class="h-1 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+										<div class="h-full rounded-full bg-orange-500" style="width: 27%"></div>
+									</div>
+								</div>
 							</div>
-							<div class="flex justify-between text-xs">
-								<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Transport</span>
-								<span style="color: {isDark ? '#ffffff' : '#171717'}">$156</span>
+							<div class="flex items-center gap-2">
+								<div class="w-6 h-6 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(168,85,247,0.15)' : 'rgba(168,85,247,0.1)'}">
+									<i class="fa-solid fa-car text-purple-500 text-[10px]"></i>
+								</div>
+								<div class="flex-1">
+									<div class="flex justify-between text-xs mb-1">
+										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Transport</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$156</span>
+									</div>
+									<div class="h-1 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
+										<div class="h-full rounded-full bg-purple-500" style="width: 11%"></div>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 				
-				<!-- Right card - Growth potential -->
-				<div class="absolute right-[5%] top-[30%] animate-float-medium">
-					<div class="rounded-2xl p-4 w-52 shadow-xl" style="background: {isDark ? 'rgba(26,26,26,0.9)' : 'rgba(255,255,255,0.95)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(8px)">
-						<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">If invested instead</p>
-						<p class="text-2xl font-semibold text-sw-accent mb-1">+$10,526</p>
-						<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">over 5 years · 7% return</p>
-						<div class="mt-3 flex items-end gap-1 h-8">
-							<div class="w-3 rounded-sm bg-sw-accent/30" style="height: 40%"></div>
-							<div class="w-3 rounded-sm bg-sw-accent/40" style="height: 55%"></div>
-							<div class="w-3 rounded-sm bg-sw-accent/50" style="height: 45%"></div>
-							<div class="w-3 rounded-sm bg-sw-accent/60" style="height: 70%"></div>
-							<div class="w-3 rounded-sm bg-sw-accent/70" style="height: 65%"></div>
-							<div class="w-3 rounded-sm bg-sw-accent" style="height: 100%"></div>
-						</div>
-					</div>
-				</div>
-				
-				<!-- Bottom left - Goal progress -->
-				<div class="absolute left-[10%] bottom-[15%] animate-float-fast">
-					<div class="rounded-xl p-3 w-44 shadow-lg" style="background: {isDark ? 'rgba(26,26,26,0.9)' : 'rgba(255,255,255,0.95)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(8px)">
+				<!-- Right card - Growth potential with animated chart -->
+				<div class="absolute right-[4%] top-[22%] animate-float-medium">
+					<div class="rounded-2xl p-5 w-60 shadow-2xl" style="background: {isDark ? 'rgba(26,26,26,0.95)' : 'rgba(255,255,255,0.98)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
 						<div class="flex items-center gap-2 mb-2">
-							<div class="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center">
-								<i class="fa-solid fa-bullseye text-purple-500 text-xs"></i>
+							<div class="w-7 h-7 rounded-lg bg-sw-accent/15 flex items-center justify-center">
+								<i class="fa-solid fa-chart-line text-sw-accent text-xs"></i>
 							</div>
-							<span class="text-xs font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Coffee budget</span>
+							<p class="text-xs font-medium" style="color: {isDark ? '#a3a3a3' : '#737373'}">If invested instead</p>
 						</div>
-						<div class="w-full h-1.5 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							<div class="h-full rounded-full bg-purple-500" style="width: 68%"></div>
+						<p class="text-3xl font-bold text-sw-accent mb-1">+$10,526</p>
+						<p class="text-xs mb-4" style="color: {isDark ? '#737373' : '#737373'}">over 5 years at 7% return</p>
+						
+						<!-- Growth visualization -->
+						<div class="relative h-16 flex items-end gap-1">
+							<div class="flex-1 rounded-t-sm transition-all duration-500" style="height: 20%; background: linear-gradient(to top, {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}, {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.05)'})"></div>
+							<div class="flex-1 rounded-t-sm transition-all duration-500" style="height: 35%; background: linear-gradient(to top, {isDark ? 'rgba(13,148,136,0.4)' : 'rgba(13,148,136,0.3)'}, {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.1)'})"></div>
+							<div class="flex-1 rounded-t-sm transition-all duration-500" style="height: 45%; background: linear-gradient(to top, {isDark ? 'rgba(13,148,136,0.5)' : 'rgba(13,148,136,0.4)'}, {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'})"></div>
+							<div class="flex-1 rounded-t-sm transition-all duration-500" style="height: 60%; background: linear-gradient(to top, {isDark ? 'rgba(13,148,136,0.6)' : 'rgba(13,148,136,0.5)'}, {isDark ? 'rgba(13,148,136,0.25)' : 'rgba(13,148,136,0.2)'})"></div>
+							<div class="flex-1 rounded-t-sm transition-all duration-500" style="height: 80%; background: linear-gradient(to top, {isDark ? 'rgba(13,148,136,0.8)' : 'rgba(13,148,136,0.7)'}, {isDark ? 'rgba(13,148,136,0.35)' : 'rgba(13,148,136,0.3)'})"></div>
+							<div class="flex-1 rounded-t-sm transition-all duration-500" style="height: 100%; background: linear-gradient(to top, #0d9488, {isDark ? 'rgba(13,148,136,0.5)' : 'rgba(13,148,136,0.4)'})"></div>
 						</div>
-						<p class="text-xs mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">$68 of $100</p>
+						<div class="flex justify-between mt-2 text-[10px]" style="color: {isDark ? '#525252' : '#a3a3a3'}">
+							<span>Year 1</span>
+							<span>Year 5</span>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Bottom left - Subscription alert -->
+				<div class="absolute left-[8%] bottom-[18%] animate-float-fast">
+					<div class="rounded-xl p-4 w-52 shadow-xl" style="background: {isDark ? 'rgba(26,26,26,0.95)' : 'rgba(255,255,255,0.98)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
+						<div class="flex items-start gap-3">
+							<div class="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+								<i class="fa-solid fa-bell text-amber-500 text-sm"></i>
+							</div>
+							<div class="flex-1 min-w-0">
+								<p class="text-xs font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Subscription found</p>
+								<p class="text-[11px] mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Netflix renewed for $15.99</p>
+								<div class="flex items-center gap-1">
+									<span class="text-[10px] px-2 py-0.5 rounded-full font-medium" style="background: {isDark ? 'rgba(251,191,36,0.15)' : 'rgba(251,191,36,0.1)'}; color: #f59e0b">$192/yr</span>
+									<span class="text-[10px]" style="color: {isDark ? '#525252' : '#a3a3a3'}">→</span>
+									<span class="text-[10px]" style="color: {isDark ? '#a3a3a3' : '#737373'}">$1,340 in 5yr</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Bottom right - Goal progress ring -->
+				<div class="absolute right-[10%] bottom-[12%] animate-float-slow" style="animation-delay: -2s">
+					<div class="rounded-xl p-4 w-44 shadow-xl" style="background: {isDark ? 'rgba(26,26,26,0.95)' : 'rgba(255,255,255,0.98)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
+						<div class="flex items-center gap-3">
+							<div class="relative w-12 h-12">
+								<svg class="w-12 h-12 -rotate-90" viewBox="0 0 36 36">
+									<circle cx="18" cy="18" r="15" fill="none" stroke="{isDark ? '#2a2a2a' : '#e5e5e5'}" stroke-width="3"/>
+									<circle cx="18" cy="18" r="15" fill="none" stroke="#a855f7" stroke-width="3" stroke-dasharray="68, 100" stroke-linecap="round"/>
+								</svg>
+								<span class="absolute inset-0 flex items-center justify-center text-xs font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">68%</span>
+							</div>
+							<div>
+								<p class="text-xs font-medium mb-0.5" style="color: {isDark ? '#ffffff' : '#171717'}">Coffee budget</p>
+								<p class="text-[11px]" style="color: {isDark ? '#a3a3a3' : '#737373'}">$68 of $100</p>
+								<p class="text-[10px] text-purple-500 font-medium">On track ✓</p>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
