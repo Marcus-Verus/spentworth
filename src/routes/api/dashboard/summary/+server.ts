@@ -69,6 +69,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		totalFuture: number;
 		lastDate: string;
 		dates: string[];
+		amounts: number[];
+		category: string;
 	}>();
 	
 	// Day of week tracking (0 = Sunday, 6 = Saturday)
@@ -128,13 +130,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		// Track merchant frequency
 		const merchantName = tx.merchant || 'Unknown';
 		if (!merchantMap.has(merchantName)) {
-			merchantMap.set(merchantName, { count: 0, totalSpent: 0, totalFuture: 0, lastDate: date, dates: [] });
+			merchantMap.set(merchantName, { count: 0, totalSpent: 0, totalFuture: 0, lastDate: date, dates: [], amounts: [], category });
 		}
 		const m = merchantMap.get(merchantName)!;
 		m.count++;
 		m.totalSpent += amount;
 		m.totalFuture += future;
 		m.dates.push(date);
+		m.amounts.push(amount);
 		if (date > m.lastDate) m.lastDate = date;
 		
 		// Track day of week
@@ -207,7 +210,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const biggestSpendingDay = dayOfWeek.reduce((max, d) => d.spent > max.spent ? d : max);
 	const mostFrequentDay = dayOfWeek.reduce((max, d) => d.count > max.count ? d : max);
 	
-	// Detect recurring charges (merchants with regular intervals)
+	// Detect recurring charges (merchants with regular intervals AND consistent amounts)
 	const recurringCharges: Array<{
 		merchant: string;
 		avgAmount: number;
@@ -217,8 +220,50 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		count: number;
 	}> = [];
 	
+	// Categories that are typically NOT subscriptions (exclude these)
+	const nonSubscriptionCategories = new Set([
+		'Gas & Fuel',
+		'Groceries',
+		'Restaurants',
+		'Fast Food',
+		'Coffee Shops',
+		'Hardware & Home Improvement',
+		'Department Stores',
+		'Convenience Stores',
+		'Automotive',
+		'Clothing',
+		'Electronics',
+		'Home & Garden',
+		'Pets',
+		'Pharmacy',
+		'Travel',
+		'Transportation',
+		'ATM/Cash',
+		'Uncategorized'
+	]);
+	
 	for (const [merchant, data] of merchantMap.entries()) {
 		if (data.count >= 2 && data.dates.length >= 2) {
+			// Skip categories that are typically not subscriptions
+			if (nonSubscriptionCategories.has(data.category)) {
+				continue;
+			}
+			
+			// Check amount consistency - real subscriptions have very consistent amounts
+			// Calculate coefficient of variation (std dev / mean)
+			const avgAmount = data.totalSpent / data.count;
+			const variance = data.amounts.reduce((sum, amt) => sum + Math.pow(amt - avgAmount, 2), 0) / data.amounts.length;
+			const stdDev = Math.sqrt(variance);
+			const coefficientOfVariation = avgAmount > 0 ? (stdDev / avgAmount) : 1;
+			
+			// Only consider as subscription if amount varies less than 15% (subscriptions are consistent)
+			// Exception: allow higher variance for very small amounts (rounding differences)
+			const isConsistentAmount = coefficientOfVariation < 0.15 || (avgAmount < 20 && coefficientOfVariation < 0.25);
+			
+			if (!isConsistentAmount) {
+				continue;
+			}
+			
 			// Sort dates and calculate intervals
 			const sortedDates = data.dates.sort();
 			const intervals: number[] = [];
@@ -232,7 +277,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			
 			if (intervals.length > 0) {
 				const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-				const avgAmount = data.totalSpent / data.count;
 				
 				// Detect patterns
 				let frequency = '';
