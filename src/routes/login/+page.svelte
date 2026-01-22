@@ -11,24 +11,43 @@
 	let loading = $state(false);
 	let error = $state<string | null>(data.error || null);
 
-	// Handle OAuth code exchange on client side (where PKCE verifier is stored)
+	// Handle OAuth callback - check if already logged in (code was exchanged by layout)
 	onMount(async () => {
-		if (data.code && browser) {
+		// If session exists (from layout), redirect to dashboard
+		if (data.session) {
+			goto('/dashboard');
+			return;
+		}
+		
+		// If there's an OAuth code and no session, try to exchange it
+		if (browser && data.code) {
 			loading = true;
-			error = null;
 			
+			// Double-check session in case it was just set
+			const { data: sessionData } = await data.supabase.auth.getSession();
+			
+			if (sessionData?.session) {
+				goto('/dashboard');
+				return;
+			}
+			
+			// No session, try to exchange the code
 			try {
-				// Exchange the code using the browser client (has access to PKCE verifier)
 				const { error: exchangeError } = await data.supabase.auth.exchangeCodeForSession(data.code);
 				
 				if (exchangeError) {
+					// If it's a "code already used" type error but we have a session now, just redirect
+					const { data: recheckSession } = await data.supabase.auth.getSession();
+					if (recheckSession?.session) {
+						goto('/dashboard');
+						return;
+					}
+					
 					console.error('OAuth exchange error:', exchangeError);
 					error = exchangeError.message || 'Failed to complete sign in';
 					loading = false;
-					// Clean up the URL
 					window.history.replaceState({}, '', '/login');
 				} else {
-					// Success! Redirect to dashboard
 					goto('/dashboard');
 				}
 			} catch (e) {
