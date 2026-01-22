@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { initTheme, getTheme } from '$lib/stores/theme';
 	import Header from '$lib/components/Header.svelte';

@@ -24,7 +24,7 @@
 	let years = $state(5);
 	let showCalculator = $state(false);
 	
-	const futureValue = $derived(() => {
+	const futureValue = $derived.by(() => {
 		const annualReturn = 0.07; // 7% average return
 		const daysPerYear = 365;
 		let total = 0;
@@ -976,7 +976,7 @@
 								</div>
 								<div class="flex justify-between items-center">
 									<span class="text-sm" style="color: {isDark ? '#737373' : '#737373'}">If invested</span>
-									<span class="font-mono font-semibold text-lg text-sw-accent">${futureValue().toLocaleString()}</span>
+									<span class="font-mono font-semibold text-lg text-sw-accent">${futureValue.toLocaleString()}</span>
 								</div>
 							</div>
 							

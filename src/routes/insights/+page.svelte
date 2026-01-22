@@ -32,7 +32,7 @@
 	let loading = $state(true);
 	let filter = $state<'all' | 'high' | 'opportunity' | 'trend' | 'achievement'>('all');
 
-	let filteredInsights = $derived(() => {
+	let filteredInsights = $derived.by(() => {
 		if (filter === 'all') return insights;
 		if (filter === 'high') return insights.filter(i => i.priority === 'high');
 		return insights.filter(i => i.type === filter);
@@ -177,7 +177,7 @@
 							{@const total = insights.length}
 							{@const colors = ['#0d9488', '#ef4444', '#f59e0b', '#6366f1', '#ec4899']}
 							{@const types = Object.entries(typeCounts)}
-							{@const labels: Record<string, string> = {
+							{@const typeLabels: Record<string, string> = {
 								'opportunity': 'Opportunities',
 								'trend': 'Trends',
 								'subscription': 'Subscriptions',
@@ -202,16 +202,9 @@
 								</div>
 								<div class="flex-1 w-full space-y-2">
 									{#each types as [type, count], i}
-										{@const labels: Record<string, string> = {
-											'opportunity': 'Opportunities',
-											'trend': 'Trends',
-											'subscription': 'Subscriptions',
-											'achievement': 'Wins',
-											'tip': 'Tips'
-										}}
 									<div class="flex items-center gap-2">
 										<div class="w-3 h-3 rounded-sm" style="background: {colors[i % colors.length]}"></div>
-										<span class="text-sm flex-1 capitalize" style="color: {isDark ? '#ffffff' : '#171717'}">{labels[type] || type}</span>
+										<span class="text-sm flex-1 capitalize" style="color: {isDark ? '#ffffff' : '#171717'}">{typeLabels[type] || type}</span>
 										<span class="font-mono text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{count}</span>
 									</div>
 									{/each}
@@ -243,7 +236,7 @@
 
 			<!-- Insights List -->
 			<div class="space-y-3">
-				{#each filteredInsights() as insight, index}
+				{#each filteredInsights as insight, index}
 					<div 
 						class="rounded-xl p-4 sm:p-5"
 						style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
@@ -293,7 +286,7 @@
 			</div>
 
 			<!-- Empty State -->
-			{#if filteredInsights().length === 0 && insights.length > 0}
+			{#if filteredInsights.length === 0 && insights.length > 0}
 				<div class="text-center py-12 rounded-xl" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">No insights match this filter</p>
 				</div>

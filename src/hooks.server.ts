@@ -63,7 +63,7 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	event.locals.user = user;
 
 	// Protected routes
-	const protectedRoutes = ['/dashboard', '/imports', '/settings', '/rules'];
+	const protectedRoutes = ['/dashboard', '/imports', '/settings', '/budgets', '/insights'];
 	const isProtected = protectedRoutes.some((route) => event.url.pathname.startsWith(route));
 
 	if (isProtected && !session) {

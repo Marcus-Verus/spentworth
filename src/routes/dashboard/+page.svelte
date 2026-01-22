@@ -384,7 +384,7 @@
 
 	let maxMonthlySpend = $state(1);
 	let maxDaySpend = $state(1);
-	let displayCategories = $state<typeof summary.categories>([]);
+	let displayCategories = $state<Array<{category: string; spent: number; future: number; delta: number}>>([]);
 </script>
 
 <div class="min-h-screen">
