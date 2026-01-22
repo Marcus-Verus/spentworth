@@ -7,7 +7,7 @@
 	let email = $state('');
 	let password = $state('');
 	let loading = $state(false);
-	let error = $state<string | null>(null);
+	let error = $state<string | null>(data.error || null);
 
 	async function handleLogin(e: Event) {
 		e.preventDefault();

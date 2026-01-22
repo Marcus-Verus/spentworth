@@ -2,28 +2,43 @@ import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }) => {
-	try {
-		const code = url.searchParams.get('code');
-		const next = url.searchParams.get('next') || '/dashboard';
+	const code = url.searchParams.get('code');
+	const next = url.searchParams.get('next') || '/dashboard';
+	const errorParam = url.searchParams.get('error');
+	const errorDescription = url.searchParams.get('error_description');
 
-		if (code) {
-			const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-			if (!exchangeError) {
-				throw redirect(303, next);
-			}
-			// Log error for debugging
+	// If there's an OAuth error from Supabase, redirect to login with error message
+	if (errorParam) {
+		console.error('OAuth error:', errorParam, errorDescription);
+		const errorMessage = encodeURIComponent(errorDescription || errorParam || 'Authentication failed');
+		throw redirect(303, `/login?error=${errorMessage}`);
+	}
+
+	if (!code) {
+		// No code provided - redirect to login without causing a loop
+		throw redirect(303, '/login');
+	}
+
+	try {
+		const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+		
+		if (exchangeError) {
 			console.error('OAuth exchange error:', exchangeError);
+			// Redirect to login with error message - don't pass the code back
+			const errorMessage = encodeURIComponent(exchangeError.message || 'Failed to complete sign in');
+			throw redirect(303, `/login?error=${errorMessage}`);
 		}
 
-		// If there's an error or no code, redirect to login
-		throw redirect(303, '/login');
+		// Success! Redirect to dashboard
+		throw redirect(303, next);
 	} catch (e) {
 		// Re-throw redirects
 		if (e && typeof e === 'object' && 'status' in e && e.status >= 300 && e.status < 400) {
 			throw e;
 		}
-		// Log unexpected errors
+		// Log unexpected errors and redirect with message
 		console.error('OAuth callback error:', e);
-		throw redirect(303, '/login');
+		const errorMessage = encodeURIComponent('An unexpected error occurred during sign in');
+		throw redirect(303, `/login?error=${errorMessage}`);
 	}
 };
