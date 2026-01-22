@@ -14,6 +14,7 @@
 	let uploading = $state(false);
 	let uploadError = $state<string | null>(null);
 	let dragOver = $state(false);
+	let showFormatHelp = $state(false);
 	
 	// Tier usage info
 	let tierUsage = $state<{
@@ -220,6 +221,67 @@
 					<p class="text-xs sm:text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">or tap to browse</p>
 				{/if}
 			</label>
+		</div>
+
+		<!-- CSV Format Help -->
+		<div class="mb-4 sm:mb-6">
+			<button
+				onclick={() => showFormatHelp = !showFormatHelp}
+				class="flex items-center gap-2 text-sm transition-colors hover:opacity-80"
+				style="color: {isDark ? '#a3a3a3' : '#737373'}"
+			>
+				<i class="fa-solid fa-circle-question text-xs"></i>
+				<span>Having trouble with your CSV?</span>
+				<i class="fa-solid fa-chevron-{showFormatHelp ? 'up' : 'down'} text-xs ml-1"></i>
+			</button>
+			
+			{#if showFormatHelp}
+				<div 
+					class="mt-3 p-4 rounded-xl text-sm"
+					style="background: {isDark ? '#1a1a1a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e0d5'}"
+				>
+					<h4 class="font-medium mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Supported CSV Formats</h4>
+					
+					<p class="mb-3" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+						We automatically detect columns from most bank exports. Your CSV should include:
+					</p>
+					
+					<div class="grid gap-3 sm:grid-cols-3 mb-4">
+						<div class="p-3 rounded-lg" style="background: {isDark ? '#262626' : '#ffffff'}">
+							<p class="font-medium text-xs mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Date Column</p>
+							<p class="text-xs" style="color: {isDark ? '#737373' : '#737373'}">
+								date, transaction date, posting date, trans date
+							</p>
+						</div>
+						<div class="p-3 rounded-lg" style="background: {isDark ? '#262626' : '#ffffff'}">
+							<p class="font-medium text-xs mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Amount Column</p>
+							<p class="text-xs" style="color: {isDark ? '#737373' : '#737373'}">
+								amount, debit/credit (separate columns work too)
+							</p>
+						</div>
+						<div class="p-3 rounded-lg" style="background: {isDark ? '#262626' : '#ffffff'}">
+							<p class="font-medium text-xs mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Description Column</p>
+							<p class="text-xs" style="color: {isDark ? '#737373' : '#737373'}">
+								description, merchant, name, payee, memo
+							</p>
+						</div>
+					</div>
+					
+					<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pt-3" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e0d5'}">
+						<a 
+							href="/spentworth-template.csv" 
+							download="spentworth-template.csv"
+							class="inline-flex items-center gap-2 text-sw-accent hover:underline"
+						>
+							<i class="fa-solid fa-download text-xs"></i>
+							<span>Download template CSV</span>
+						</a>
+						<span class="text-xs" style="color: {isDark ? '#525252' : '#9ca3af'}">
+							Use this for manual entry or as a reference format
+						</span>
+					</div>
+				</div>
+			{/if}
 		</div>
 
 		{#if uploadError}
