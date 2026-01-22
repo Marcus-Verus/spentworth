@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { BudgetWithProgress } from '$lib/types';
+import { canCreateBudget } from '$lib/server/tierLimits';
 
 // Calculate opportunity cost for a one-time amount with 7% annual compound return over 10 years
 function calculateOpportunityCost(oneTimeAmount: number, years: number = 10): number {
@@ -218,6 +219,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	if (existing) {
 		throw error(409, `Budget already exists for ${category}. Update it instead.`);
+	}
+
+	// Check tier limit for budgets (only if creating new, not updating existing)
+	const budgetCheck = await canCreateBudget(locals.supabase, user.id);
+	if (!budgetCheck.allowed) {
+		throw error(403, budgetCheck.message || 'Budget limit reached');
 	}
 
 	const { data: budget, error: insertError } = await locals.supabase

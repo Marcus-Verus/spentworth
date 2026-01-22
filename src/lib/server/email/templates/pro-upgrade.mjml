@@ -1,0 +1,153 @@
+<mjml>
+  <mj-head>
+    <mj-title>Welcome to SpentWorth Pro! 🎉</mj-title>
+    <mj-preview>You've unlocked the full power of financial clarity</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="1.7" color="#404040" />
+      <mj-button background-color="#0d9488" color="#ffffff" font-size="15px" font-weight="600" border-radius="10px" inner-padding="14px 32px" />
+      <mj-section background-color="#ffffff" padding="0" />
+    </mj-attributes>
+    <mj-style inline="inline">
+      .feature-icon { display: inline-block; width: 32px; height: 32px; background-color: rgba(13, 148, 136, 0.1); border-radius: 8px; text-align: center; line-height: 32px; margin-right: 12px; }
+      .pro-badge { background: linear-gradient(135deg, #d97706, #f59e0b); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f0e8">
+    <!-- Top Spacer -->
+    <mj-section background-color="#f5f0e8" padding="40px 0 0 0"></mj-section>
+    
+    <!-- Celebration Header with Gradient -->
+    <mj-section border-radius="20px 20px 0 0" padding="48px 32px 40px 32px" css-class="header-gradient" background-color="#0d9488">
+      <mj-column>
+        <mj-text align="center" font-size="56px" padding="0 0 8px 0">
+          🎉
+        </mj-text>
+        <mj-text align="center" font-size="28px" font-weight="700" color="#ffffff" padding="0">
+          Welcome to Pro!
+        </mj-text>
+        <mj-text align="center" font-size="16px" color="rgba(255,255,255,0.9)" padding-top="8px">
+          You've unlocked the full power of financial clarity
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" padding="40px 32px 24px 32px">
+      <mj-column>
+        <mj-text font-size="17px" color="#171717" font-weight="600" padding-bottom="16px">
+          Hi {{name}},
+        </mj-text>
+        <mj-text>
+          Thank you for upgrading to SpentWorth Pro! You now have access to powerful tools that will supercharge your path to financial freedom.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Pro Features Unlocked -->
+    <mj-section background-color="#ffffff" padding="8px 32px 24px 32px">
+      <mj-column>
+        <mj-text font-size="17px" color="#171717" font-weight="600" padding-bottom="16px">
+          Your new Pro features:
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Feature 1 -->
+    <mj-section background-color="#ffffff" padding="0 32px 16px 32px">
+      <mj-column background-color="#f5f0e8" border-radius="12px" padding="16px 20px">
+        <mj-text padding="0">
+          <span style="font-size: 20px; margin-right: 12px;">📊</span>
+          <strong style="color: #171717;">Unlimited Transaction History</strong><br/>
+          <span style="font-size: 14px; color: #737373;">Import and analyze all your historical data—no limits.</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Feature 2 -->
+    <mj-section background-color="#ffffff" padding="0 32px 16px 32px">
+      <mj-column background-color="#f5f0e8" border-radius="12px" padding="16px 20px">
+        <mj-text padding="0">
+          <span style="font-size: 20px; margin-right: 12px;">🎯</span>
+          <strong style="color: #171717;">Unlimited Goals & Budgets</strong><br/>
+          <span style="font-size: 14px; color: #737373;">Create as many financial goals and budgets as you need.</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Feature 3 -->
+    <mj-section background-color="#ffffff" padding="0 32px 16px 32px">
+      <mj-column background-color="#f5f0e8" border-radius="12px" padding="16px 20px">
+        <mj-text padding="0">
+          <span style="font-size: 20px; margin-right: 12px;">🌙</span>
+          <strong style="color: #171717;">Dark Mode</strong><br/>
+          <span style="font-size: 14px; color: #737373;">Easy on the eyes during late-night financial planning sessions.</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Feature 4 -->
+    <mj-section background-color="#ffffff" padding="0 32px 16px 32px">
+      <mj-column background-color="#f5f0e8" border-radius="12px" padding="16px 20px">
+        <mj-text padding="0">
+          <span style="font-size: 20px; margin-right: 12px;">📄</span>
+          <strong style="color: #171717;">PDF Reports</strong><br/>
+          <span style="font-size: 14px; color: #737373;">Export beautiful, shareable reports of your financial insights.</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Feature 5 -->
+    <mj-section background-color="#ffffff" padding="0 32px 24px 32px">
+      <mj-column background-color="#f5f0e8" border-radius="12px" padding="16px 20px">
+        <mj-text padding="0">
+          <span style="font-size: 20px; margin-right: 12px;">⭐</span>
+          <strong style="color: #171717;">Priority Support</strong><br/>
+          <span style="font-size: 14px; color: #737373;">Get help faster with priority email support.</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- CTA Button -->
+    <mj-section background-color="#ffffff" padding="8px 32px 32px 32px">
+      <mj-column>
+        <mj-button href="{{dashboard_url}}" padding="0">
+          Explore Your Pro Features →
+        </mj-button>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Subscription Details -->
+    <mj-section background-color="#ffffff" padding="0 32px 32px 32px">
+      <mj-column background-color="#ecfdf5" border-radius="12px" padding="20px">
+        <mj-text font-size="14px" color="#047857" padding="0">
+          <strong>Your subscription:</strong><br/>
+          <span style="font-size: 13px;">Plan: SpentWorth Pro ({{billing_cycle}})</span><br/>
+          <span style="font-size: 13px;">Next billing date: {{next_billing_date}}</span><br/>
+          <span style="font-size: 13px;">
+            <a href="{{manage_subscription_url}}" style="color: #047857;">Manage your subscription →</a>
+          </span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" border-radius="0 0 20px 20px" padding="24px 32px 32px 32px">
+      <mj-column>
+        <mj-divider border-color="#e5e5e5" border-width="1px" padding="0 0 24px 0" />
+        <mj-text align="center" font-size="13px" color="#9ca3af">
+          Thank you for supporting SpentWorth! We're excited to be part of your financial journey.
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af" padding-top="16px">
+          © {{year}} SpentWorth. All rights reserved.<br/>
+          <a href="https://spentworth.com/privacy" style="color: #9ca3af;">Privacy</a> · 
+          <a href="https://spentworth.com/terms" style="color: #9ca3af;">Terms</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Bottom Spacer -->
+    <mj-section background-color="#f5f0e8" padding="40px 0"></mj-section>
+  </mj-body>
+</mjml>
+

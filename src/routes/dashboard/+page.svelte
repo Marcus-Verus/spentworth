@@ -5,9 +5,10 @@
 	import Header from '$lib/components/Header.svelte';
 	import Onboarding from '$lib/components/Onboarding.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
-	import { initTheme, getTheme } from '$lib/stores/theme';
+	import { initTheme, getTheme, setTheme } from '$lib/stores/theme';
 
 	let isDark = $state(false);
+	let isPro = $state(false);
 
 	interface Goal {
 		id: string;
@@ -143,6 +144,23 @@
 	onMount(async () => {
 		initTheme();
 		isDark = getTheme() === 'dark';
+		
+		// Check Pro status for dark mode
+		try {
+			const subRes = await fetch('/api/stripe/subscription');
+			if (subRes.ok) {
+				const subData = await subRes.json();
+				isPro = subData.plan === 'pro' && ['active', 'trialing'].includes(subData.status);
+			}
+		} catch {
+			// Ignore errors
+		}
+		
+		// If not Pro and dark mode is on, reset to light
+		if (!isPro && isDark) {
+			setTheme('light');
+			isDark = false;
+		}
 		
 		// Check if user has completed onboarding
 		const onboardingCompleted = localStorage.getItem('sw_onboarding_completed');

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
-	import { initTheme, getTheme } from '$lib/stores/theme';
+	import { initTheme, getTheme, setTheme } from '$lib/stores/theme';
 	import type { BudgetWithProgress } from '$lib/types';
 	import { CATEGORIES } from '$lib/types';
 
@@ -28,6 +28,14 @@
 	let editingBudget = $state<BudgetWithProgress | null>(null);
 	let animatedHealthScore = $state(0);
 	let animatedVelocity = $state(0);
+	let saveError = $state<string | null>(null);
+	
+	// Tier usage info
+	let tierUsage = $state<{
+		plan: 'free' | 'pro';
+		isProActive: boolean;
+		budgets: { used: number; limit: number | null };
+	} | null>(null);
 	
 	// Form state
 	let newCategory = $state('');
@@ -305,7 +313,14 @@
 		const categoryToSave = useCustomCategory ? customCategoryName.trim() : newCategory;
 		if (!categoryToSave || newLimit <= 0) return;
 		
+		// Check if at budget limit before making request
+		if (tierUsage && tierUsage.budgets.limit !== null && tierUsage.budgets.used >= tierUsage.budgets.limit) {
+			saveError = `Free tier allows ${tierUsage.budgets.limit} budget categories. Upgrade to Pro for unlimited budgets.`;
+			return;
+		}
+		
 		saving = true;
+		saveError = null;
 		try {
 			const res = await fetch('/api/budgets', {
 				method: 'POST',
@@ -323,9 +338,17 @@
 				useCustomCategory = false;
 				customCategoryName = '';
 				await loadBudgets();
+				await loadTierUsage(); // Refresh tier usage after creating budget
+			} else if (res.status === 403) {
+				const json = await res.json();
+				saveError = json.message || 'Budget limit reached. Upgrade to Pro for unlimited budgets.';
+			} else {
+				const json = await res.json();
+				saveError = json.message || 'Failed to create budget';
 			}
 		} catch (e) {
 			console.error('Failed to save budget:', e);
+			saveError = 'Failed to create budget. Please try again.';
 		}
 		saving = false;
 	}
@@ -435,11 +458,33 @@
 		saving = false;
 	}
 
-	onMount(() => {
+	onMount(async () => {
 		initTheme();
 		isDark = getTheme() === 'dark';
+		
+		// Check Pro status for dark mode (tier usage also tells us if Pro)
+		await loadTierUsage();
+		
+		// If not Pro and dark mode is on, reset to light
+		if (tierUsage && !tierUsage.isProActive && isDark) {
+			setTheme('light');
+			isDark = false;
+		}
+		
 		loadBudgets();
 	});
+
+	async function loadTierUsage() {
+		try {
+			const res = await fetch('/api/tier');
+			const json = await res.json();
+			if (json.ok) {
+				tierUsage = json.data;
+			}
+		} catch (err) {
+			console.error('Failed to load tier usage:', err);
+		}
+	}
 
 	function getProgressColor(percentUsed: number): string {
 		if (percentUsed >= 100) return '#ef4444'; // red
@@ -505,9 +550,9 @@
 							<i class="fa-solid fa-receipt text-sw-accent"></i>
 							Log Spending
 						</button>
-						{#if availableCategories.length > 0}
+						{#if availableCategories.length > 0 && (!tierUsage || tierUsage.budgets.limit === null || tierUsage.budgets.used < tierUsage.budgets.limit)}
 							<button 
-								onclick={() => { showAddModal = true; newCategory = availableCategories[0]; }}
+								onclick={() => { showAddModal = true; newCategory = availableCategories[0]; saveError = null; }}
 								class="btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
 							>
 								<i class="fa-solid fa-plus"></i>
@@ -518,6 +563,37 @@
 				{/if}
 			</div>
 		</div>
+
+		<!-- Tier usage banner for free users -->
+		{#if tierUsage && tierUsage.budgets.limit !== null}
+			{@const remaining = tierUsage.budgets.limit - tierUsage.budgets.used}
+			{@const isAtLimit = remaining <= 0}
+			<div 
+				class="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+				style="background: {isAtLimit ? 'rgba(239,68,68,0.1)' : 'rgba(13,148,136,0.1)'}; border: 1px solid {isAtLimit ? 'rgba(239,68,68,0.3)' : 'rgba(13,148,136,0.3)'};"
+			>
+				<div class="flex items-center gap-3">
+					<div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: {isAtLimit ? 'rgba(239,68,68,0.2)' : 'rgba(13,148,136,0.2)'}">
+						<i class="fa-solid {isAtLimit ? 'fa-triangle-exclamation' : 'fa-wallet'} text-sm" style="color: {isAtLimit ? '#ef4444' : '#0d9488'}"></i>
+					</div>
+					<div>
+						<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
+							{#if isAtLimit}
+								Budget category limit reached
+							{:else}
+								{remaining} budget slot{remaining !== 1 ? 's' : ''} remaining
+							{/if}
+						</p>
+						<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							Free plan: {tierUsage.budgets.used}/{tierUsage.budgets.limit} categories
+						</p>
+					</div>
+				</div>
+				<a href="/pricing" class="btn {isAtLimit ? 'btn-primary' : 'btn-secondary'} text-xs sm:text-sm whitespace-nowrap">
+					{isAtLimit ? 'Upgrade to Pro' : 'Get Unlimited'}
+				</a>
+			</div>
+		{/if}
 
 		{#if loading}
 			<div class="flex items-center justify-center py-20">
@@ -553,25 +629,25 @@
 						Set spending limits for your categories. Track where your money goes and see how much you could be investing instead.
 					</p>
 					
-					<div class="flex flex-col sm:flex-row gap-3 justify-center">
+				<div class="flex flex-col sm:flex-row gap-3 justify-center">
+					<button 
+						onclick={() => { showAddModal = true; newCategory = availableCategories[0] || ''; saveError = null; }}
+						class="btn-primary px-6 py-3 rounded-xl font-medium"
+					>
+						<i class="fa-solid fa-plus mr-2"></i>
+						Create Your First Budget
+					</button>
+					{#if availableCategories.length >= 3 && (!tierUsage || tierUsage.budgets.limit === null || tierUsage.budgets.limit > 3)}
 						<button 
-							onclick={() => { showAddModal = true; newCategory = availableCategories[0] || ''; }}
-							class="btn-primary px-6 py-3 rounded-xl font-medium"
+							onclick={initQuickSetup}
+							class="px-6 py-3 rounded-xl font-medium transition-all hover:scale-[1.02]"
+							style="background: transparent; border: 2px dashed {isDark ? '#404040' : '#d4cfc5'}; color: {isDark ? '#a3a3a3' : '#737373'}"
 						>
-							<i class="fa-solid fa-plus mr-2"></i>
-							Create Your First Budget
+							<i class="fa-solid fa-bolt mr-2"></i>
+							Quick Setup All
 						</button>
-						{#if availableCategories.length >= 3}
-							<button 
-								onclick={initQuickSetup}
-								class="px-6 py-3 rounded-xl font-medium transition-all hover:scale-[1.02]"
-								style="background: transparent; border: 2px dashed {isDark ? '#404040' : '#d4cfc5'}; color: {isDark ? '#a3a3a3' : '#737373'}"
-							>
-								<i class="fa-solid fa-bolt mr-2"></i>
-								Quick Setup All
-							</button>
-						{/if}
-					</div>
+					{/if}
+				</div>
 				</div>
 			</div>
 		{:else}
@@ -853,6 +929,18 @@
 			<h2 class="font-display text-xl font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
 				Create Budget
 			</h2>
+			
+			{#if saveError}
+				<div class="p-3 rounded-lg mb-4 flex items-start gap-3" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);">
+					<i class="fa-solid fa-triangle-exclamation text-red-500 mt-0.5"></i>
+					<div class="flex-1">
+						<p class="text-sm text-red-500">{saveError}</p>
+						{#if saveError.includes('Upgrade')}
+							<a href="/pricing" class="text-sm font-medium text-sw-accent hover:underline mt-1 inline-block">View pricing →</a>
+						{/if}
+					</div>
+				</div>
+			{/if}
 			
 			<div class="space-y-4">
 				<div>

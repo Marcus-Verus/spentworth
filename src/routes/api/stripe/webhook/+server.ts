@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
 import type Stripe from 'stripe';
+import { sendProUpgradeEmail } from '$lib/server/email';
 
 // Use service role for webhook operations (bypasses RLS)
 const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -82,6 +83,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
 
 	// Fetch subscription details
 	const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+	const billingInterval = subscription.items.data[0]?.price.recurring?.interval;
 
 	await supabaseAdmin.from('subscriptions').upsert({
 		user_id: userId,
@@ -90,7 +92,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
 		stripe_price_id: subscription.items.data[0]?.price.id,
 		status: subscription.status === 'trialing' ? 'trialing' : 'active',
 		plan: 'pro',
-		interval: subscription.items.data[0]?.price.recurring?.interval === 'year' ? 'yearly' : 'monthly',
+		interval: billingInterval === 'year' ? 'yearly' : 'monthly',
 		current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
 		current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
 		trial_start: subscription.trial_start
@@ -101,6 +103,31 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
 			: null,
 		updated_at: new Date().toISOString()
 	});
+
+	// Send Pro upgrade email
+	try {
+		// Get user email from Supabase auth
+		const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
+		
+		if (userData?.user?.email) {
+			const nextBillingDate = new Date(subscription.current_period_end * 1000);
+			const formattedDate = nextBillingDate.toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric'
+			});
+
+			await sendProUpgradeEmail({
+				to: userData.user.email,
+				name: userData.user.user_metadata?.full_name || userData.user.email.split('@')[0],
+				billingCycle: billingInterval === 'year' ? 'Yearly' : 'Monthly',
+				nextBillingDate: formattedDate
+			});
+		}
+	} catch (emailError) {
+		// Log but don't fail the webhook
+		console.error('Failed to send Pro upgrade email:', emailError);
+	}
 }
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {

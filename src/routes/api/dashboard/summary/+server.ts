@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { DashboardSummary, CategorySummary } from '$lib/types';
+import { getTransactionDateLimit } from '$lib/server/tierLimits';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const { session, user } = await locals.safeGetSession();
@@ -22,6 +23,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const ticker = prefs?.default_ticker || 'SPY';
 	const monthlyIncome = prefs?.monthly_income || null;
 
+	// Get tier-based date limit (null for Pro, 90 days ago for free)
+	const tierDateLimit = await getTransactionDateLimit(locals.supabase, user.id);
+
 	// Build query for included purchases
 	let query = locals.supabase
 		.from('transactions')
@@ -30,8 +34,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		.eq('included_in_spend', true)
 		.eq('kind', 'purchase');
 
-	if (from) {
-		query = query.gte('date', from);
+	// Apply date filters - tier limit takes precedence as minimum
+	const effectiveFrom = tierDateLimit 
+		? (from && from > tierDateLimit ? from : tierDateLimit)
+		: from;
+
+	if (effectiveFrom) {
+		query = query.gte('date', effectiveFrom);
 	}
 	if (to) {
 		query = query.lte('date', to);

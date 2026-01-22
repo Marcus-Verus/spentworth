@@ -1,0 +1,56 @@
+<mjml>
+  <mj-head>
+    <mj-title>{{subject}}</mj-title>
+    <mj-preview>{{preview}}</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="1.6" color="#404040" />
+      <mj-button background-color="#0d9488" color="#ffffff" font-size="15px" font-weight="600" border-radius="10px" inner-padding="14px 28px" />
+      <mj-section background-color="#ffffff" padding="0" />
+    </mj-attributes>
+    <mj-style>
+      .accent { color: #0d9488 !important; }
+      .muted { color: #737373 !important; }
+      .dark { color: #171717 !important; }
+      a { color: #0d9488; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f0e8">
+    <!-- Spacer -->
+    <mj-section background-color="#f5f0e8" padding="30px 0 0 0"></mj-section>
+    
+    <!-- Logo Header -->
+    <mj-section background-color="#ffffff" border-radius="16px 16px 0 0" padding="32px 24px 24px 24px">
+      <mj-column>
+        <mj-image 
+          src="https://spentworth.com/logo-email.png" 
+          alt="SpentWorth" 
+          width="180px"
+          align="center"
+        />
+      </mj-column>
+    </mj-section>
+    
+    {{content}}
+    
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" border-radius="0 0 16px 16px" padding="24px 24px 32px 24px">
+      <mj-column>
+        <mj-divider border-color="#e5e5e5" border-width="1px" padding="0 0 24px 0" />
+        <mj-text align="center" font-size="13px" color="#9ca3af">
+          © {{year}} SpentWorth. All rights reserved.
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af" padding-top="8px">
+          <a href="{{unsubscribe_url}}" style="color: #9ca3af;">Unsubscribe</a> · 
+          <a href="https://spentworth.com/privacy" style="color: #9ca3af;">Privacy</a> · 
+          <a href="https://spentworth.com/terms" style="color: #9ca3af;">Terms</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Bottom Spacer -->
+    <mj-section background-color="#f5f0e8" padding="30px 0"></mj-section>
+  </mj-body>
+</mjml>
+

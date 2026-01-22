@@ -4,7 +4,7 @@
 	import type { ImportBatch, BatchSummary } from '$lib/types';
 	import Header from '$lib/components/Header.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
-	import { initTheme, getTheme } from '$lib/stores/theme';
+	import { initTheme, getTheme, setTheme } from '$lib/stores/theme';
 
 	let { data } = $props();
 	let isDark = $state(false);
@@ -14,15 +14,43 @@
 	let uploading = $state(false);
 	let uploadError = $state<string | null>(null);
 	let dragOver = $state(false);
+	
+	// Tier usage info
+	let tierUsage = $state<{
+		plan: 'free' | 'pro';
+		isProActive: boolean;
+		imports: { used: number; limit: number | null };
+	} | null>(null);
 
-	onMount(() => {
+	onMount(async () => {
 		initTheme();
 		isDark = getTheme() === 'dark';
+		
+		// Check Pro status for dark mode
+		await loadTierUsage();
+		
+		// If not Pro and dark mode is on, reset to light
+		if (tierUsage && !tierUsage.isProActive && isDark) {
+			setTheme('light');
+			isDark = false;
+		}
 	});
 
 	$effect(() => {
 		loadBatches();
 	});
+
+	async function loadTierUsage() {
+		try {
+			const res = await fetch('/api/tier');
+			const json = await res.json();
+			if (json.ok) {
+				tierUsage = json.data;
+			}
+		} catch (err) {
+			console.error('Failed to load tier usage:', err);
+		}
+	}
 
 	async function loadBatches() {
 		loading = true;
@@ -35,6 +63,12 @@
 	}
 
 	async function handleFileUpload(file: File) {
+		// Check if user has reached their import limit
+		if (tierUsage && tierUsage.imports.limit !== null && tierUsage.imports.used >= tierUsage.imports.limit) {
+			uploadError = `You've used all ${tierUsage.imports.limit} imports this month. Upgrade to Pro for unlimited imports.`;
+			return;
+		}
+
 		uploading = true;
 		uploadError = null;
 
@@ -53,7 +87,12 @@
 			if (json.ok) {
 				goto(`/imports/${json.data.batchId}`);
 			} else {
-				uploadError = json.error || 'Upload failed';
+				// Handle tier limit error with upgrade prompt
+				if (res.status === 403) {
+					uploadError = json.message || 'Import limit reached. Upgrade to Pro for unlimited imports.';
+				} else {
+					uploadError = json.error || json.message || 'Upload failed';
+				}
 			}
 		} catch (err) {
 			uploadError = 'Upload failed. Please try again.';
@@ -119,6 +158,37 @@
 			<h1 class="font-display text-2xl sm:text-3xl font-bold mb-1 sm:mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Import History</h1>
 			<p class="text-sm sm:text-base" style="color: {isDark ? '#a3a3a3' : '#737373'}">Upload statements and review imports</p>
 		</div>
+
+		<!-- Tier usage banner for free users -->
+		{#if tierUsage && tierUsage.imports.limit !== null}
+			{@const remaining = tierUsage.imports.limit - tierUsage.imports.used}
+			{@const isAtLimit = remaining <= 0}
+			<div 
+				class="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+				style="background: {isAtLimit ? 'rgba(239,68,68,0.1)' : 'rgba(13,148,136,0.1)'}; border: 1px solid {isAtLimit ? 'rgba(239,68,68,0.3)' : 'rgba(13,148,136,0.3)'};"
+			>
+				<div class="flex items-center gap-3">
+					<div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: {isAtLimit ? 'rgba(239,68,68,0.2)' : 'rgba(13,148,136,0.2)'}">
+						<i class="fa-solid {isAtLimit ? 'fa-triangle-exclamation' : 'fa-file-import'} text-sm" style="color: {isAtLimit ? '#ef4444' : '#0d9488'}"></i>
+					</div>
+					<div>
+						<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
+							{#if isAtLimit}
+								Import limit reached
+							{:else}
+								{remaining} import{remaining !== 1 ? 's' : ''} remaining this month
+							{/if}
+						</p>
+						<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							Free plan: {tierUsage.imports.used}/{tierUsage.imports.limit} used
+						</p>
+					</div>
+				</div>
+				<a href="/pricing" class="btn {isAtLimit ? 'btn-primary' : 'btn-secondary'} text-xs sm:text-sm whitespace-nowrap">
+					{isAtLimit ? 'Upgrade to Pro' : 'Get Unlimited'}
+				</a>
+			</div>
+		{/if}
 
 		<!-- Upload area -->
 		<div

@@ -11,6 +11,14 @@
 	let error = $state<string | null>(null);
 	let success = $state(false);
 
+	// Password validation
+	const hasMinLength = $derived(password.length >= 8);
+	const hasLowercase = $derived(/[a-z]/.test(password));
+	const hasUppercase = $derived(/[A-Z]/.test(password));
+	const hasDigit = $derived(/[0-9]/.test(password));
+	const hasSymbol = $derived(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password));
+	const isPasswordValid = $derived(hasMinLength && hasLowercase && hasUppercase && hasDigit && hasSymbol);
+
 	async function handleSignup(e: Event) {
 		e.preventDefault();
 		loading = true;
@@ -22,8 +30,8 @@
 			return;
 		}
 
-		if (password.length < 6) {
-			error = 'Password must be at least 6 characters';
+		if (!isPasswordValid) {
+			error = 'Password does not meet all requirements';
 			loading = false;
 			return;
 		}
@@ -107,29 +115,72 @@
 						/>
 					</div>
 
-					<div>
-						<label for="password" class="label">Password</label>
-						<input
-							id="password"
-							type="password"
-							bind:value={password}
-							required
-							class="input"
-							placeholder="••••••••"
-						/>
-					</div>
+				<div>
+					<label for="password" class="label">Password</label>
+					<input
+						id="password"
+						type="password"
+						bind:value={password}
+						required
+						class="input"
+						placeholder="••••••••"
+						minlength="8"
+					/>
+					{#if password.length > 0}
+						<div class="mt-3 space-y-1.5">
+							<div class="flex items-center gap-2 text-xs">
+								<span class={hasMinLength ? 'text-sw-accent' : 'text-sw-text-dim'}>
+									{#if hasMinLength}✓{:else}○{/if}
+								</span>
+								<span class={hasMinLength ? 'text-sw-text' : 'text-sw-text-dim'}>At least 8 characters</span>
+							</div>
+							<div class="flex items-center gap-2 text-xs">
+								<span class={hasLowercase ? 'text-sw-accent' : 'text-sw-text-dim'}>
+									{#if hasLowercase}✓{:else}○{/if}
+								</span>
+								<span class={hasLowercase ? 'text-sw-text' : 'text-sw-text-dim'}>Lowercase letter (a-z)</span>
+							</div>
+							<div class="flex items-center gap-2 text-xs">
+								<span class={hasUppercase ? 'text-sw-accent' : 'text-sw-text-dim'}>
+									{#if hasUppercase}✓{:else}○{/if}
+								</span>
+								<span class={hasUppercase ? 'text-sw-text' : 'text-sw-text-dim'}>Uppercase letter (A-Z)</span>
+							</div>
+							<div class="flex items-center gap-2 text-xs">
+								<span class={hasDigit ? 'text-sw-accent' : 'text-sw-text-dim'}>
+									{#if hasDigit}✓{:else}○{/if}
+								</span>
+								<span class={hasDigit ? 'text-sw-text' : 'text-sw-text-dim'}>Number (0-9)</span>
+							</div>
+							<div class="flex items-center gap-2 text-xs">
+								<span class={hasSymbol ? 'text-sw-accent' : 'text-sw-text-dim'}>
+									{#if hasSymbol}✓{:else}○{/if}
+								</span>
+								<span class={hasSymbol ? 'text-sw-text' : 'text-sw-text-dim'}>Symbol (!@#$%^&* etc.)</span>
+							</div>
+						</div>
+					{:else}
+						<p class="mt-2 text-xs text-sw-text-dim">
+							Must be 8+ characters with lowercase, uppercase, number, and symbol
+						</p>
+					{/if}
+				</div>
 
-					<div>
-						<label for="confirmPassword" class="label">Confirm Password</label>
-						<input
-							id="confirmPassword"
-							type="password"
-							bind:value={confirmPassword}
-							required
-							class="input"
-							placeholder="••••••••"
-						/>
-					</div>
+				<div>
+					<label for="confirmPassword" class="label">Confirm Password</label>
+					<input
+						id="confirmPassword"
+						type="password"
+						bind:value={confirmPassword}
+						required
+						class="input"
+						placeholder="••••••••"
+						minlength="8"
+					/>
+					{#if confirmPassword.length > 0 && password !== confirmPassword}
+						<p class="mt-2 text-xs text-sw-danger">Passwords do not match</p>
+					{/if}
+				</div>
 
 				<button type="submit" disabled={loading} class="btn btn-primary w-full py-3">
 					{loading ? 'Creating account...' : 'Create Account'}

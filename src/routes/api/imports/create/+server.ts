@@ -4,6 +4,7 @@ import { parseCSV } from '$lib/server/csv/parse';
 import { classifyBatch } from '$lib/server/classify/classifier';
 import { detectDuplicatesInBatch } from '$lib/server/dedupe/dedupe';
 import { computeBatchSummary } from '$lib/server/imports/summary';
+import { canCreateImport } from '$lib/server/tierLimits';
 import type { MerchantRule, TransactionKind } from '$lib/types';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -14,6 +15,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	try {
+		// Check tier limit for imports
+		const importCheck = await canCreateImport(locals.supabase, user.id);
+		if (!importCheck.allowed) {
+			throw error(403, importCheck.message || 'Import limit reached');
+		}
+
 		const formData = await request.formData();
 		const file = formData.get('file') as File | null;
 		const sourceName = formData.get('sourceName') as string | null;

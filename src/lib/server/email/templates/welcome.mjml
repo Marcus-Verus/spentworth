@@ -1,0 +1,177 @@
+<mjml>
+  <mj-head>
+    <mj-title>Welcome to SpentWorth</mj-title>
+    <mj-preview>Your journey to financial clarity starts now 🎯</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="1.7" color="#404040" />
+      <mj-button background-color="#0d9488" color="#ffffff" font-size="15px" font-weight="600" border-radius="10px" inner-padding="14px 32px" />
+      <mj-section background-color="#ffffff" padding="0" />
+    </mj-attributes>
+    <mj-style inline="inline">
+      .highlight { background: linear-gradient(120deg, rgba(13, 148, 136, 0.1) 0%, rgba(13, 148, 136, 0.1) 100%); padding: 2px 6px; border-radius: 4px; }
+      .stat-value { font-size: 28px; font-weight: 700; color: #0d9488; }
+      .stat-label { font-size: 12px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f0e8">
+    <!-- Top Spacer -->
+    <mj-section background-color="#f5f0e8" padding="40px 0 0 0"></mj-section>
+    
+    <!-- Logo Header with Teal Gradient -->
+    <mj-section background-color="#0d9488" border-radius="20px 20px 0 0" padding="40px 24px 32px 24px">
+      <mj-column>
+        <mj-image 
+          src="https://spentworth.com/logo-email.svg" 
+          alt="SpentWorth" 
+          width="180px"
+          align="center"
+          padding-bottom="20px"
+        />
+        <mj-text align="center" font-size="32px" font-weight="700" color="#ffffff" padding="0">
+          Welcome to SpentWorth
+        </mj-text>
+        <mj-text align="center" font-size="16px" color="rgba(255,255,255,0.85)" padding-top="8px">
+          Your journey to financial clarity begins now
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" padding="40px 32px 24px 32px">
+      <mj-column>
+        <mj-text font-size="17px" color="#171717" font-weight="600" padding-bottom="16px">
+          Hi {{name}},
+        </mj-text>
+        <mj-text>
+          You just took the first step toward understanding where your money really goes. 
+          SpentWorth will help you discover hidden spending patterns, forgotten subscriptions, 
+          and see what your money could become if invested.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Stats Row -->
+    <mj-section background-color="#ffffff" padding="8px 32px 24px 32px">
+      <mj-column background-color="#f5f0e8" border-radius="12px" padding="24px 16px">
+        <mj-text align="center" padding="0">
+          <span class="stat-value">$127</span>
+        </mj-text>
+        <mj-text align="center" padding="4px 0 0 0">
+          <span class="stat-label">AVG. MONTHLY SAVINGS FOUND</span>
+        </mj-text>
+      </mj-column>
+      <mj-column background-color="#f5f0e8" border-radius="12px" padding="24px 16px">
+        <mj-text align="center" padding="0">
+          <span class="stat-value">6</span>
+        </mj-text>
+        <mj-text align="center" padding="4px 0 0 0">
+          <span class="stat-label">FORGOTTEN SUBSCRIPTIONS</span>
+        </mj-text>
+      </mj-column>
+      <mj-column background-color="#f5f0e8" border-radius="12px" padding="24px 16px">
+        <mj-text align="center" padding="0">
+          <span class="stat-value">2 min</span>
+        </mj-text>
+        <mj-text align="center" padding="4px 0 0 0">
+          <span class="stat-label">TO FIRST INSIGHT</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Getting Started Steps -->
+    <mj-section background-color="#ffffff" padding="16px 32px">
+      <mj-column>
+        <mj-text font-size="17px" color="#171717" font-weight="600" padding-bottom="16px">
+          Get started in 3 simple steps:
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <mj-section background-color="#ffffff" padding="0 32px 12px 32px">
+      <mj-column width="10%" vertical-align="top">
+        <mj-text align="center" font-size="18px" font-weight="700" color="#0d9488" padding="0">
+          1
+        </mj-text>
+      </mj-column>
+      <mj-column width="90%" vertical-align="top">
+        <mj-text color="#171717" font-weight="600" padding="0 0 4px 0">
+          Export from your bank
+        </mj-text>
+        <mj-text font-size="14px" color="#737373" padding="0">
+          Download your statements as CSV from your online banking. Most banks make this easy.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <mj-section background-color="#ffffff" padding="0 32px 12px 32px">
+      <mj-column width="10%" vertical-align="top">
+        <mj-text align="center" font-size="18px" font-weight="700" color="#0d9488" padding="0">
+          2
+        </mj-text>
+      </mj-column>
+      <mj-column width="90%" vertical-align="top">
+        <mj-text color="#171717" font-weight="600" padding="0 0 4px 0">
+          Upload to SpentWorth
+        </mj-text>
+        <mj-text font-size="14px" color="#737373" padding="0">
+          We automatically categorize transactions—no manual tagging required.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <mj-section background-color="#ffffff" padding="0 32px 24px 32px">
+      <mj-column width="10%" vertical-align="top">
+        <mj-text align="center" font-size="18px" font-weight="700" color="#0d9488" padding="0">
+          3
+        </mj-text>
+      </mj-column>
+      <mj-column width="90%" vertical-align="top">
+        <mj-text color="#171717" font-weight="600" padding="0 0 4px 0">
+          See your insights
+        </mj-text>
+        <mj-text font-size="14px" color="#737373" padding="0">
+          Discover patterns, opportunity costs, and see what your spending could become.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- CTA Button -->
+    <mj-section background-color="#ffffff" padding="8px 32px 32px 32px">
+      <mj-column>
+        <mj-button href="{{dashboard_url}}" padding="0">
+          Upload Your First Statement →
+        </mj-button>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Privacy Note -->
+    <mj-section background-color="#ffffff" padding="0 32px 32px 32px">
+      <mj-column background-color="#f0fdf4" border-radius="12px" padding="16px 20px">
+        <mj-text font-size="14px" color="#15803d" padding="0">
+          <strong>🔒 Your privacy matters:</strong> We never access your bank credentials. 
+          Your data is processed locally and stays under your control.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" border-radius="0 0 20px 20px" padding="24px 32px 32px 32px">
+      <mj-column>
+        <mj-divider border-color="#e5e5e5" border-width="1px" padding="0 0 24px 0" />
+        <mj-text align="center" font-size="13px" color="#9ca3af">
+          Questions? Just reply to this email—we're here to help.
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af" padding-top="16px">
+          © {{year}} SpentWorth. All rights reserved.<br/>
+          <a href="https://spentworth.com/privacy" style="color: #9ca3af;">Privacy</a> · 
+          <a href="https://spentworth.com/terms" style="color: #9ca3af;">Terms</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Bottom Spacer -->
+    <mj-section background-color="#f5f0e8" padding="40px 0"></mj-section>
+  </mj-body>
+</mjml>
+

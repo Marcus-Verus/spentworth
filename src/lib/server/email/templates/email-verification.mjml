@@ -1,0 +1,122 @@
+<mjml>
+  <mj-head>
+    <mj-title>Verify Your Email</mj-title>
+    <mj-preview>Confirm your email to get started with SpentWorth</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="1.7" color="#404040" />
+      <mj-button background-color="#0d9488" color="#ffffff" font-size="15px" font-weight="600" border-radius="10px" inner-padding="14px 32px" />
+      <mj-section background-color="#ffffff" padding="0" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f5f0e8">
+    <!-- Top Spacer -->
+    <mj-section background-color="#f5f0e8" padding="40px 0 0 0"></mj-section>
+    
+    <!-- Logo Header -->
+    <mj-section background-color="#ffffff" border-radius="20px 20px 0 0" padding="40px 32px 24px 32px">
+      <mj-column>
+        <mj-text align="center" font-size="48px" padding="0 0 16px 0">
+          ✉️
+        </mj-text>
+        <mj-text align="center" font-size="26px" font-weight="700" color="#171717" padding="0">
+          Verify Your Email
+        </mj-text>
+        <mj-text align="center" font-size="15px" color="#737373" padding-top="8px">
+          One quick step to start your journey
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" padding="24px 32px">
+      <mj-column>
+        <mj-text font-size="17px" color="#171717" font-weight="600" padding-bottom="16px">
+          Hi {{name}},
+        </mj-text>
+        <mj-text>
+          Thanks for signing up for SpentWorth! Please verify your email address by clicking the button below or entering the verification code.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Verification Code -->
+    <mj-section background-color="#ffffff" padding="8px 32px 24px 32px">
+      <mj-column>
+        <mj-text align="center" font-size="13px" color="#737373" padding-bottom="8px">
+          Your verification code:
+        </mj-text>
+        <mj-text align="center" font-size="36px" font-weight="700" color="#0d9488" letter-spacing="8px" padding="0">
+          {{verification_code}}
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af" padding-top="8px">
+          Code expires in 1 hour
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Divider with "OR" -->
+    <mj-section background-color="#ffffff" padding="0 32px 24px 32px">
+      <mj-column width="40%">
+        <mj-divider border-color="#e5e5e5" border-width="1px" padding="8px 0" />
+      </mj-column>
+      <mj-column width="20%">
+        <mj-text align="center" font-size="12px" color="#9ca3af" padding="0">
+          OR
+        </mj-text>
+      </mj-column>
+      <mj-column width="40%">
+        <mj-divider border-color="#e5e5e5" border-width="1px" padding="8px 0" />
+      </mj-column>
+    </mj-section>
+    
+    <!-- CTA Button -->
+    <mj-section background-color="#ffffff" padding="0 32px 24px 32px">
+      <mj-column>
+        <mj-button href="{{verification_url}}" padding="0">
+          Verify Email Address
+        </mj-button>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Link Fallback -->
+    <mj-section background-color="#ffffff" padding="0 32px 24px 32px">
+      <mj-column background-color="#f5f0e8" border-radius="10px" padding="16px 20px">
+        <mj-text font-size="13px" color="#737373" padding="0 0 8px 0">
+          Or copy and paste this link into your browser:
+        </mj-text>
+        <mj-text font-size="12px" color="#0d9488" padding="0" css-class="word-break">
+          {{verification_url}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Info Note -->
+    <mj-section background-color="#ffffff" padding="0 32px 32px 32px">
+      <mj-column background-color="#eff6ff" border-radius="12px" padding="16px 20px">
+        <mj-text font-size="14px" color="#1d4ed8" padding="0">
+          <strong>ℹ️ Why verify?</strong> Email verification helps protect your account and ensures you can recover access if needed.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Footer -->
+    <mj-section background-color="#ffffff" border-radius="0 0 20px 20px" padding="24px 32px 32px 32px">
+      <mj-column>
+        <mj-divider border-color="#e5e5e5" border-width="1px" padding="0 0 24px 0" />
+        <mj-text align="center" font-size="13px" color="#9ca3af">
+          Didn't create an account? You can safely ignore this email.
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af" padding-top="16px">
+          © {{year}} SpentWorth. All rights reserved.<br/>
+          <a href="https://spentworth.com/privacy" style="color: #9ca3af;">Privacy</a> · 
+          <a href="https://spentworth.com/terms" style="color: #9ca3af;">Terms</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- Bottom Spacer -->
+    <mj-section background-color="#f5f0e8" padding="40px 0"></mj-section>
+  </mj-body>
+</mjml>
+

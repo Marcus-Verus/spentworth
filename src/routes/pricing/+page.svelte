@@ -25,7 +25,8 @@
 				const res = await fetch('/api/stripe/subscription');
 				if (res.ok) {
 					const data = await res.json();
-					isPro = data.plan === 'pro';
+					// Must be pro plan AND active/trialing status
+					isPro = data.plan === 'pro' && ['active', 'trialing'].includes(data.status);
 				}
 			} catch {
 				// Ignore errors
@@ -58,13 +59,13 @@
 			description: 'Get started with the basics',
 			monthlyPrice: 0,
 			yearlyPrice: 0,
-			features: [
-				'3 CSV imports per month',
-				'Basic spending dashboard',
-				'Opportunity cost calculator',
-				'5 budget categories',
-				'90-day transaction history'
-			],
+		features: [
+			'3 CSV imports per month',
+			'Basic spending dashboard',
+			'Opportunity cost calculator',
+			'10 budget categories',
+			'90-day transaction history'
+		],
 			cta: 'Get Started',
 			ctaHref: '/signup',
 			highlighted: false
