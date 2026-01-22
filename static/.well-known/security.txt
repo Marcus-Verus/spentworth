@@ -1,0 +1,18 @@
+Contact: mailto:support@spentworth.com
+Expires: 2027-01-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://spentworth.com/.well-known/security.txt
+
+# Security Policy
+
+If you discover a security vulnerability in SpentWorth, please report it to us at support@spentworth.com.
+
+We take security seriously and will respond to reports promptly.
+
+Please include:
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Any suggested fixes
+
+We appreciate responsible disclosure and will work with you to address any issues.

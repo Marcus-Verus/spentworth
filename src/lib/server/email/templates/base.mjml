@@ -42,9 +42,12 @@
           © {{year}} SpentWorth. All rights reserved.
         </mj-text>
         <mj-text align="center" font-size="12px" color="#9ca3af" padding-top="8px">
-          <a href="{{unsubscribe_url}}" style="color: #9ca3af;">Unsubscribe</a> · 
-          <a href="https://spentworth.com/privacy" style="color: #9ca3af;">Privacy</a> · 
-          <a href="https://spentworth.com/terms" style="color: #9ca3af;">Terms</a>
+          This is a transactional email from your SpentWorth account.
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9ca3af" padding-top="4px">
+          <a href="https://spentworth.com/privacy" style="color: #9ca3af;">Privacy Policy</a> · 
+          <a href="https://spentworth.com/terms" style="color: #9ca3af;">Terms of Service</a> · 
+          <a href="https://spentworth.com/settings" style="color: #9ca3af;">Manage Account</a>
         </mj-text>
       </mj-column>
     </mj-section>

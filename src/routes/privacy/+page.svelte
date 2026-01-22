@@ -164,7 +164,7 @@
 					</ul>
 				</section>
 
-				<section>
+				<section id="cookies">
 					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Cookies</h2>
 					<p class="mb-3">SpentWorth uses the following types of cookies:</p>
 					<ul class="space-y-2 mb-3">
