@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import Logo from '$lib/components/Logo.svelte';
 
 	let { data } = $props();
@@ -8,6 +10,35 @@
 	let password = $state('');
 	let loading = $state(false);
 	let error = $state<string | null>(data.error || null);
+
+	// Handle OAuth code exchange on client side (where PKCE verifier is stored)
+	onMount(async () => {
+		if (data.code && browser) {
+			loading = true;
+			error = null;
+			
+			try {
+				// Exchange the code using the browser client (has access to PKCE verifier)
+				const { error: exchangeError } = await data.supabase.auth.exchangeCodeForSession(data.code);
+				
+				if (exchangeError) {
+					console.error('OAuth exchange error:', exchangeError);
+					error = exchangeError.message || 'Failed to complete sign in';
+					loading = false;
+					// Clean up the URL
+					window.history.replaceState({}, '', '/login');
+				} else {
+					// Success! Redirect to dashboard
+					goto('/dashboard');
+				}
+			} catch (e) {
+				console.error('OAuth callback error:', e);
+				error = 'An unexpected error occurred during sign in';
+				loading = false;
+				window.history.replaceState({}, '', '/login');
+			}
+		}
+	});
 
 	async function handleLogin(e: Event) {
 		e.preventDefault();
@@ -35,7 +66,7 @@
 		const { error: authError } = await data.supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: `${origin}/auth/callback`
+				redirectTo: `${origin}/login`
 			}
 		});
 
@@ -56,7 +87,7 @@
 				<span class="font-display text-2xl font-semibold text-sw-text">SpentWorth</span>
 			</a>
 			<h1 class="font-display text-2xl font-bold mb-2">Welcome back</h1>
-			<p class="text-sw-text-dim">Sign in to continue</p>
+			<p class="text-sw-text-dim">{data.code ? 'Completing sign in...' : 'Sign in to continue'}</p>
 		</div>
 
 		<div class="card">

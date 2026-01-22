@@ -1,24 +1,14 @@
-import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const code = url.searchParams.get('code');
 	const error = url.searchParams.get('error');
+	const errorDescription = url.searchParams.get('error_description');
 	
-	// If there's an error, don't redirect - let the page show it
-	if (error) {
-		return { error: decodeURIComponent(error) };
-	}
-	
-	// If OAuth code is present, redirect to callback handler with all params
-	if (code) {
-		// Forward all query parameters to preserve state
-		const params = new URLSearchParams();
-		url.searchParams.forEach((value, key) => {
-			params.set(key, value);
-		});
-		throw redirect(303, `/auth/callback?${params.toString()}`);
-	}
-	
-	return {};
+	// Pass code and error to client for handling
+	// Don't redirect - let client-side handle the PKCE exchange
+	return { 
+		code: code || null,
+		error: error ? decodeURIComponent(errorDescription || error) : null
+	};
 };
