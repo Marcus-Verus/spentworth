@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import type { DashboardSummary, CategorySummary } from '$lib/types';
-import { getTransactionDateLimit } from '$lib/server/tierLimits';
+import type { DashboardSummary, CategorySummary, HiddenDataInfo } from '$lib/types';
+import { getTransactionDateLimit, FREE_TIER_LIMITS, getUserTier } from '$lib/server/tierLimits';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const { session, user } = await locals.safeGetSession();
@@ -25,6 +25,54 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	// Get tier-based date limit (null for Pro, 90 days ago for free)
 	const tierDateLimit = await getTransactionDateLimit(locals.supabase, user.id);
+	const { isProActive } = await getUserTier(locals.supabase, user.id);
+
+	// Detect hidden data for free users (data outside their tier limit)
+	let hiddenDataInfo: HiddenDataInfo | null = null;
+	
+	if (!isProActive && tierDateLimit) {
+		// Count transactions before the tier limit date
+		const { count: hiddenCount } = await locals.supabase
+			.from('transactions')
+			.select('*', { count: 'exact', head: true })
+			.eq('user_id', user.id)
+			.eq('included_in_spend', true)
+			.eq('kind', 'purchase')
+			.lt('date', tierDateLimit);
+		
+		// Sum the hidden amounts if there are any hidden transactions
+		if (hiddenCount && hiddenCount > 0) {
+			const { data: hiddenTx } = await locals.supabase
+				.from('transactions')
+				.select('amount, date')
+				.eq('user_id', user.id)
+				.eq('included_in_spend', true)
+				.eq('kind', 'purchase')
+				.lt('date', tierDateLimit)
+				.order('date', { ascending: true })
+				.limit(1);
+			
+			const { data: hiddenSum } = await locals.supabase
+				.from('transactions')
+				.select('amount')
+				.eq('user_id', user.id)
+				.eq('included_in_spend', true)
+				.eq('kind', 'purchase')
+				.lt('date', tierDateLimit);
+			
+			const hiddenTotalSpent = hiddenSum?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0;
+			const oldestTransactionDate = hiddenTx?.[0]?.date || null;
+			
+			hiddenDataInfo = {
+				hasHiddenData: true,
+				hiddenTransactionCount: hiddenCount,
+				hiddenTotalSpent: Math.round(hiddenTotalSpent * 100) / 100,
+				tierDateLimit,
+				oldestTransactionDate,
+				historyLimitDays: FREE_TIER_LIMITS.transactionHistoryDays
+			};
+		}
+	}
 
 	// Build query for included purchases
 	let query = locals.supabase
@@ -416,7 +464,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		mostFrequentDay,
 		recurringCharges,
 		yoyComparison,
-		monthlyIncome
+		monthlyIncome,
+		hiddenDataInfo
 	};
 
 	return json({

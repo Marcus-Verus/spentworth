@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import type { DashboardSummary, RecurringCharge } from '$lib/types';
+	import type { DashboardSummary, RecurringCharge, HiddenDataInfo } from '$lib/types';
 	import Header from '$lib/components/Header.svelte';
 	import Onboarding from '$lib/components/Onboarding.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -63,6 +63,65 @@
 	
 	// Onboarding
 	let showOnboarding = $state(false);
+	
+	// Date range selector
+	type DateRangeOption = 'last_month' | 'last_3_months' | 'last_6_months' | 'ytd' | 'last_year' | 'all_time';
+	let selectedDateRange = $state<DateRangeOption>('all_time');
+	let showDateRangeDropdown = $state(false);
+	
+	const dateRangeOptions: { value: DateRangeOption; label: string; shortLabel: string }[] = [
+		{ value: 'last_month', label: 'Last Month', shortLabel: '1M' },
+		{ value: 'last_3_months', label: 'Last 3 Months', shortLabel: '3M' },
+		{ value: 'last_6_months', label: 'Last 6 Months', shortLabel: '6M' },
+		{ value: 'ytd', label: 'Year to Date', shortLabel: 'YTD' },
+		{ value: 'last_year', label: 'Last 12 Months', shortLabel: '1Y' },
+		{ value: 'all_time', label: 'All Time', shortLabel: 'All' }
+	];
+	
+	function getDateRangeParams(range: DateRangeOption): { from?: string; to?: string } {
+		const now = new Date();
+		const today = now.toISOString().slice(0, 10);
+		
+		switch (range) {
+			case 'last_month': {
+				const from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+				const to = new Date(now.getFullYear(), now.getMonth(), 0);
+				return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+			}
+			case 'last_3_months': {
+				const from = new Date(now);
+				from.setMonth(from.getMonth() - 3);
+				return { from: from.toISOString().slice(0, 10), to: today };
+			}
+			case 'last_6_months': {
+				const from = new Date(now);
+				from.setMonth(from.getMonth() - 6);
+				return { from: from.toISOString().slice(0, 10), to: today };
+			}
+			case 'ytd': {
+				const from = new Date(now.getFullYear(), 0, 1);
+				return { from: from.toISOString().slice(0, 10), to: today };
+			}
+			case 'last_year': {
+				const from = new Date(now);
+				from.setFullYear(from.getFullYear() - 1);
+				return { from: from.toISOString().slice(0, 10), to: today };
+			}
+			case 'all_time':
+			default:
+				return {};
+		}
+	}
+	
+	function getSelectedRangeLabel(): string {
+		return dateRangeOptions.find(o => o.value === selectedDateRange)?.label || 'All Time';
+	}
+	
+	async function selectDateRange(range: DateRangeOption) {
+		selectedDateRange = range;
+		showDateRangeDropdown = false;
+		await loadSummary();
+	}
 	
 	// Cancelled subscriptions (stored in localStorage)
 	let cancelledSubscriptions = $state<Set<string>>(new Set());
@@ -216,7 +275,15 @@
 
 	async function loadSummary() {
 		loading = true;
-		const res = await fetch('/api/dashboard/summary');
+		
+		// Build URL with date range params
+		const params = new URLSearchParams();
+		const { from, to } = getDateRangeParams(selectedDateRange);
+		if (from) params.set('from', from);
+		if (to) params.set('to', to);
+		
+		const url = `/api/dashboard/summary${params.toString() ? '?' + params.toString() : ''}`;
+		const res = await fetch(url);
 		const json = await res.json();
 
 		if (json.ok) {
@@ -423,21 +490,75 @@
 					<h1 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
 						Your Spending <span class="text-gradient">Dashboard</span>
 					</h1>
-					<button 
-						onclick={exportToCSV}
-						class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-						style="background: {isDark ? '#262626' : '#f5f0e8'}; color: {isDark ? '#a3a3a3' : '#525252'}"
-						title="Export data to CSV"
-					>
-						<i class="fa-solid fa-download text-[10px]"></i>
-						<span class="hidden sm:inline">Export</span>
-					</button>
+					<div class="flex items-center gap-2">
+						<!-- Date Range Selector -->
+						<div class="relative">
+							<button 
+								onclick={() => showDateRangeDropdown = !showDateRangeDropdown}
+								class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-[1.02]"
+								style="background: {isDark ? 'linear-gradient(135deg, #1a3a36, #0d2925)' : 'linear-gradient(135deg, rgba(13,148,136,0.1), rgba(13,148,136,0.05))'}; color: {isDark ? '#5eead4' : '#0d9488'}; border: 1px solid {isDark ? 'rgba(94,234,212,0.2)' : 'rgba(13,148,136,0.2)'}"
+							>
+								<i class="fa-solid fa-calendar-days text-[10px]"></i>
+								<span class="hidden sm:inline">{getSelectedRangeLabel()}</span>
+								<span class="sm:hidden">{dateRangeOptions.find(o => o.value === selectedDateRange)?.shortLabel}</span>
+								<i class="fa-solid fa-chevron-down text-[8px] ml-0.5 transition-transform {showDateRangeDropdown ? 'rotate-180' : ''}"></i>
+							</button>
+							
+							{#if showDateRangeDropdown}
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<!-- svelte-ignore a11y_no_static_element_interactions -->
+								<div 
+									class="fixed inset-0 z-40" 
+									onclick={() => showDateRangeDropdown = false}
+								></div>
+								<div 
+									class="absolute right-0 top-full mt-1 z-50 rounded-xl shadow-xl overflow-hidden min-w-[160px]"
+									style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
+								>
+									{#each dateRangeOptions as option}
+										<button
+											onclick={() => selectDateRange(option.value)}
+											class="w-full px-4 py-2.5 text-left text-sm flex items-center justify-between gap-3 transition-colors"
+											style="background: {selectedDateRange === option.value ? (isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.08)') : 'transparent'}; color: {selectedDateRange === option.value ? '#0d9488' : (isDark ? '#e5e5e5' : '#171717')}"
+										>
+											<span>{option.label}</span>
+											{#if selectedDateRange === option.value}
+												<i class="fa-solid fa-check text-xs text-sw-accent"></i>
+											{/if}
+										</button>
+									{/each}
+								</div>
+							{/if}
+						</div>
+						
+						<button 
+							onclick={exportToCSV}
+							class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+							style="background: {isDark ? '#262626' : '#f5f0e8'}; color: {isDark ? '#a3a3a3' : '#525252'}; border: 1px solid {isDark ? '#3a3a3a' : '#d4cfc5'}"
+							title="Export data to CSV"
+						>
+							<i class="fa-solid fa-download text-[10px]"></i>
+							<span class="hidden sm:inline">Export</span>
+						</button>
+					</div>
 				</div>
 				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 					{#if summary.dateMin && summary.dateMax}
+						<p class="text-sm flex items-center gap-2 flex-wrap" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							<span>
+								<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMin)}</span> to <span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMax)}</span>
+								<span class="text-sw-accent ml-1">({getDateRangeText()})</span>
+							</span>
+							{#if summary.hiddenDataInfo?.hasHiddenData}
+								<span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500">
+									<i class="fa-solid fa-eye-slash text-[10px]"></i>
+									Limited view
+								</span>
+							{/if}
+						</p>
+					{:else if selectedDateRange !== 'all_time'}
 						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-							<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMin)}</span> to <span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatDate(summary.dateMax)}</span>
-							<span class="text-sw-accent ml-1">({getDateRangeText()})</span>
+							No transactions in selected period
 						</p>
 					{/if}
 					<button 
@@ -450,6 +571,28 @@
 						</svg>
 						How it works
 					</button>
+				</div>
+				
+				<!-- Quick Date Range Pills (mobile-friendly) -->
+				<div class="flex items-center gap-1.5 mt-3 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+					{#each dateRangeOptions as option}
+						<button
+							onclick={() => selectDateRange(option.value)}
+							disabled={loading}
+							class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap {loading ? 'opacity-50 cursor-not-allowed' : ''}"
+							style="background: {selectedDateRange === option.value 
+								? (isDark ? 'linear-gradient(135deg, #0d9488, #0f766e)' : '#0d9488') 
+								: (isDark ? '#262626' : '#f5f0e8')}; 
+								color: {selectedDateRange === option.value 
+									? '#ffffff' 
+									: (isDark ? '#a3a3a3' : '#525252')};
+								border: 1px solid {selectedDateRange === option.value 
+									? 'transparent' 
+									: (isDark ? '#3a3a3a' : '#d4cfc5')}"
+						>
+							{option.shortLabel}
+						</button>
+					{/each}
 				</div>
 			</div>
 			
@@ -475,6 +618,49 @@
 					</div>
 					<div class="mt-4 p-3 rounded-lg text-xs" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
 						<i class="fa-solid fa-lightbulb mr-1 text-sw-accent"></i><strong style="color: {isDark ? '#ffffff' : '#171717'}">Example:</strong> <span style="color: {isDark ? '#a3a3a3' : '#525252'}">You spent $100 at Amazon 6 months ago. If you'd invested that in {getTickerName(summary.ticker)} instead, it might be worth $104 today — that's $4 in "opportunity cost" you left on the table.</span>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Hidden Data Warning Banner (for downgraded/free users with data outside tier limit) -->
+			{#if summary.hiddenDataInfo?.hasHiddenData}
+				{@const hidden = summary.hiddenDataInfo}
+				<div class="mb-6 sm:mb-8 rounded-2xl overflow-hidden" style="background: linear-gradient(135deg, {isDark ? 'rgba(251,191,36,0.15)' : 'rgba(251,191,36,0.1)'}, {isDark ? 'rgba(245,158,11,0.1)' : 'rgba(245,158,11,0.05)'}); border: 1px solid {isDark ? 'rgba(251,191,36,0.3)' : 'rgba(245,158,11,0.3)'}">
+					<div class="px-4 sm:px-6 py-4 sm:py-5">
+						<div class="flex items-start gap-3 sm:gap-4">
+							<div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(251,191,36,0.2)' : 'rgba(251,191,36,0.15)'}">
+								<i class="fa-solid fa-eye-slash text-lg sm:text-xl text-amber-500"></i>
+							</div>
+							<div class="flex-1 min-w-0">
+								<h3 class="font-display font-semibold text-base sm:text-lg mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+									You have hidden spending data
+								</h3>
+								<p class="text-sm mb-3" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+									Free accounts can only view the last <span class="font-semibold">{hidden.historyLimitDays} days</span> of spending history. 
+									You have <span class="font-semibold text-amber-500">{hidden.hiddenTransactionCount} transactions</span> totaling 
+									<span class="font-semibold text-amber-500">{formatCurrency(hidden.hiddenTotalSpent)}</span> that aren't shown above.
+								</p>
+								<div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+									<a 
+										href="/pricing" 
+										class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-all hover:scale-105"
+										style="background: linear-gradient(135deg, #f59e0b, #d97706)"
+									>
+										<i class="fa-solid fa-crown text-xs"></i>
+										Upgrade to Pro for full history
+									</a>
+									<span class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+										Data since {hidden.oldestTransactionDate ? formatDate(hidden.oldestTransactionDate) : 'earlier'}
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="px-4 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2" style="background: {isDark ? 'rgba(0,0,0,0.2)' : 'rgba(251,191,36,0.1)'}; border-top: 1px solid {isDark ? 'rgba(251,191,36,0.2)' : 'rgba(245,158,11,0.2)'}">
+						<i class="fa-solid fa-info-circle text-amber-500 text-xs"></i>
+						<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							The dashboard stats above only reflect your last {hidden.historyLimitDays} days of spending. Your full spending history is preserved and will be restored when you upgrade.
+						</p>
 					</div>
 				</div>
 			{/if}

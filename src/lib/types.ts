@@ -193,6 +193,16 @@ export interface UserPrefs {
 	allowFallbackForAllTickers: boolean;
 }
 
+// Hidden data info for tier limit warnings
+export interface HiddenDataInfo {
+	hasHiddenData: boolean;
+	hiddenTransactionCount: number;
+	hiddenTotalSpent: number;
+	tierDateLimit: string | null;
+	oldestTransactionDate: string | null;
+	historyLimitDays: number;
+}
+
 // Dashboard summary
 export interface DashboardSummary {
 	totalSpent: number;
@@ -217,6 +227,7 @@ export interface DashboardSummary {
 	recurringCharges: RecurringCharge[];
 	yoyComparison: YoYComparison | null;
 	monthlyIncome: number | null;
+	hiddenDataInfo: HiddenDataInfo | null;
 }
 
 export interface YoYComparison {
