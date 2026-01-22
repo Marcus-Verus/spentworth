@@ -19,6 +19,12 @@
 	let subscription = $state<SubscriptionInfo | null>(null);
 	let loadingPortal = $state(false);
 	
+	// Account deletion state
+	let showDeleteModal = $state(false);
+	let deleteConfirmText = $state('');
+	let deleting = $state(false);
+	let deleteError = $state<string | null>(null);
+	
 	// Pro tier check based on subscription
 	let isPro = $derived(
 		subscription?.plan === 'pro' && 
@@ -129,6 +135,29 @@
 				return { text: 'Canceled', class: 'bg-gray-500/20 text-gray-600 border-gray-500/30' };
 			default:
 				return { text: 'Free', class: 'bg-gray-500/20 text-gray-600 border-gray-500/30' };
+		}
+	}
+
+	async function deleteAccount() {
+		if (deleteConfirmText !== 'DELETE') return;
+		
+		deleting = true;
+		deleteError = null;
+
+		try {
+			const res = await fetch('/api/account/delete', { method: 'DELETE' });
+			
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.message || 'Failed to delete account');
+			}
+
+			// Clear local storage and redirect to home
+			localStorage.clear();
+			window.location.href = '/?deleted=true';
+		} catch (err) {
+			deleteError = err instanceof Error ? err.message : 'Something went wrong';
+			deleting = false;
 		}
 	}
 </script>
@@ -404,7 +433,109 @@
 						<span class="text-sw-accent text-sm animate-fade-in">Settings saved!</span>
 					{/if}
 				</div>
+
+				<!-- Danger Zone -->
+				<div class="rounded-2xl p-6 mt-8" style="background: {isDark ? 'rgba(239,68,68,0.05)' : 'rgba(239,68,68,0.03)'}; border: 1px solid rgba(239,68,68,0.2)">
+					<h2 class="font-display text-lg font-semibold mb-4 text-red-600">
+						<i class="fa-solid fa-triangle-exclamation mr-2"></i>Danger Zone
+					</h2>
+					
+					<div class="space-y-4">
+						<div>
+							<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Delete Account</p>
+							<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								Permanently delete your account and all associated data. This action cannot be undone.
+								{#if isPro}
+									Your Pro subscription will also be canceled.
+								{/if}
+							</p>
+							<button
+								onclick={() => showDeleteModal = true}
+								class="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-600 hover:bg-red-700 text-white"
+							>
+								<i class="fa-solid fa-trash mr-1.5"></i>
+								Delete My Account
+							</button>
+						</div>
+					</div>
+				</div>
 			</div>
 		{/if}
 	</main>
+
+	<!-- Delete Account Modal -->
+	{#if showDeleteModal}
+		<div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5)">
+			<div 
+				class="w-full max-w-md rounded-2xl p-6"
+				style="background: {isDark ? '#1a1a1a' : '#ffffff'}"
+			>
+				<div class="flex items-center gap-3 mb-4">
+					<div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+						<i class="fa-solid fa-triangle-exclamation text-red-600"></i>
+					</div>
+					<h3 class="font-display text-xl font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+						Delete Account
+					</h3>
+				</div>
+
+				<div class="space-y-4">
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						This will permanently delete:
+					</p>
+					<ul class="text-sm space-y-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						<li><i class="fa-solid fa-xmark text-red-500 mr-2"></i>All your transactions and imports</li>
+						<li><i class="fa-solid fa-xmark text-red-500 mr-2"></i>Your budgets, goals, and rules</li>
+						<li><i class="fa-solid fa-xmark text-red-500 mr-2"></i>Your account and all settings</li>
+						{#if isPro}
+							<li><i class="fa-solid fa-xmark text-red-500 mr-2"></i>Your Pro subscription (will be canceled)</li>
+						{/if}
+					</ul>
+
+					<div class="rounded-xl p-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2)">
+						<p class="text-sm font-medium text-red-600 mb-2">
+							This action cannot be undone.
+						</p>
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							Type <span class="font-mono font-bold text-red-600">DELETE</span> to confirm:
+						</p>
+						<input
+							type="text"
+							bind:value={deleteConfirmText}
+							placeholder="DELETE"
+							class="mt-2 w-full px-3 py-2 rounded-lg text-sm font-mono"
+							style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+						/>
+					</div>
+
+					{#if deleteError}
+						<p class="text-sm text-red-500">{deleteError}</p>
+					{/if}
+
+					<div class="flex gap-3 pt-2">
+						<button
+							onclick={() => { showDeleteModal = false; deleteConfirmText = ''; deleteError = null; }}
+							disabled={deleting}
+							class="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+							style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+						>
+							Cancel
+						</button>
+						<button
+							onclick={deleteAccount}
+							disabled={deleteConfirmText !== 'DELETE' || deleting}
+							class="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700"
+						>
+							{#if deleting}
+								<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+								Deleting...
+							{:else}
+								Delete Forever
+							{/if}
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
 </div>
