@@ -9,7 +9,14 @@
 	let email = $state('');
 	let password = $state('');
 	let loading = $state(false);
-	let error = $state<string | null>(data.error || null);
+	let error = $state<string | null>(null);
+
+	// Set initial error from props (if any)
+	$effect(() => {
+		if (data.error) {
+			error = data.error;
+		}
+	});
 
 	// Handle OAuth callback - check if already logged in (code was exchanged by layout)
 	onMount(async () => {

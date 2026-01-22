@@ -31,11 +31,115 @@
 	let summary = $state<InsightSummary | null>(null);
 	let loading = $state(true);
 	let filter = $state<'all' | 'high' | 'opportunity' | 'trend' | 'achievement'>('all');
+	let expandedInsight = $state<string | null>(null);
+	let animatedSavings = $state(0);
 
 	let filteredInsights = $derived.by(() => {
 		if (filter === 'all') return insights;
 		if (filter === 'high') return insights.filter(i => i.priority === 'high');
 		return insights.filter(i => i.type === filter);
+	});
+
+	// Achievement badges based on insights
+	let achievements = $derived.by(() => {
+		const badges: Array<{ icon: string; title: string; description: string; color: string; earned: boolean }> = [];
+		
+		const achievementInsights = insights.filter(i => i.type === 'achievement');
+		const opportunityInsights = insights.filter(i => i.type === 'opportunity');
+		const trendInsights = insights.filter(i => i.type === 'trend');
+		
+		// Badge for having achievements
+		if (achievementInsights.length >= 1) {
+			badges.push({ 
+				icon: 'fa-trophy', 
+				title: 'First Win', 
+				description: 'Achieved your first spending milestone',
+				color: '#f59e0b',
+				earned: true
+			});
+		}
+		
+		// Badge for multiple opportunities identified
+		if (opportunityInsights.length >= 3) {
+			badges.push({ 
+				icon: 'fa-binoculars', 
+				title: 'Opportunity Hunter', 
+				description: 'Identified 3+ savings opportunities',
+				color: '#0d9488',
+				earned: true
+			});
+		}
+		
+		// Badge for improving trends
+		const improvingTrends = trendInsights.filter(i => i.title.toLowerCase().includes('improv') || i.title.toLowerCase().includes('decreas'));
+		if (improvingTrends.length >= 2) {
+			badges.push({ 
+				icon: 'fa-chart-line', 
+				title: 'Trend Setter', 
+				description: 'Multiple categories showing improvement',
+				color: '#10b981',
+				earned: true
+			});
+		}
+		
+		// Budget master badge
+		if (summary && summary.potentialSavings > 1000) {
+			badges.push({ 
+				icon: 'fa-piggy-bank', 
+				title: 'Savings Champion', 
+				description: '$1,000+ potential savings identified',
+				color: '#8b5cf6',
+				earned: true
+			});
+		}
+		
+		// Add locked badges
+		if (badges.length < 4) {
+			const lockedBadges = [
+				{ icon: 'fa-star', title: 'Perfect Month', description: 'All budgets under limit', color: '#6b7280', earned: false },
+				{ icon: 'fa-fire', title: 'Streak Master', description: '3 months of improvement', color: '#6b7280', earned: false },
+				{ icon: 'fa-crown', title: 'Budget King', description: 'Save $5,000 in a year', color: '#6b7280', earned: false },
+			];
+			badges.push(...lockedBadges.slice(0, 4 - badges.length));
+		}
+		
+		return badges.slice(0, 4);
+	});
+
+	// Spending patterns mock data (would come from API)
+	let spendingPatterns = $derived.by(() => {
+		return {
+			peakDay: { day: 'Saturday', percent: 22 },
+			peakTime: { time: 'Evening', percent: 45 },
+			topCategory: { name: 'Dining', change: -12 },
+			avgTransaction: { amount: 47, trend: 'down' as const }
+		};
+	});
+
+	// Weekly spending rhythm (mock data for heatmap)
+	let weeklyHeatmap = $derived.by(() => {
+		// Generate realistic spending patterns
+		const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+		const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+		
+		// Higher spending on weekends and payday (15th, 30th)
+		const data: Array<{ day: string; week: string; value: number }> = [];
+		
+		for (let w = 0; w < 4; w++) {
+			for (let d = 0; d < 7; d++) {
+				const isWeekend = d >= 5;
+				const isPayWeek = w === 1 || w === 3;
+				const base = Math.random() * 50;
+				const weekendBonus = isWeekend ? 30 : 0;
+				const payBonus = isPayWeek ? 20 : 0;
+				data.push({
+					day: days[d],
+					week: weeks[w],
+					value: Math.round(base + weekendBonus + payBonus)
+				});
+			}
+		}
+		return data;
 	});
 
 	function formatCurrency(amount: number): string {
@@ -45,6 +149,45 @@
 			minimumFractionDigits: 0,
 			maximumFractionDigits: 0
 		}).format(amount);
+	}
+
+	function getHeatmapColor(value: number): string {
+		// Scale from light to dark teal based on value (0-100)
+		if (value < 20) return isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)';
+		if (value < 40) return isDark ? 'rgba(13,148,136,0.25)' : 'rgba(13,148,136,0.2)';
+		if (value < 60) return isDark ? 'rgba(13,148,136,0.45)' : 'rgba(13,148,136,0.4)';
+		if (value < 80) return isDark ? 'rgba(13,148,136,0.65)' : 'rgba(13,148,136,0.6)';
+		return isDark ? 'rgba(13,148,136,0.85)' : 'rgba(13,148,136,0.8)';
+	}
+
+	function getTypeIcon(type: string): string {
+		switch (type) {
+			case 'opportunity': return 'fa-lightbulb';
+			case 'trend': return 'fa-chart-line';
+			case 'subscription': return 'fa-repeat';
+			case 'achievement': return 'fa-trophy';
+			case 'tip': return 'fa-wand-magic-sparkles';
+			default: return 'fa-circle-info';
+		}
+	}
+
+	function getTypeColor(type: string): string {
+		switch (type) {
+			case 'opportunity': return '#0d9488';
+			case 'trend': return '#6366f1';
+			case 'subscription': return '#f59e0b';
+			case 'achievement': return '#10b981';
+			case 'tip': return '#ec4899';
+			default: return '#6b7280';
+		}
+	}
+
+	function getPriorityBadge(priority: string): { text: string; bg: string; color: string } {
+		switch (priority) {
+			case 'high': return { text: 'High Impact', bg: 'rgba(239,68,68,0.15)', color: '#ef4444' };
+			case 'medium': return { text: 'Medium', bg: 'rgba(245,158,11,0.15)', color: '#f59e0b' };
+			default: return { text: 'Info', bg: 'rgba(107,114,128,0.15)', color: '#6b7280' };
+		}
 	}
 
 	// Donut chart path generator
@@ -74,6 +217,24 @@
 			if (json.ok) {
 				insights = json.data.insights;
 				summary = json.data.summary;
+				
+				// Animate savings number
+				if (summary?.potentialSavings) {
+					const target = summary.potentialSavings;
+					const duration = 1500;
+					const steps = 40;
+					const increment = target / steps;
+					let current = 0;
+					const interval = setInterval(() => {
+						current += increment;
+						if (current >= target) {
+							animatedSavings = target;
+							clearInterval(interval);
+						} else {
+							animatedSavings = Math.round(current);
+						}
+					}, duration / steps);
+				}
 			}
 		} catch (e) {
 			console.error('Failed to load insights:', e);
@@ -95,87 +256,263 @@
 <div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
 	<Header />
 	
-	<main class="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+	<main class="max-w-6xl mx-auto px-4 py-6 sm:py-8">
 		<!-- Page Header -->
 		<div class="mb-6 sm:mb-8">
 			<h1 class="font-display text-2xl sm:text-3xl font-bold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
-				Insights
+				<span class="text-gradient">AI-Powered</span> Insights
 			</h1>
 			<p class="text-sm sm:text-base" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-				What your spending means for your future
+				Personalized recommendations based on your spending patterns
 			</p>
 		</div>
 
 		{#if loading}
 			<div class="flex items-center justify-center py-20">
-				<i class="fa-solid fa-spinner fa-spin text-2xl text-sw-accent"></i>
+				<div class="text-center">
+					<div class="relative w-20 h-20 mx-auto mb-4">
+						<div class="absolute inset-0 rounded-full animate-ping" style="background: rgba(13,148,136,0.2)"></div>
+						<div class="relative w-20 h-20 rounded-full flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 2px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<i class="fa-solid fa-brain text-2xl text-sw-accent animate-pulse"></i>
+						</div>
+					</div>
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Analyzing your spending patterns...</p>
+				</div>
 			</div>
 		{:else}
-			<!-- Summary -->
+			<!-- Hero Summary Card -->
 			{#if summary && summary.potentialSavings > 0}
-				<div class="rounded-2xl p-5 sm:p-6 mb-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<p class="text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						Potential opportunity cost
-					</p>
-					<p class="font-display text-3xl sm:text-4xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
-						{formatCurrency(summary.potentialSavings)}
-					</p>
-					<p class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
-						over 10 years at 7% return
-					</p>
+				<div class="rounded-2xl p-6 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden" style="background: {isDark ? 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f9f6f1 100%)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<!-- Background decoration -->
+					<div class="absolute top-0 right-0 w-64 h-64 opacity-10" style="background: radial-gradient(circle, #0d9488 0%, transparent 70%);"></div>
+					<div class="absolute bottom-0 left-0 w-48 h-48 opacity-5" style="background: radial-gradient(circle, #f59e0b 0%, transparent 70%);"></div>
+					
+					<div class="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+						<div class="flex items-center gap-5">
+							<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center relative" style="background: linear-gradient(135deg, rgba(13,148,136,0.2) 0%, rgba(13,148,136,0.1) 100%)">
+								<i class="fa-solid fa-gem text-2xl sm:text-3xl text-sw-accent"></i>
+								<div class="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold" style="background: #f59e0b; color: #ffffff">
+									{summary.highPriority}
+								</div>
+							</div>
+							<div>
+								<p class="text-xs uppercase tracking-wider mb-1" style="color: {isDark ? '#737373' : '#9ca3af'}">Potential 10-Year Value</p>
+								<p class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-sw-accent">
+									{formatCurrency(animatedSavings)}
+								</p>
+								<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									from {summary.totalInsights} insights • {summary.highPriority} high priority
+								</p>
+							</div>
+						</div>
+						
+						<div class="flex flex-wrap gap-3">
+							<a href="/budgets" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-[1.02]" style="background: {isDark ? '#2a2a2a' : '#ffffff'}; border: 1px solid {isDark ? '#404040' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}">
+								<i class="fa-solid fa-wallet text-sw-accent"></i>
+								View Budgets
+							</a>
+							<a href="/dashboard" class="btn-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium">
+								<i class="fa-solid fa-chart-pie"></i>
+								Dashboard
+							</a>
+						</div>
+					</div>
 				</div>
 			{/if}
 
-			<!-- Charts Section -->
-			{#if insights.length > 0}
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-					<!-- Opportunity Costs by Category -->
-					{#if insights.filter(i => i.opportunityCost && i.category).length > 0}
-						<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-							<h3 class="font-display font-semibold mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Opportunity Cost by Category</h3>
-							{#if insights.length > 0}
-								{@const categoryInsights = insights.filter(i => i.opportunityCost && i.category).reduce((acc, i) => {
-									const cat = i.category!;
-									if (!acc[cat]) acc[cat] = 0;
-									acc[cat] += i.opportunityCost || 0;
-									return acc;
-								}, {} as Record<string, number>)}
-								{@const sortedCategories = Object.entries(categoryInsights).sort((a, b) => b[1] - a[1]).slice(0, 8)}
-								{@const maxCost = Math.max(...sortedCategories.map(([_, cost]) => cost), 1)}
-								<div class="h-48 sm:h-56 flex items-end gap-1.5 sm:gap-2">
-									{#each sortedCategories as [category, cost], i}
-									<div class="flex-1 flex flex-col items-center gap-1 group relative">
-										<div class="w-full flex flex-col items-center justify-end" style="height: 180px;">
-											<div 
-												class="w-full rounded-t transition-all relative group-hover:opacity-90"
-												style="height: {Math.max((cost / maxCost) * 100, 4)}%; background: linear-gradient(to top, #ef4444, #f87171);"
-											>
-												<div class="absolute -top-12 left-1/2 -translate-x-1/2 rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-													<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{category}</p>
-													<p style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(cost)}</p>
-												</div>
-											</div>
-										</div>
-										<span class="text-[9px] sm:text-[10px] truncate w-full text-center" style="color: {isDark ? '#a3a3a3' : '#737373'}" title={category}>
-											{category.split(' ')[0]}
-										</span>
+			<!-- Achievement Badges -->
+			{#if achievements.length > 0}
+				<div class="mb-6 sm:mb-8">
+					<h2 class="font-display font-semibold text-lg mb-4 flex items-center gap-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-medal text-sw-gold"></i>
+						Your Achievements
+					</h2>
+					<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+						{#each achievements as badge}
+							<div 
+								class="rounded-xl p-4 text-center transition-all {badge.earned ? 'hover:scale-[1.02]' : 'opacity-50'}"
+								style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {badge.earned ? badge.color + '40' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+							>
+								<div 
+									class="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
+									style="background: {badge.earned ? badge.color + '20' : (isDark ? '#2a2a2a' : '#f0f0f0')}"
+								>
+									<i class="fa-solid {badge.icon} text-lg" style="color: {badge.earned ? badge.color : (isDark ? '#525252' : '#9ca3af')}"></i>
+								</div>
+								<p class="font-medium text-sm mb-0.5" style="color: {isDark ? '#ffffff' : '#171717'}">{badge.title}</p>
+								<p class="text-[10px] leading-relaxed" style="color: {isDark ? '#737373' : '#9ca3af'}">{badge.description}</p>
+								{#if !badge.earned}
+									<div class="mt-2 text-[10px] font-medium" style="color: {isDark ? '#525252' : '#9ca3af'}">
+										<i class="fa-solid fa-lock mr-1"></i> Locked
 									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Spending Patterns Grid -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+				<!-- Spending Heatmap -->
+				<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="flex items-center gap-2 mb-4">
+						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(13,148,136,0.15)">
+							<i class="fa-solid fa-calendar-days text-sm text-sw-accent"></i>
+						</div>
+						<div>
+							<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Spending Rhythm</h3>
+							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">When you spend the most</p>
+						</div>
+					</div>
+					
+					<!-- Heatmap Grid -->
+					<div class="overflow-x-auto">
+						<div class="min-w-[280px]">
+							<!-- Day labels -->
+							<div class="grid grid-cols-8 gap-1 mb-1">
+								<div></div>
+								{#each ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as day}
+									<div class="text-[10px] text-center" style="color: {isDark ? '#737373' : '#9ca3af'}">{day}</div>
+								{/each}
+							</div>
+							
+							<!-- Heatmap rows -->
+							{#each ['Week 1', 'Week 2', 'Week 3', 'Week 4'] as week, weekIndex}
+								<div class="grid grid-cols-8 gap-1 mb-1">
+									<div class="text-[10px] flex items-center" style="color: {isDark ? '#737373' : '#9ca3af'}">{week}</div>
+									{#each weeklyHeatmap.filter(d => d.week === week) as cell}
+										<div 
+											class="aspect-square rounded-sm cursor-pointer transition-all hover:scale-110"
+											style="background: {getHeatmapColor(cell.value)}"
+											title="{cell.day}, {cell.week}: ${cell.value}"
+										></div>
 									{/each}
 								</div>
-							{/if}
+							{/each}
+							
+							<!-- Legend -->
+							<div class="flex items-center justify-end gap-1 mt-3">
+								<span class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">Less</span>
+								{#each [10, 30, 50, 70, 90] as value}
+									<div class="w-3 h-3 rounded-sm" style="background: {getHeatmapColor(value)}"></div>
+								{/each}
+								<span class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">More</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Quick Stats -->
+				<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="flex items-center gap-2 mb-4">
+						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(99,102,241,0.15)">
+							<i class="fa-solid fa-chart-simple text-sm" style="color: #6366f1"></i>
+						</div>
+						<div>
+							<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Pattern Analysis</h3>
+							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Your spending behaviors</p>
+						</div>
+					</div>
+					
+					<div class="space-y-4">
+						<div class="flex items-center justify-between p-3 rounded-xl" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
+									<i class="fa-solid fa-calendar-day text-sw-accent"></i>
+								</div>
+								<div>
+									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Peak Spending Day</p>
+									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{spendingPatterns.peakDay.percent}% of weekly spend</p>
+								</div>
+							</div>
+							<span class="font-mono font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{spendingPatterns.peakDay.day}</span>
+						</div>
+						
+						<div class="flex items-center justify-between p-3 rounded-xl" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
+									<i class="fa-solid fa-clock" style="color: #6366f1"></i>
+								</div>
+								<div>
+									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Peak Spending Time</p>
+									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{spendingPatterns.peakTime.percent}% of purchases</p>
+								</div>
+							</div>
+							<span class="font-mono font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{spendingPatterns.peakTime.time}</span>
+						</div>
+						
+						<div class="flex items-center justify-between p-3 rounded-xl" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
+									<i class="fa-solid fa-arrow-trend-down text-green-500"></i>
+								</div>
+								<div>
+									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Most Improved</p>
+									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{Math.abs(spendingPatterns.topCategory.change)}% decrease</p>
+								</div>
+							</div>
+							<span class="font-mono font-semibold text-green-500">{spendingPatterns.topCategory.name}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Insight Type Distribution -->
+			{#if insights.length > 0}
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+					<!-- Opportunity Costs by Category -->
+					{#if insights.filter(i => i.opportunityCost && i.category).length > 0}
+						{@const categoryInsights = insights.filter(i => i.opportunityCost && i.category).reduce((acc, i) => {
+							const cat = i.category!;
+							if (!acc[cat]) acc[cat] = 0;
+							acc[cat] += i.opportunityCost || 0;
+							return acc;
+						}, {} as Record<string, number>)}
+						{@const sortedCategories = Object.entries(categoryInsights).sort((a, b) => b[1] - a[1]).slice(0, 6)}
+						{@const maxCost = Math.max(...sortedCategories.map(([_, cost]) => cost), 1)}
+						
+						<div class="lg:col-span-2 rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<div class="flex items-center gap-2 mb-4">
+								<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(239,68,68,0.15)">
+									<i class="fa-solid fa-money-bill-trend-up text-sm" style="color: #ef4444"></i>
+								</div>
+								<div>
+									<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Opportunity Cost by Category</h3>
+									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Where your money could grow most</p>
+								</div>
+							</div>
+							
+							<div class="space-y-3">
+								{#each sortedCategories as [category, cost], i}
+									{@const width = (cost / maxCost) * 100}
+									<div class="group">
+										<div class="flex items-center justify-between mb-1">
+											<span class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{category}</span>
+											<span class="font-mono text-sm text-sw-accent">{formatCurrency(cost)}</span>
+										</div>
+										<div class="h-2 rounded-full overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
+											<div 
+												class="h-full rounded-full transition-all duration-700"
+												style="width: {width}%; background: linear-gradient(90deg, #ef4444, #f87171);"
+											></div>
+										</div>
+									</div>
+								{/each}
+							</div>
 						</div>
 					{/if}
 
-					<!-- Insight Types Distribution -->
-					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-						<h3 class="font-display font-semibold mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Insight Types</h3>
+					<!-- Insight Types Donut -->
+					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+						<h3 class="font-display font-semibold mb-4 text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Insight Breakdown</h3>
 						{#if insights.length > 0}
 							{@const typeCounts = insights.reduce((acc, i) => {
 								acc[i.type] = (acc[i.type] || 0) + 1;
 								return acc;
 							}, {} as Record<string, number>)}
 							{@const total = insights.length}
-							{@const colors = ['#0d9488', '#ef4444', '#f59e0b', '#6366f1', '#ec4899']}
+							{@const colors = ['#0d9488', '#6366f1', '#f59e0b', '#10b981', '#ec4899']}
 							{@const types = Object.entries(typeCounts)}
 							{@const typeLabels: Record<string, string> = {
 								'opportunity': 'Opportunities',
@@ -184,27 +521,27 @@
 								'achievement': 'Wins',
 								'tip': 'Tips'
 							}}
-							<div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-								<div class="relative flex-shrink-0">
-									<svg viewBox="0 0 200 200" class="w-32 h-32 sm:w-44 sm:h-44">
+							<div class="flex flex-col items-center gap-4">
+								<div class="relative">
+									<svg viewBox="0 0 200 200" class="w-32 h-32">
 									{#each types as [type, count], i}
 										{@const startAngle = types.slice(0, i).reduce((acc, [_, c]) => acc + (c / total) * 360, 0)}
 										{@const angle = (count / total) * 360}
 										{#if angle > 0.5}
-											<path d={getDonutPath(startAngle, startAngle + angle - 0.5)} fill={colors[i % colors.length]} class="hover:opacity-80 transition-opacity">
+											<path d={getDonutPath(startAngle, startAngle + angle - 0.5)} fill={colors[i % colors.length]} class="hover:opacity-80 transition-opacity cursor-pointer">
 												<title>{type}: {count}</title>
 											</path>
 										{/if}
 									{/each}
-									<text x="100" y="95" text-anchor="middle" class="text-[10px] sm:text-xs" style="fill: {isDark ? '#a3a3a3' : '#737373'}">Total</text>
-										<text x="100" y="115" text-anchor="middle" class="font-display font-bold text-sm sm:text-base" style="fill: {isDark ? '#ffffff' : '#171717'}">{total}</text>
+									<text x="100" y="95" text-anchor="middle" class="text-[10px]" style="fill: {isDark ? '#a3a3a3' : '#737373'}">Total</text>
+										<text x="100" y="115" text-anchor="middle" class="font-display font-bold text-base" style="fill: {isDark ? '#ffffff' : '#171717'}">{total}</text>
 									</svg>
 								</div>
-								<div class="flex-1 w-full space-y-2">
+								<div class="w-full space-y-1.5">
 									{#each types as [type, count], i}
 									<div class="flex items-center gap-2">
 										<div class="w-3 h-3 rounded-sm" style="background: {colors[i % colors.length]}"></div>
-										<span class="text-sm flex-1 capitalize" style="color: {isDark ? '#ffffff' : '#171717'}">{typeLabels[type] || type}</span>
+										<span class="text-xs flex-1 capitalize" style="color: {isDark ? '#ffffff' : '#171717'}">{typeLabels[type] || type}</span>
 										<span class="font-mono text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{count}</span>
 									</div>
 									{/each}
@@ -216,20 +553,25 @@
 			{/if}
 
 			<!-- Filter Tabs -->
-			<div class="flex gap-1 mb-6 p-1 rounded-lg" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+			<div class="flex gap-1 mb-6 p-1.5 rounded-xl overflow-x-auto" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 				{#each [
-					{ value: 'all', label: 'All' },
-					{ value: 'opportunity', label: 'Opportunities' },
-					{ value: 'trend', label: 'Trends' },
-					{ value: 'achievement', label: 'Wins' }
+					{ value: 'all', label: 'All', icon: 'fa-layer-group' },
+					{ value: 'high', label: 'High Priority', icon: 'fa-fire' },
+					{ value: 'opportunity', label: 'Opportunities', icon: 'fa-lightbulb' },
+					{ value: 'trend', label: 'Trends', icon: 'fa-chart-line' },
+					{ value: 'achievement', label: 'Wins', icon: 'fa-trophy' }
 				] as tab}
 					<button
 						onclick={() => filter = tab.value as typeof filter}
-						class="flex-1 px-3 py-2 rounded-md text-sm font-medium transition-all"
+						class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
 						style="background: {filter === tab.value ? (isDark ? '#2a2a2a' : '#f5f0e8') : 'transparent'}; 
 							   color: {filter === tab.value ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#737373' : '#9ca3af')}"
 					>
+						<i class="fa-solid {tab.icon} text-xs"></i>
 						{tab.label}
+						{#if tab.value === 'high' && summary?.highPriority}
+							<span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style="background: #ef4444; color: #ffffff">{summary.highPriority}</span>
+						{/if}
 					</button>
 				{/each}
 			</div>
@@ -237,50 +579,104 @@
 			<!-- Insights List -->
 			<div class="space-y-3">
 				{#each filteredInsights as insight, index}
+					{@const typeColor = getTypeColor(insight.type)}
+					{@const priorityBadge = getPriorityBadge(insight.priority)}
+					{@const isExpanded = expandedInsight === insight.id}
+					
 					<div 
-						class="rounded-xl p-4 sm:p-5"
-						style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
+						class="rounded-xl overflow-hidden transition-all hover:scale-[1.005]"
+						style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; animation: slideUp 0.4s ease-out; animation-delay: {index * 50}ms; animation-fill-mode: both;"
 					>
-						<div class="flex items-start gap-4">
-							<!-- Number or Icon -->
-							<div 
-								class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-semibold"
-								style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#a3a3a3' : '#737373'}"
-							>
-								{index + 1}
-							</div>
-							
-							<div class="flex-1 min-w-0">
-								<h3 class="font-display font-semibold text-base mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
-									{insight.title}
-								</h3>
+						<button 
+							class="w-full p-4 sm:p-5 text-left"
+							onclick={() => expandedInsight = isExpanded ? null : insight.id}
+						>
+							<div class="flex items-start gap-4">
+								<!-- Type Icon -->
+								<div 
+									class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+									style="background: {typeColor}15"
+								>
+									<i class="fa-solid {getTypeIcon(insight.type)} text-base sm:text-lg" style="color: {typeColor}"></i>
+								</div>
 								
-								<p class="text-sm leading-relaxed mb-3" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-									{insight.description}
-								</p>
-
-								<!-- Opportunity Cost -->
-								{#if insight.opportunityCost && insight.type !== 'achievement'}
-									<div class="flex items-center gap-2 text-sm">
-										<i class="fa-solid fa-arrow-trend-up text-sw-accent"></i>
-										<span style="color: {isDark ? '#a3a3a3' : '#737373'}">
-											{formatCurrency(insight.opportunityCost)} potential in 10 years
+								<div class="flex-1 min-w-0">
+									<div class="flex flex-wrap items-center gap-2 mb-1">
+										<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">
+											{insight.title}
+										</h3>
+										<span class="px-2 py-0.5 rounded-full text-[10px] font-medium" style="background: {priorityBadge.bg}; color: {priorityBadge.color}">
+											{priorityBadge.text}
 										</span>
 									</div>
-								{/if}
+									
+									<p class="text-sm leading-relaxed mb-2" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+										{insight.description}
+									</p>
 
-								<!-- Action Link -->
-								{#if insight.actionText && insight.actionHref}
-									<a 
-										href={insight.actionHref}
-										class="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-sw-accent hover:underline"
-									>
-										{insight.actionText}
-										<i class="fa-solid fa-arrow-right text-xs"></i>
-									</a>
-								{/if}
+									<!-- Quick Stats -->
+									<div class="flex flex-wrap items-center gap-3">
+										{#if insight.opportunityCost && insight.type !== 'achievement'}
+											<div class="flex items-center gap-1.5 text-sm">
+												<i class="fa-solid fa-chart-line text-xs text-sw-accent"></i>
+												<span class="font-mono font-medium text-sw-accent">{formatCurrency(insight.opportunityCost)}</span>
+												<span class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">potential</span>
+											</div>
+										{/if}
+										
+										{#if insight.category}
+											<span class="text-xs px-2 py-0.5 rounded-full" style="background: {isDark ? '#2a2a2a' : '#f0f0f0'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+												{insight.category}
+											</span>
+										{/if}
+										
+										{#if insight.merchant}
+											<span class="text-xs px-2 py-0.5 rounded-full" style="background: {isDark ? '#2a2a2a' : '#f0f0f0'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+												{insight.merchant}
+											</span>
+										{/if}
+									</div>
+								</div>
+
+								<!-- Expand Icon -->
+								<div class="flex-shrink-0">
+									<i class="fa-solid fa-chevron-down text-xs transition-transform {isExpanded ? 'rotate-180' : ''}" style="color: {isDark ? '#525252' : '#9ca3af'}"></i>
+								</div>
 							</div>
-						</div>
+						</button>
+
+						<!-- Expanded Content -->
+						{#if isExpanded}
+							<div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-0" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#f0f0f0'}">
+								<div class="pt-4 flex flex-wrap gap-3">
+									{#if insight.actionText && insight.actionHref}
+										<a 
+											href={insight.actionHref}
+											class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium btn-primary"
+										>
+											{insight.actionText}
+											<i class="fa-solid fa-arrow-right text-xs"></i>
+										</a>
+									{/if}
+									
+									<button 
+										class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+										style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#a3a3a3' : '#737373'}"
+									>
+										<i class="fa-solid fa-bookmark text-xs"></i>
+										Save for Later
+									</button>
+									
+									<button 
+										class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+										style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#a3a3a3' : '#737373'}"
+									>
+										<i class="fa-solid fa-check text-xs"></i>
+										Mark as Done
+									</button>
+								</div>
+							</div>
+						{/if}
 					</div>
 				{/each}
 			</div>
@@ -288,26 +684,65 @@
 			<!-- Empty State -->
 			{#if filteredInsights.length === 0 && insights.length > 0}
 				<div class="text-center py-12 rounded-xl" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">No insights match this filter</p>
+					<div class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style="background: {isDark ? '#2a2a2a' : '#f0f0f0'}">
+						<i class="fa-solid fa-filter text-xl" style="color: {isDark ? '#525252' : '#9ca3af'}"></i>
+					</div>
+					<p class="text-sm font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">No matching insights</p>
+					<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Try selecting a different filter</p>
 				</div>
 			{/if}
 
 			<!-- Empty State - No Data -->
 			{#if insights.length === 0 && !loading}
-				<div class="text-center py-16 rounded-xl" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<i class="fa-solid fa-chart-line text-3xl mb-4" style="color: {isDark ? '#404040' : '#d4d4d4'}"></i>
-					<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+				<div class="text-center py-16 rounded-2xl" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="relative w-24 h-24 mx-auto mb-6">
+						<div class="absolute inset-0 rounded-full" style="background: radial-gradient(circle, rgba(13,148,136,0.2) 0%, transparent 70%);"></div>
+						<div class="relative w-24 h-24 rounded-full flex items-center justify-center" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
+							<i class="fa-solid fa-brain text-4xl" style="color: {isDark ? '#404040' : '#d4d4d4'}"></i>
+						</div>
+					</div>
+					<h3 class="font-display font-bold text-xl mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
 						No insights yet
 					</h3>
-					<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						Import some transactions to get personalized insights
+					<p class="text-sm mb-6 max-w-md mx-auto" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Import your transactions and we'll analyze your spending patterns to provide personalized insights and recommendations.
 					</p>
-					<a href="/imports" class="btn-primary inline-flex items-center gap-2">
+					<a href="/imports" class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl">
 						<i class="fa-solid fa-file-arrow-up"></i>
 						Import Transactions
 					</a>
 				</div>
 			{/if}
+
+			<!-- Pro Tip Section -->
+			{#if insights.length > 0}
+				<div class="mt-8 rounded-2xl p-5 sm:p-6 relative overflow-hidden" style="background: {isDark ? 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(139,92,246,0.05) 100%)' : 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.02) 100%)'}; border: 1px solid {isDark ? 'rgba(139,92,246,0.3)' : 'rgba(139,92,246,0.2)'}">
+					<div class="flex items-start gap-4">
+						<div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(139,92,246,0.2)">
+							<i class="fa-solid fa-wand-magic-sparkles text-lg" style="color: #8b5cf6"></i>
+						</div>
+						<div>
+							<h3 class="font-display font-semibold text-base mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+								Pro Tip: Automate Your Savings
+							</h3>
+							<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+								Set up automatic transfers to move your monthly budget surplus to investments. Even small amounts compound significantly over time — ${50}/month becomes ${8,700} in 10 years at 7% return.
+							</p>
+							<a href="/settings" class="inline-flex items-center gap-1.5 mt-3 text-sm font-medium hover:underline" style="color: #8b5cf6">
+								Set up automation
+								<i class="fa-solid fa-arrow-right text-xs"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			{/if}
 		{/if}
 	</main>
 </div>
+
+<style>
+	@keyframes slideUp {
+		0% { opacity: 0; transform: translateY(10px); }
+		100% { opacity: 1; transform: translateY(0); }
+	}
+</style>

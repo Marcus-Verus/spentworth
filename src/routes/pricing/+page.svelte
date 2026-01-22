@@ -120,11 +120,12 @@
 			>
 				Monthly
 			</span>
-			<button
-				onclick={() => billingCycle = billingCycle === 'monthly' ? 'yearly' : 'monthly'}
-				class="relative w-14 h-8 rounded-full transition-colors"
-				style="background: {billingCycle === 'yearly' ? '#0d9488' : (isDark ? '#2a2a2a' : '#d4d4d4')}"
-			>
+		<button
+			onclick={() => billingCycle = billingCycle === 'monthly' ? 'yearly' : 'monthly'}
+			class="relative w-14 h-8 rounded-full transition-colors"
+			style="background: {billingCycle === 'yearly' ? '#0d9488' : (isDark ? '#2a2a2a' : '#d4d4d4')}"
+			aria-label="Toggle billing cycle between monthly and yearly"
+		>
 				<span 
 					class="absolute top-1 w-6 h-6 rounded-full bg-white transition-transform shadow-sm"
 					style="left: {billingCycle === 'yearly' ? '30px' : '4px'}"

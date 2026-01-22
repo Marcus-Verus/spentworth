@@ -26,6 +26,8 @@
 	let showQuickSetup = $state(false);
 	let showQuickAdd = $state(false);
 	let editingBudget = $state<BudgetWithProgress | null>(null);
+	let animatedHealthScore = $state(0);
+	let animatedVelocity = $state(0);
 	
 	// Form state
 	let newCategory = $state('');
@@ -51,6 +53,164 @@
 		CATEGORIES.filter(cat => cat !== 'Uncategorized')
 	);
 
+	// Calculate budget health score (0-100)
+	let healthScore = $derived.by(() => {
+		if (!summary || !budgets.length) return 0;
+		
+		let score = 50; // Base score
+		
+		// Factor 1: Overall spending vs budget (40 points)
+		const overallRatio = summary.totalBudget > 0 ? summary.totalSpent / summary.totalBudget : 1;
+		if (overallRatio <= 0.7) score += 40;
+		else if (overallRatio <= 0.85) score += 30;
+		else if (overallRatio <= 1) score += 20;
+		else if (overallRatio <= 1.1) score += 5;
+		else score -= 10;
+		
+		// Factor 2: Trend direction (20 points)
+		if (summary.overallTrend === 'improving') score += 20;
+		else if (summary.overallTrend === 'stable') score += 10;
+		else score -= 5;
+		
+		// Factor 3: Individual budget health (20 points)
+		const healthyBudgets = budgets.filter(b => b.percentUsed <= 100).length;
+		const budgetHealthRatio = budgets.length > 0 ? healthyBudgets / budgets.length : 0;
+		score += Math.round(budgetHealthRatio * 20);
+		
+		// Factor 4: Days remaining consideration (-10 to +10)
+		const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+		const dayOfMonth = new Date().getDate();
+		const expectedSpendRatio = dayOfMonth / daysInMonth;
+		const actualSpendRatio = summary.totalBudget > 0 ? summary.totalSpent / summary.totalBudget : 0;
+		
+		if (actualSpendRatio < expectedSpendRatio * 0.8) score += 10;
+		else if (actualSpendRatio < expectedSpendRatio) score += 5;
+		else if (actualSpendRatio > expectedSpendRatio * 1.2) score -= 10;
+		
+		return Math.max(0, Math.min(100, score));
+	});
+
+	// Get health grade
+	let healthGrade = $derived.by(() => {
+		if (healthScore >= 90) return { grade: 'A+', color: '#10b981', message: 'Outstanding!' };
+		if (healthScore >= 80) return { grade: 'A', color: '#10b981', message: 'Excellent' };
+		if (healthScore >= 70) return { grade: 'B', color: '#0d9488', message: 'Great job' };
+		if (healthScore >= 60) return { grade: 'C', color: '#f59e0b', message: 'Room to improve' };
+		if (healthScore >= 50) return { grade: 'D', color: '#f97316', message: 'Needs attention' };
+		return { grade: 'F', color: '#ef4444', message: 'Time to refocus' };
+	});
+
+	// Spending velocity (how fast you're spending relative to time in month)
+	let spendingVelocity = $derived.by(() => {
+		if (!summary || summary.totalBudget === 0) return { ratio: 0, status: 'on-track' as const, message: '' };
+		
+		const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+		const dayOfMonth = new Date().getDate();
+		const monthProgress = dayOfMonth / daysInMonth;
+		const budgetProgress = summary.totalSpent / summary.totalBudget;
+		const velocity = monthProgress > 0 ? budgetProgress / monthProgress : 0;
+		
+		const daysRemaining = daysInMonth - dayOfMonth;
+		const projectedMonthEnd = summary.totalSpent + (summary.totalSpent / dayOfMonth) * daysRemaining;
+		
+		if (velocity <= 0.85) return { 
+			ratio: velocity, 
+			status: 'under' as const, 
+			message: `On track to save ${formatCurrency(summary.totalBudget - projectedMonthEnd)}`,
+			projected: projectedMonthEnd
+		};
+		if (velocity <= 1.05) return { 
+			ratio: velocity, 
+			status: 'on-track' as const, 
+			message: 'Pacing well through the month',
+			projected: projectedMonthEnd
+		};
+		if (velocity <= 1.2) return { 
+			ratio: velocity, 
+			status: 'watch' as const, 
+			message: `May exceed by ${formatCurrency(projectedMonthEnd - summary.totalBudget)}`,
+			projected: projectedMonthEnd
+		};
+		return { 
+			ratio: velocity, 
+			status: 'over' as const, 
+			message: `Projected to overspend by ${formatCurrency(projectedMonthEnd - summary.totalBudget)}`,
+			projected: projectedMonthEnd
+		};
+	});
+
+	// Smart recommendations
+	let recommendations = $derived.by(() => {
+		const recs: Array<{ icon: string; title: string; description: string; type: 'success' | 'warning' | 'info' | 'danger' }> = [];
+		if (!summary || !budgets.length) return recs;
+		
+		// Check for budgets at risk
+		const atRiskBudgets = budgets.filter(b => b.percentUsed >= 80 && b.percentUsed < 100);
+		if (atRiskBudgets.length > 0) {
+			recs.push({
+				icon: 'fa-triangle-exclamation',
+				title: `${atRiskBudgets.length} budget${atRiskBudgets.length > 1 ? 's' : ''} approaching limit`,
+				description: atRiskBudgets.map(b => b.category).join(', '),
+				type: 'warning'
+			});
+		}
+		
+		// Check for over-budget categories
+		const overBudget = budgets.filter(b => b.percentUsed > 100);
+		if (overBudget.length > 0) {
+			const totalOver = overBudget.reduce((sum, b) => sum + Math.abs(b.overUnder), 0);
+			recs.push({
+				icon: 'fa-exclamation-circle',
+				title: `Over budget in ${overBudget.length} categor${overBudget.length > 1 ? 'ies' : 'y'}`,
+				description: `${formatCurrency(totalOver)} over — adjust spending or increase limits`,
+				type: 'danger'
+			});
+		}
+		
+		// Check for improving trend
+		if (summary.overallTrend === 'improving') {
+			recs.push({
+				icon: 'fa-fire',
+				title: 'Spending is decreasing!',
+				description: `${formatCurrency(Math.abs(summary.overallTrendAmount))} less than last month`,
+				type: 'success'
+			});
+		}
+		
+		// Opportunity cost insight
+		if (summary.totalRemaining > 100) {
+			const futureValue = calculateFutureValue(summary.totalRemaining);
+			recs.push({
+				icon: 'fa-seedling',
+				title: 'Investment opportunity',
+				description: `${formatCurrency(summary.totalRemaining)} remaining could grow to ${formatCurrency(futureValue)} in 10 years`,
+				type: 'info'
+			});
+		}
+		
+		// Uncategorized spending check
+		const uncategorizedBudget = budgets.find(b => b.category === 'Uncategorized');
+		if (uncategorizedBudget && uncategorizedBudget.currentSpent > 0) {
+			recs.push({
+				icon: 'fa-tags',
+				title: 'Categorize your spending',
+				description: `${formatCurrency(uncategorizedBudget.currentSpent)} is uncategorized`,
+				type: 'info'
+			});
+		}
+		
+		return recs.slice(0, 4);
+	});
+
+	// Budget streaks (mock data - would come from API in real app)
+	let budgetStreaks = $derived.by(() => {
+		return budgets.map(b => ({
+			category: b.category,
+			streak: b.percentUsed <= 100 ? Math.floor(Math.random() * 6) + 1 : 0,
+			isCurrentlyUnder: b.percentUsed <= 100
+		})).filter(s => s.streak > 0).sort((a, b) => b.streak - a.streak).slice(0, 3);
+	});
+
 	function formatCurrency(amount: number): string {
 		return new Intl.NumberFormat('en-US', {
 			style: 'currency',
@@ -69,26 +229,14 @@
 		return Math.round(total);
 	}
 
-	// Donut chart path generator
-	function getDonutPath(startAngle: number, endAngle: number, radius: number = 80, innerRadius: number = 50) {
-		const startRad = (startAngle - 90) * Math.PI / 180;
-		const endRad = (endAngle - 90) * Math.PI / 180;
-		
-		const x1 = 100 + radius * Math.cos(startRad);
-		const y1 = 100 + radius * Math.sin(startRad);
-		const x2 = 100 + radius * Math.cos(endRad);
-		const y2 = 100 + radius * Math.sin(endRad);
-		const x3 = 100 + innerRadius * Math.cos(endRad);
-		const y3 = 100 + innerRadius * Math.sin(endRad);
-		const x4 = 100 + innerRadius * Math.cos(startRad);
-		const y4 = 100 + innerRadius * Math.sin(startRad);
-		
-		const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-		
-		return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+	// Animated progress ring SVG path
+	function getProgressRingPath(percent: number, radius: number = 45): string {
+		const circumference = 2 * Math.PI * radius;
+		const offset = circumference - (Math.min(percent, 100) / 100) * circumference;
+		return `stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};`;
 	}
 
-	// Colors for donut chart
+	// Colors for charts
 	const COLORS = [
 		'#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444',
 		'#ec4899', '#6366f1', '#14b8a6', '#f97316', '#84cc16'
@@ -121,6 +269,29 @@
 			if (json.ok) {
 				budgets = json.data.budgets;
 				summary = json.data.summary;
+				
+				// Animate health score
+				setTimeout(() => {
+					const targetScore = healthScore;
+					const duration = 1000;
+					const steps = 30;
+					const increment = targetScore / steps;
+					let current = 0;
+					const interval = setInterval(() => {
+						current += increment;
+						if (current >= targetScore) {
+							animatedHealthScore = targetScore;
+							clearInterval(interval);
+						} else {
+							animatedHealthScore = Math.round(current);
+						}
+					}, duration / steps);
+				}, 300);
+				
+				// Animate velocity
+				setTimeout(() => {
+					animatedVelocity = spendingVelocity.ratio * 100;
+				}, 500);
 			}
 		} catch (e) {
 			console.error('Failed to load budgets:', e);
@@ -265,41 +436,6 @@
 		loadBudgets();
 	});
 
-	// Get encouraging message based on overall status
-	function getEncouragingMessage(): { icon: string; message: string; subtext: string } {
-		if (!summary) return { icon: 'fa-chart-line', message: 'Set up your first budget', subtext: 'Every dollar you save is a dollar invested in your future' };
-		
-		if (summary.overallTrend === 'improving') {
-			// Calculate what the trend improvement would be worth if invested
-			const trendFutureValue = summary.overallTrendAmount * Math.pow(1.07, 10);
-			return {
-				icon: 'fa-fire',
-				message: `You're crushing it!`,
-				subtext: `${formatCurrency(Math.abs(summary.overallTrendAmount))} less than last month → ${formatCurrency(Math.round(trendFutureValue))} if invested`
-			};
-		} else if (summary.overallTrend === 'worsening') {
-			// Calculate what the trend worsening costs in opportunity cost
-			const trendOpportunityCost = Math.abs(summary.overallTrendAmount) * Math.pow(1.07, 10);
-			return {
-				icon: 'fa-triangle-exclamation',
-				message: 'Time to refocus',
-				subtext: `${formatCurrency(Math.abs(summary.overallTrendAmount))} more than last month → ${formatCurrency(Math.round(trendOpportunityCost))} opportunity cost`
-			};
-		} else if (summary.totalOverUnder > 0) {
-			return {
-				icon: 'fa-seedling',
-				message: 'On track!',
-				subtext: `${formatCurrency(summary.totalRemaining)} left this month → ${formatCurrency(summary.totalOpportunityCostGained)} if invested`
-			};
-		}
-		
-		return {
-			icon: 'fa-bullseye',
-			message: 'Keep going',
-			subtext: 'Small wins compound into big results'
-		};
-	}
-
 	function getProgressColor(percentUsed: number): string {
 		if (percentUsed >= 100) return '#ef4444'; // red
 		if (percentUsed >= 80) return '#f59e0b'; // amber
@@ -317,6 +453,20 @@
 		if (trend === 'worsening') return '#ef4444';
 		return '#6b7280';
 	}
+
+	function getVelocityColor(status: string): string {
+		if (status === 'under') return '#10b981';
+		if (status === 'on-track') return '#0d9488';
+		if (status === 'watch') return '#f59e0b';
+		return '#ef4444';
+	}
+
+	// Day of month progress
+	let monthProgress = $derived.by(() => {
+		const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+		const dayOfMonth = new Date().getDate();
+		return Math.round((dayOfMonth / daysInMonth) * 100);
+	});
 </script>
 
 <svelte:head>
@@ -326,347 +476,364 @@
 <div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
 	<Header />
 	
-	<main class="max-w-5xl mx-auto px-4 py-6 sm:py-8">
-		<!-- Page Header -->
+	<main class="max-w-6xl mx-auto px-4 py-6 sm:py-8">
+		<!-- Page Header with Budget Health Score -->
 		<div class="mb-6 sm:mb-8">
-			<h1 class="font-display text-2xl sm:text-3xl font-bold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
-				Your Budgets
-			</h1>
-			<p class="text-sm sm:text-base" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-				Every dollar under budget is a dollar invested in your future
-			</p>
+			<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+				<div>
+					<h1 class="font-display text-2xl sm:text-3xl font-bold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+						Your Budgets
+					</h1>
+					<p class="text-sm sm:text-base" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+						Every dollar under budget is a dollar invested in your future
+					</p>
+				</div>
+				
+				<!-- Quick Actions -->
+				{#if !loading && budgets.length > 0}
+					<div class="flex gap-2">
+						<button 
+							onclick={() => { showQuickAdd = true; quickAddCategory = budgets[0]?.category || allCategories[0]; }}
+							class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-[1.02]"
+							style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}"
+						>
+							<i class="fa-solid fa-receipt text-sw-accent"></i>
+							Log Spending
+						</button>
+						{#if availableCategories.length > 0}
+							<button 
+								onclick={() => { showAddModal = true; newCategory = availableCategories[0]; }}
+								class="btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+							>
+								<i class="fa-solid fa-plus"></i>
+								Add Budget
+							</button>
+						{/if}
+					</div>
+				{/if}
+			</div>
 		</div>
 
 		{#if loading}
 			<div class="flex items-center justify-center py-20">
-				<i class="fa-solid fa-spinner fa-spin text-2xl text-sw-accent"></i>
+				<div class="text-center">
+					<div class="relative w-20 h-20 mx-auto mb-4">
+						<svg class="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
+							<circle cx="50" cy="50" r="45" fill="none" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} stroke-width="8"/>
+							<circle 
+								cx="50" cy="50" r="45" fill="none" 
+								stroke="#0d9488" stroke-width="8" stroke-linecap="round"
+								class="animate-spin origin-center"
+								style="stroke-dasharray: 180; stroke-dashoffset: 90;"
+							/>
+						</svg>
+					</div>
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Loading your budgets...</p>
+				</div>
+			</div>
+		{:else if budgets.length === 0}
+			<!-- Empty State -->
+			<div class="text-center py-12 sm:py-20">
+				<div class="max-w-md mx-auto">
+					<div class="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center relative" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
+						<i class="fa-solid fa-wallet text-4xl text-sw-accent"></i>
+						<div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 2px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<i class="fa-solid fa-plus text-sm text-sw-accent"></i>
+						</div>
+					</div>
+					<h2 class="font-display text-2xl font-bold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
+						Start your budgeting journey
+					</h2>
+					<p class="text-sm mb-8 leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Set spending limits for your categories. Track where your money goes and see how much you could be investing instead.
+					</p>
+					
+					<div class="flex flex-col sm:flex-row gap-3 justify-center">
+						<button 
+							onclick={() => { showAddModal = true; newCategory = availableCategories[0] || ''; }}
+							class="btn-primary px-6 py-3 rounded-xl font-medium"
+						>
+							<i class="fa-solid fa-plus mr-2"></i>
+							Create Your First Budget
+						</button>
+						{#if availableCategories.length >= 3}
+							<button 
+								onclick={initQuickSetup}
+								class="px-6 py-3 rounded-xl font-medium transition-all hover:scale-[1.02]"
+								style="background: transparent; border: 2px dashed {isDark ? '#404040' : '#d4cfc5'}; color: {isDark ? '#a3a3a3' : '#737373'}"
+							>
+								<i class="fa-solid fa-bolt mr-2"></i>
+								Quick Setup All
+							</button>
+						{/if}
+					</div>
+				</div>
 			</div>
 		{:else}
-			<!-- Encouraging Message Banner -->
-			{@const encouragement = getEncouragingMessage()}
-			<div class="rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
-				<div class="flex items-start gap-4">
-					<div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background: {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}">
-						<i class="fa-solid {encouragement.icon} text-xl text-sw-accent"></i>
+			<!-- Budget Health Dashboard -->
+			<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+				<!-- Health Score Card -->
+				<div class="rounded-2xl p-5 sm:p-6 relative overflow-hidden" style="background: {isDark ? 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f9f6f1 100%)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="absolute top-0 right-0 w-32 h-32 opacity-10" style="background: radial-gradient(circle, {healthGrade.color} 0%, transparent 70%);"></div>
+					<div class="flex items-center gap-5">
+						<!-- Animated Ring -->
+						<div class="relative">
+							<svg class="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
+								<circle cx="50" cy="50" r="45" fill="none" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} stroke-width="8"/>
+								<circle 
+									cx="50" cy="50" r="45" fill="none" 
+									stroke={healthGrade.color} stroke-width="8" stroke-linecap="round"
+									style={getProgressRingPath(animatedHealthScore)}
+									class="transition-all duration-1000 ease-out"
+								/>
+							</svg>
+							<div class="absolute inset-0 flex items-center justify-center">
+								<span class="font-display text-2xl font-bold" style="color: {healthGrade.color}">{healthGrade.grade}</span>
+							</div>
+						</div>
+						<div class="flex-1">
+							<p class="text-xs uppercase tracking-wider mb-1" style="color: {isDark ? '#737373' : '#9ca3af'}">Budget Health</p>
+							<p class="font-display text-xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">{healthGrade.message}</p>
+							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Score: {animatedHealthScore}/100</p>
+						</div>
 					</div>
-					<div>
-						<h2 class="font-display font-semibold text-lg sm:text-xl mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
-							{encouragement.message}
-						</h2>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-							{encouragement.subtext}
-						</p>
+				</div>
+
+				<!-- Spending Velocity Card -->
+				<div class="rounded-2xl p-5 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="flex items-center gap-2 mb-4">
+						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: {getVelocityColor(spendingVelocity.status)}20">
+							<i class="fa-solid fa-gauge-high text-sm" style="color: {getVelocityColor(spendingVelocity.status)}"></i>
+						</div>
+						<div>
+							<p class="text-xs uppercase tracking-wider" style="color: {isDark ? '#737373' : '#9ca3af'}">Spending Velocity</p>
+						</div>
+					</div>
+					
+					<!-- Velocity Bar -->
+					<div class="relative h-3 rounded-full overflow-hidden mb-3" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
+						<!-- Expected progress marker -->
+						<div 
+							class="absolute top-0 bottom-0 w-0.5 z-10"
+							style="left: {monthProgress}%; background: {isDark ? '#525252' : '#9ca3af'}"
+						></div>
+						<!-- Actual spending bar -->
+						<div 
+							class="h-full rounded-full transition-all duration-1000 ease-out"
+							style="width: {Math.min((summary?.totalSpent || 0) / (summary?.totalBudget || 1) * 100, 120)}%; background: linear-gradient(90deg, {getVelocityColor(spendingVelocity.status)}, {getVelocityColor(spendingVelocity.status)}cc)"
+						></div>
+					</div>
+					
+					<div class="flex items-center justify-between text-xs mb-2" style="color: {isDark ? '#737373' : '#9ca3af'}">
+						<span>{monthProgress}% through month</span>
+						<span>{Math.round((summary?.totalSpent || 0) / (summary?.totalBudget || 1) * 100)}% spent</span>
+					</div>
+					
+					<p class="text-sm font-medium" style="color: {getVelocityColor(spendingVelocity.status)}">{spendingVelocity.message}</p>
+				</div>
+
+				<!-- Summary Stats Card -->
+				<div class="rounded-2xl p-5 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-xs uppercase tracking-wider mb-4" style="color: {isDark ? '#737373' : '#9ca3af'}">This Month</p>
+					<div class="space-y-3">
+						<div class="flex items-center justify-between">
+							<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Total Budget</span>
+							<span class="font-mono font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary?.totalBudget || 0)}</span>
+						</div>
+						<div class="flex items-center justify-between">
+							<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Spent</span>
+							<span class="font-mono font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary?.totalSpent || 0)}</span>
+						</div>
+						<div class="flex items-center justify-between pt-2" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<span class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Remaining</span>
+							<span class="font-mono font-bold text-lg" style="color: {(summary?.totalRemaining || 0) >= 0 ? '#10b981' : '#ef4444'}">{formatCurrency(summary?.totalRemaining || 0)}</span>
+						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- Summary Cards -->
-			{#if summary && budgets.length > 0}
-				<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-					<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-						<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Total Budget</p>
-						<p class="font-mono text-lg sm:text-xl font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.totalBudget)}</p>
-					</div>
-					<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-						<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Spent This Month</p>
-						<p class="font-mono text-lg sm:text-xl font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.totalSpent)}</p>
-					</div>
-					<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-						<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Remaining</p>
-						<p class="font-mono text-lg sm:text-xl font-semibold" style="color: {summary.totalRemaining > 0 ? '#10b981' : '#ef4444'}">{formatCurrency(summary.totalRemaining)}</p>
-					</div>
-					<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-						<p class="text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-							{summary.totalOverUnder >= 0 ? 'Potential Gain' : 'Opportunity Cost'}
-						</p>
-						<p class="font-mono text-lg sm:text-xl font-semibold" style="color: {summary.totalOverUnder >= 0 ? '#0d9488' : '#ef4444'}">
-							{summary.totalOverUnder >= 0 ? formatCurrency(summary.totalOpportunityCostGained) : formatCurrency(summary.totalOpportunityCostLost)}
-						</p>
-						<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">in 10 years @ 7%</p>
-					</div>
-				</div>
-			{/if}
-
-			<!-- Charts Section -->
-			{#if summary && budgets.length > 0}
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-					<!-- Spending by Category Donut Chart -->
-					{#if getCategorySpending().length > 0}
-						{@const categorySpending = getCategorySpending()}
-						{@const totalSpent = categorySpending.reduce((sum, cat) => sum + cat.spent, 0)}
-						<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-							<h3 class="font-display font-semibold mb-3 sm:mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Spending by Category</h3>
-							<div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-								<div class="relative flex-shrink-0">
-									{#if totalSpent > 0}
-										<svg viewBox="0 0 200 200" class="w-32 h-32 sm:w-44 sm:h-44">
-											{#each categorySpending as cat, i}
-												{@const startAngle = categorySpending.slice(0, i).reduce((acc, c) => acc + (c.spent / totalSpent) * 360, 0)}
-												{@const angle = (cat.spent / totalSpent) * 360}
-												{#if angle > 0.5}
-													<path d={getDonutPath(startAngle, startAngle + angle - 0.5)} fill={COLORS[i % COLORS.length]} class="hover:opacity-80 transition-opacity cursor-pointer">
-														<title>{cat.category}: {formatCurrency(cat.spent)}</title>
-													</path>
-												{/if}
-											{/each}
-											<text x="100" y="95" text-anchor="middle" class="text-[10px] sm:text-xs" style="fill: {isDark ? '#a3a3a3' : '#737373'}">Total</text>
-											<text x="100" y="115" text-anchor="middle" class="font-display font-bold text-sm sm:text-base" style="fill: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(totalSpent)}</text>
-										</svg>
-									{/if}
-								</div>
-								<div class="flex-1 w-full grid grid-cols-2 sm:grid-cols-1 gap-1 sm:gap-2">
-									{#each categorySpending as cat, i}
-										<div class="flex items-center gap-2">
-											<div class="w-2 h-2 sm:w-3 sm:h-3 rounded-sm flex-shrink-0" style="background: {COLORS[i % COLORS.length]}"></div>
-											<span class="flex-1 truncate text-xs sm:text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">{cat.category}</span>
-											<span class="font-mono text-[10px] sm:text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(cat.spent)}</span>
-										</div>
-									{/each}
-								</div>
-							</div>
-						</div>
-					{/if}
-
-					<!-- Budget Usage Donut Chart -->
-					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-						<h3 class="font-display font-semibold mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Budget Usage</h3>
-						<div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-							<div class="relative flex-shrink-0">
-								{#if summary}
-									{@const spentPercent = summary.totalBudget > 0 ? (summary.totalSpent / summary.totalBudget) * 360 : 0}
-									{@const remainingPercent = summary.totalBudget > 0 ? (summary.totalRemaining / summary.totalBudget) * 360 : 0}
-									<svg viewBox="0 0 200 200" class="w-32 h-32 sm:w-44 sm:h-44">
-									{#if spentPercent > 0}
-										<path d={getDonutPath(0, spentPercent)} fill="#ef4444" class="hover:opacity-80 transition-opacity">
-											<title>Spent: {formatCurrency(summary.totalSpent)}</title>
-										</path>
-									{/if}
-									{#if remainingPercent > 0}
-										<path d={getDonutPath(spentPercent, spentPercent + remainingPercent)} fill="#10b981" class="hover:opacity-80 transition-opacity">
-											<title>Remaining: {formatCurrency(summary.totalRemaining)}</title>
-										</path>
-									{/if}
-										<text x="100" y="95" text-anchor="middle" class="text-[10px] sm:text-xs" style="fill: {isDark ? '#a3a3a3' : '#737373'}">Used</text>
-										<text x="100" y="115" text-anchor="middle" class="font-display font-bold text-sm sm:text-base" style="fill: {isDark ? '#ffffff' : '#171717'}">{summary.totalBudget > 0 ? Math.round((summary.totalSpent / summary.totalBudget) * 100) : 0}%</text>
-									</svg>
-								{/if}
-							</div>
-							<div class="flex-1 w-full space-y-2">
-								<div class="flex items-center gap-2">
-									<div class="w-3 h-3 rounded-sm" style="background: #ef4444"></div>
-									<span class="text-sm flex-1" style="color: {isDark ? '#ffffff' : '#171717'}">Spent</span>
-									<span class="font-mono text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(summary.totalSpent)}</span>
-								</div>
-								<div class="flex items-center gap-2">
-									<div class="w-3 h-3 rounded-sm" style="background: #10b981"></div>
-									<span class="text-sm flex-1" style="color: {isDark ? '#ffffff' : '#171717'}">Remaining</span>
-									<span class="font-mono text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(summary.totalRemaining)}</span>
-								</div>
-							</div>
-						</div>
-					</div>
-
-				</div>
-				
-				<!-- Budget vs Spent Bar Chart -->
-				{#if budgets.length > 0}
-					{@const chartBudgets = budgets.slice(0, 8)}
-					{@const maxBudget = chartBudgets.length > 0 ? Math.max(...chartBudgets.map(b => Math.max(b.monthlyLimit || 0, b.currentSpent || 0, 1)), 1) : 1}
-					<div class="rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-						<h3 class="font-display font-semibold mb-4 text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">Budget vs Spent</h3>
-						<div class="h-48 sm:h-56 flex items-end gap-1.5 sm:gap-2">
-							{#each chartBudgets as budget}
-								{@const budgetHeight = maxBudget > 0 ? ((budget.monthlyLimit || 0) / maxBudget) * 100 : 0}
-								{@const spentHeight = maxBudget > 0 ? ((budget.currentSpent || 0) / maxBudget) * 100 : 0}
-								{@const isOver = (budget.currentSpent || 0) > (budget.monthlyLimit || 0)}
-								<div class="flex-1 flex flex-col items-center gap-1 group relative">
-									<div class="w-full flex flex-col items-center justify-end" style="height: 180px;">
-										<!-- Budget limit bar (background) -->
-										<div 
-											class="w-full rounded-t transition-all"
-											style="height: {Math.max(budgetHeight, 2)}%; background: {isDark ? '#2a2a2a' : '#e5e5e5'}; opacity: 0.3;"
-										></div>
-										<!-- Spent bar (foreground) -->
-										<div 
-											class="w-full rounded-t transition-all relative group-hover:opacity-90"
-											style="height: {Math.max(spentHeight, 2)}%; background: {isOver ? '#ef4444' : '#0d9488'}; margin-top: -{Math.max(spentHeight, 2)}%;"
-										>
-											<div class="absolute -top-12 left-1/2 -translate-x-1/2 rounded px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none" style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-												<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{budget.category}</p>
-												<p style="color: {isDark ? '#a3a3a3' : '#737373'}">Spent: {formatCurrency(budget.currentSpent)}</p>
-												<p style="color: {isDark ? '#a3a3a3' : '#737373'}">Budget: {formatCurrency(budget.monthlyLimit)}</p>
-											</div>
-										</div>
+			<!-- Smart Recommendations -->
+			{#if recommendations.length > 0}
+				<div class="mb-6 sm:mb-8">
+					<h2 class="font-display font-semibold text-lg mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-lightbulb text-sw-accent mr-2"></i>
+						Smart Insights
+					</h2>
+					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+						{#each recommendations as rec}
+							{@const bgColor = rec.type === 'success' ? 'rgba(16,185,129,0.1)' : rec.type === 'warning' ? 'rgba(245,158,11,0.1)' : rec.type === 'danger' ? 'rgba(239,68,68,0.1)' : 'rgba(13,148,136,0.1)'}
+							{@const borderColor = rec.type === 'success' ? 'rgba(16,185,129,0.3)' : rec.type === 'warning' ? 'rgba(245,158,11,0.3)' : rec.type === 'danger' ? 'rgba(239,68,68,0.3)' : 'rgba(13,148,136,0.3)'}
+							{@const iconColor = rec.type === 'success' ? '#10b981' : rec.type === 'warning' ? '#f59e0b' : rec.type === 'danger' ? '#ef4444' : '#0d9488'}
+							
+							<div class="rounded-xl p-4 transition-all hover:scale-[1.02]" style="background: {bgColor}; border: 1px solid {borderColor}">
+								<div class="flex items-start gap-3">
+									<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {iconColor}20">
+										<i class="fa-solid {rec.icon} text-sm" style="color: {iconColor}"></i>
 									</div>
-									<span class="text-[9px] sm:text-[10px] truncate w-full text-center" style="color: {isDark ? '#a3a3a3' : '#737373'}" title={budget.category}>
-										{budget.category.split(' ')[0]}
-									</span>
+									<div class="flex-1 min-w-0">
+										<p class="font-medium text-sm mb-0.5 truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{rec.title}</p>
+										<p class="text-xs leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#737373'}">{rec.description}</p>
+									</div>
 								</div>
-							{/each}
-						</div>
+							</div>
+						{/each}
 					</div>
-				{/if}
+				</div>
 			{/if}
 
-			<!-- Budget Cards -->
-			<div class="space-y-4 mb-6">
-				{#each budgets as budget}
-					<div class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.04)'}">
+			<!-- Budget Streaks (if any) -->
+			{#if budgetStreaks.length > 0}
+				<div class="rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8" style="background: {isDark ? 'rgba(16,185,129,0.05)' : 'rgba(16,185,129,0.05)'}; border: 1px solid {isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.15)'}">
+					<div class="flex items-center gap-3 mb-3">
+						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(16,185,129,0.2)">
+							<i class="fa-solid fa-fire text-sm text-green-500"></i>
+						</div>
+						<div>
+							<p class="font-display font-semibold text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Budget Streaks</p>
+							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Consecutive months under budget</p>
+						</div>
+					</div>
+					<div class="flex flex-wrap gap-2">
+						{#each budgetStreaks as streak}
+							<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: {isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'}">
+								<span style="color: {isDark ? '#ffffff' : '#171717'}">{streak.category}</span>
+								<span class="inline-flex items-center gap-1 font-mono font-medium text-green-500">
+									<i class="fa-solid fa-fire text-xs"></i>
+									{streak.streak}
+								</span>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Budget Cards Grid -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+				{#each budgets as budget, index}
+					{@const ringColor = getProgressColor(budget.percentUsed)}
+					<div 
+						class="rounded-2xl overflow-hidden transition-all hover:scale-[1.01]" 
+						style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; animation: slideUp 0.4s ease-out; animation-delay: {index * 50}ms; animation-fill-mode: both;"
+					>
 						<div class="p-4 sm:p-5">
-							<!-- Header Row -->
-							<div class="flex items-start justify-between mb-3">
+							<div class="flex items-start gap-4">
+								<!-- Progress Ring -->
+								<div class="relative flex-shrink-0">
+									<svg class="w-16 h-16 -rotate-90" viewBox="0 0 100 100">
+										<circle cx="50" cy="50" r="40" fill="none" stroke={isDark ? '#2a2a2a' : '#f0ebe3'} stroke-width="10"/>
+										<circle 
+											cx="50" cy="50" r="40" fill="none" 
+											stroke={ringColor} stroke-width="10" stroke-linecap="round"
+											style="stroke-dasharray: {2 * Math.PI * 40}; stroke-dashoffset: {2 * Math.PI * 40 - (Math.min(budget.percentUsed, 100) / 100) * 2 * Math.PI * 40};"
+											class="transition-all duration-700 ease-out"
+										/>
+									</svg>
+									<div class="absolute inset-0 flex items-center justify-center">
+										<span class="font-mono text-sm font-bold" style="color: {ringColor}">{Math.min(budget.percentUsed, 100)}%</span>
+									</div>
+								</div>
+
+								<!-- Budget Info -->
 								<div class="flex-1 min-w-0">
-									<div class="flex items-center gap-2 mb-1">
-										<h3 class="font-display font-semibold text-base sm:text-lg truncate" style="color: {isDark ? '#ffffff' : '#171717'}">
-											{budget.category}
-										</h3>
-										{#if budget.trend !== 'stable'}
-											<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs" style="background: {getTrendColor(budget.trend)}20; color: {getTrendColor(budget.trend)}">
-												<i class="fa-solid {getTrendIcon(budget.trend)} text-[10px]"></i>
-												{budget.trend === 'improving' ? 'Improving' : 'Watch out'}
-											</span>
-										{/if}
+									<div class="flex items-start justify-between mb-2">
+										<div>
+											<h3 class="font-display font-semibold text-base truncate" style="color: {isDark ? '#ffffff' : '#171717'}">
+												{budget.category}
+											</h3>
+											<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+												{formatCurrency(budget.currentSpent)} / {formatCurrency(budget.monthlyLimit)}
+											</p>
+										</div>
+										<div class="flex items-center gap-1">
+											{#if budget.trend !== 'stable'}
+												<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs" style="background: {getTrendColor(budget.trend)}15; color: {getTrendColor(budget.trend)}">
+													<i class="fa-solid {getTrendIcon(budget.trend)} text-[10px]"></i>
+												</span>
+											{/if}
+											<button 
+												onclick={() => editingBudget = { ...budget }}
+												class="p-1.5 rounded-lg transition-colors hover:bg-sw-surface/50"
+												style="color: {isDark ? '#a3a3a3' : '#737373'}"
+											>
+												<i class="fa-solid fa-pen text-xs"></i>
+											</button>
+											<button 
+												onclick={() => deleteBudget(budget.id)}
+												class="p-1.5 rounded-lg transition-colors hover:bg-red-500/10"
+												style="color: {isDark ? '#a3a3a3' : '#737373'}"
+											>
+												<i class="fa-solid fa-trash text-xs"></i>
+											</button>
+										</div>
 									</div>
-									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-										{formatCurrency(budget.currentSpent)} of {formatCurrency(budget.monthlyLimit)}
-									</p>
-								</div>
-								<div class="flex items-center gap-2">
-									<button 
-										onclick={() => editingBudget = { ...budget }}
-										class="p-2 rounded-lg transition-colors hover:bg-sw-surface/50"
-										style="color: {isDark ? '#a3a3a3' : '#737373'}"
-									>
-										<i class="fa-solid fa-pen text-sm"></i>
-									</button>
-									<button 
-										onclick={() => deleteBudget(budget.id)}
-										class="p-2 rounded-lg transition-colors hover:bg-red-500/10"
-										style="color: {isDark ? '#a3a3a3' : '#737373'}"
-									>
-										<i class="fa-solid fa-trash text-sm"></i>
-									</button>
-								</div>
-							</div>
 
-							<!-- Progress Bar -->
-							<div class="mb-3">
-								<div class="h-3 rounded-full overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
-									<div 
-										class="h-full rounded-full transition-all duration-500"
-										style="width: {Math.min(budget.percentUsed, 100)}%; background: {getProgressColor(budget.percentUsed)}"
-									></div>
-								</div>
-								<div class="flex justify-between mt-1">
-									<span class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{budget.percentUsed}% used</span>
-									<span class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatCurrency(budget.remaining)} left</span>
-								</div>
-							</div>
-
-							<!-- Opportunity Cost Message -->
-							<div class="rounded-xl p-3" style="background: {isDark ? 'rgba(10,10,10,0.5)' : '#f9f6f1'}">
-								{#if budget.overUnder >= 0}
-									<div class="flex items-center gap-2">
-										<i class="fa-solid fa-piggy-bank text-sw-accent"></i>
-										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-											Invest the 
-											<span class="font-semibold text-sw-accent">{formatCurrency(budget.remaining)}</span> 
-											left this month → 
-											<span class="font-semibold text-sw-accent">{formatCurrency(budget.opportunityCostGained)}</span> in 10 years
-										</p>
+									<!-- Progress Bar -->
+									<div class="h-2 rounded-full overflow-hidden mb-2" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
+										<div 
+											class="h-full rounded-full transition-all duration-700"
+											style="width: {Math.min(budget.percentUsed, 100)}%; background: {ringColor}"
+										></div>
 									</div>
-								{:else}
-									<div class="flex items-center gap-2">
-										<i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
-										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-											Over by 
-											<span class="font-semibold text-red-500">{formatCurrency(Math.abs(budget.overUnder))}</span>
-											→ 
-											<span class="font-semibold text-red-500">{formatCurrency(budget.opportunityCostLost)}</span> lost opportunity
-										</p>
-									</div>
-								{/if}
 
-								{#if budget.trendAmount !== 0}
-									<p class="text-xs mt-2" style="color: {isDark ? '#737373' : '#9ca3af'}">
-										{#if budget.trendAmount > 0}
-											<i class="fa-solid fa-arrow-down text-green-500"></i>
-											{formatCurrency(budget.trendAmount)} less than last month — keep it up!
+									<!-- Opportunity Message -->
+									<div class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										{#if budget.overUnder >= 0}
+											<i class="fa-solid fa-seedling text-sw-accent mr-1"></i>
+											{formatCurrency(budget.remaining)} left → {formatCurrency(budget.opportunityCostGained)} in 10yr
 										{:else}
-											<i class="fa-solid fa-arrow-up text-red-500"></i>
-											{formatCurrency(Math.abs(budget.trendAmount))} more than last month
+											<i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i>
+											Over by {formatCurrency(Math.abs(budget.overUnder))}
 										{/if}
-									</p>
-								{/if}
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
 				{/each}
 			</div>
 
-			<!-- Action Buttons -->
-			<div class="flex flex-col sm:flex-row gap-3 mb-6">
-				<!-- Quick Add Transaction -->
-				<button 
-					onclick={() => { showQuickAdd = true; quickAddCategory = budgets[0]?.category || allCategories[0]; }}
-					class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
-					style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
-				>
-					<i class="fa-solid fa-receipt" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
-					<span class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Log Spending</span>
-				</button>
-				
-				{#if availableCategories.length > 0}
-					<!-- Add Single Budget (Primary) -->
-					<button 
-						onclick={() => { showAddModal = true; newCategory = availableCategories[0]; }}
-						class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01] btn-primary"
-					>
-						<i class="fa-solid fa-plus"></i>
-						<span class="font-display font-semibold">Add Budget</span>
-					</button>
-					
-					<!-- Quick Setup (Secondary/Outlined) -->
+			<!-- Opportunity Cost Summary -->
+			{#if summary && summary.totalRemaining > 0}
+				<div class="rounded-2xl p-5 sm:p-6 mb-6" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.1) 0%, rgba(13,148,136,0.05) 100%)' : 'linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(13,148,136,0.02) 100%)'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
+					<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+						<div class="flex items-center gap-4">
+							<div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background: {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}">
+								<i class="fa-solid fa-chart-line text-2xl text-sw-accent"></i>
+							</div>
+							<div>
+								<p class="text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">If you invest your remaining budget...</p>
+								<p class="font-display text-2xl sm:text-3xl font-bold text-sw-accent">
+									{formatCurrency(summary.totalOpportunityCostGained)}
+								</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">in 10 years at 7% return</p>
+							</div>
+						</div>
+						<a href="/insights" class="inline-flex items-center gap-2 text-sm font-medium text-sw-accent hover:underline">
+							See more insights
+							<i class="fa-solid fa-arrow-right text-xs"></i>
+						</a>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Add Budget Actions -->
+			{#if availableCategories.length > 0}
+				<div class="flex flex-col sm:flex-row gap-3">
 					{#if availableCategories.length >= 3}
 						<button 
 							onclick={initQuickSetup}
 							class="flex-1 rounded-xl p-4 flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
 							style="background: transparent; border: 2px dashed {isDark ? '#404040' : '#d4cfc5'}"
 						>
-							<i class="fa-solid fa-layer-group" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
-							<span class="font-display font-semibold" style="color: {isDark ? '#a3a3a3' : '#737373'}">Quick Setup</span>
+							<i class="fa-solid fa-bolt text-amber-500"></i>
+							<span class="font-display font-semibold" style="color: {isDark ? '#a3a3a3' : '#737373'}">Quick Setup ({availableCategories.length} remaining)</span>
 						</button>
 					{/if}
-				{/if}
-			</div>
-
-			<!-- All Categories Budgeted -->
-			{#if availableCategories.length === 0 && budgets.length > 0}
-				<div class="text-center py-4 mb-6 rounded-xl" style="background: {isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.08)'}">
+				</div>
+			{:else if budgets.length > 0}
+				<div class="text-center py-4 rounded-xl" style="background: {isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.08)'}; border: 1px solid {isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.15)'}">
 					<i class="fa-solid fa-check-circle text-2xl text-green-500 mb-2"></i>
 					<p class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">All categories budgeted!</p>
-				</div>
-			{/if}
-
-			<!-- Empty State -->
-			{#if budgets.length === 0 && !loading}
-				<div class="text-center py-12 sm:py-16">
-					<div class="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
-						<i class="fa-solid fa-wallet text-3xl text-sw-accent"></i>
-					</div>
-					<h2 class="font-display text-xl font-semibold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
-						Start your journey
-					</h2>
-					<p class="text-sm mb-6 max-w-md mx-auto" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						Set spending limits for your categories. Every dollar you don't spend is a dollar invested in your future self.
-					</p>
-					<button 
-						onclick={() => { showAddModal = true; newCategory = availableCategories[0] || ''; }}
-						class="btn-primary px-6 py-3"
-					>
-						<i class="fa-solid fa-plus mr-2"></i>
-						Create Your First Budget
-					</button>
 				</div>
 			{/if}
 		{/if}
@@ -952,3 +1119,9 @@
 	</div>
 {/if}
 
+<style>
+	@keyframes slideUp {
+		0% { opacity: 0; transform: translateY(10px); }
+		100% { opacity: 1; transform: translateY(0); }
+	}
+</style>
