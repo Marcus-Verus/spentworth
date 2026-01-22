@@ -24,10 +24,10 @@ export default {
 				'body': ['Inter', 'system-ui', 'sans-serif'],
 				'mono': ['JetBrains Mono', 'monospace']
 			},
-			backgroundImage: {
-				'grid-pattern': 'linear-gradient(rgba(20, 184, 166, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(20, 184, 166, 0.03) 1px, transparent 1px)',
-				'glow-radial': 'radial-gradient(ellipse at center, rgba(20, 184, 166, 0.15) 0%, transparent 70%)'
-			},
+		backgroundImage: {
+			'grid-pattern': 'linear-gradient(rgba(76, 175, 80, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(76, 175, 80, 0.03) 1px, transparent 1px)',
+			'glow-radial': 'radial-gradient(ellipse at center, rgba(76, 175, 80, 0.15) 0%, transparent 70%)'
+		},
 			backgroundSize: {
 				'grid': '40px 40px'
 			},
@@ -48,10 +48,10 @@ export default {
 					'0%': { opacity: '0', transform: 'translateY(10px)' },
 					'100%': { opacity: '1', transform: 'translateY(0)' }
 				},
-				pulseGlow: {
-					'0%, 100%': { boxShadow: '0 0 20px rgba(13, 148, 136, 0.3)' },
-					'50%': { boxShadow: '0 0 40px rgba(13, 148, 136, 0.5)' }
-				},
+			pulseGlow: {
+				'0%, 100%': { boxShadow: '0 0 20px rgba(56, 142, 60, 0.3)' },
+				'50%': { boxShadow: '0 0 40px rgba(56, 142, 60, 0.5)' }
+			},
 				floatSlow: {
 					'0%, 100%': { transform: 'translateY(0) rotate(-1deg)' },
 					'50%': { transform: 'translateY(-12px) rotate(1deg)' }

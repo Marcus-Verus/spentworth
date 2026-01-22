@@ -4,12 +4,12 @@
 
 @layer base {
 	:root {
-		/* Light theme */
+		/* Light theme - Money Green */
 		--sw-bg: #f5f0e8;
 		--sw-surface: #ffffff;
 		--sw-border: #d1ccc2;
-		--sw-accent: #0d9488;
-		--sw-accent-dim: #0f766e;
+		--sw-accent: #388E3C;
+		--sw-accent-dim: #2E7D32;
 		--sw-gold: #b45309;
 		--sw-text: #1a1a1a;
 		--sw-text-dim: #525252;
@@ -17,12 +17,12 @@
 	}
 	
 	:root.dark {
-		/* Dark theme */
+		/* Dark theme - Money Green */
 		--sw-bg: #0f0f0f;
 		--sw-surface: #1a1a1a;
 		--sw-border: #2a2a2a;
-		--sw-accent: #14b8a6;
-		--sw-accent-dim: #0d9488;
+		--sw-accent: #4CAF50;
+		--sw-accent-dim: #43A047;
 		--sw-gold: #d4a574;
 		--sw-text: #fafafa;
 		--sw-text-dim: #a3a3a3;
@@ -51,17 +51,17 @@
 	:root.dark body {
 		background-color: #0f0f0f;
 		background-image: 
-			radial-gradient(ellipse at 50% 0%, rgba(20, 184, 166, 0.06) 0%, transparent 60%),
+			radial-gradient(ellipse at 50% 0%, rgba(76, 175, 80, 0.06) 0%, transparent 60%),
 			radial-gradient(ellipse at 80% 80%, rgba(212, 165, 116, 0.04) 0%, transparent 50%);
 	}
 
 	::selection {
-		background-color: rgba(13, 148, 136, 0.25);
+		background-color: rgba(56, 142, 60, 0.25);
 		color: var(--sw-text);
 	}
 	
 	:root.dark ::selection {
-		background-color: rgba(20, 184, 166, 0.3);
+		background-color: rgba(76, 175, 80, 0.3);
 	}
 
 	/* Custom scrollbar */
@@ -144,7 +144,7 @@
 
 	.input {
 		@apply w-full px-4 py-2.5 bg-sw-surface border border-sw-border rounded-lg text-sw-text placeholder:text-sw-text-dim focus:outline-none focus:ring-2 focus:border-sw-accent transition-colors;
-		--tw-ring-color: rgba(13, 148, 136, 0.5);
+		--tw-ring-color: rgba(56, 142, 60, 0.5);
 	}
 
 	.label {
@@ -156,15 +156,15 @@
 	}
 
 	.badge-success {
-		background: rgba(13, 148, 136, 0.12);
-		color: #0f766e;
-		border: 1px solid rgba(13, 148, 136, 0.25);
+		background: rgba(56, 142, 60, 0.12);
+		color: #2E7D32;
+		border: 1px solid rgba(56, 142, 60, 0.25);
 	}
 	
 	:root.dark .badge-success {
-		background: rgba(20, 184, 166, 0.2);
+		background: rgba(76, 175, 80, 0.2);
 		color: #ffffff;
-		border: 1px solid rgba(20, 184, 166, 0.5);
+		border: 1px solid rgba(76, 175, 80, 0.5);
 	}
 
 	.badge-warning {
@@ -190,7 +190,7 @@
 	.stat-card::before {
 		content: '';
 		@apply absolute inset-0 pointer-events-none;
-		background: linear-gradient(135deg, rgba(13, 148, 136, 0.05) 0%, transparent 100%);
+		background: linear-gradient(135deg, rgba(56, 142, 60, 0.05) 0%, transparent 100%);
 	}
 
 	.table-container {
@@ -229,7 +229,7 @@
 
 	.toggle {
 		@apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
-		--tw-ring-color: rgba(13, 148, 136, 0.5);
+		--tw-ring-color: rgba(56, 142, 60, 0.5);
 		--tw-ring-offset-color: var(--sw-bg);
 	}
 
@@ -256,14 +256,14 @@
 
 @layer utilities {
 	.text-gradient {
-		background: linear-gradient(to right, #0f766e, #0d9488);
+		background: linear-gradient(to right, #2E7D32, #4CAF50);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
 	}
 	
 	:root.dark .text-gradient {
-		background: linear-gradient(to right, #14b8a6, #5eead4);
+		background: linear-gradient(to right, #4CAF50, #81C784);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
@@ -275,20 +275,20 @@
 
 	/* Light theme glows */
 	.glow {
-		box-shadow: 0 4px 40px rgba(13, 148, 136, 0.2);
+		box-shadow: 0 4px 40px rgba(56, 142, 60, 0.2);
 	}
 
 	.glow-sm {
-		box-shadow: 0 2px 20px rgba(13, 148, 136, 0.15);
+		box-shadow: 0 2px 20px rgba(56, 142, 60, 0.15);
 	}
 	
 	/* Dark theme glows */
 	:root.dark .glow {
-		box-shadow: 0 0 60px rgba(20, 184, 166, 0.12);
+		box-shadow: 0 0 60px rgba(76, 175, 80, 0.12);
 	}
 
 	:root.dark .glow-sm {
-		box-shadow: 0 0 30px rgba(20, 184, 166, 0.08);
+		box-shadow: 0 0 30px rgba(76, 175, 80, 0.08);
 	}
 	
 	.glow-warm {

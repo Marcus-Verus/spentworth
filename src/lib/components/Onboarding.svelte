@@ -68,7 +68,7 @@
 				<button
 					onclick={() => step = i}
 					class="w-2 h-2 rounded-full transition-all min-w-[8px] min-h-[8px]"
-					style="background: {step === i ? '#0d9488' : (isDark ? '#404040' : '#d4d4d4')}; {step === i ? 'width: 24px;' : ''}"
+					style="background: {step === i ? '#388E3C' : (isDark ? '#404040' : '#d4d4d4')}; {step === i ? 'width: 24px;' : ''}"
 					aria-label="Go to step {i + 1}"
 				></button>
 			{/each}
@@ -79,14 +79,14 @@
 			<!-- Icon -->
 			<div 
 				class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center"
-				style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.1)'};"
+				style="background: {isDark ? 'rgba(56,142,60,0.15)' : 'rgba(56,142,60,0.1)'};"
 			>
 				<i class="{steps[step].icon} text-2xl sm:text-3xl text-sw-accent"></i>
 			</div>
 			
 			<!-- Title & Subtitle -->
 			<h2 class="font-display text-xl sm:text-2xl font-bold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">{steps[step].title}</h2>
-			<p class="text-sm mb-3 sm:mb-4" style="color: #0d9488">{steps[step].subtitle}</p>
+			<p class="text-sm mb-3 sm:mb-4" style="color: #388E3C">{steps[step].subtitle}</p>
 			
 			<!-- Description -->
 			<p class="text-sm leading-relaxed mb-6 sm:mb-8" style="color: {isDark ? '#a3a3a3' : '#737373'}">{steps[step].content}</p>
@@ -116,7 +116,7 @@
 		<!-- Decorative gradient -->
 		<div 
 			class="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-30 blur-3xl pointer-events-none"
-			style="background: linear-gradient(135deg, #0d9488, #06b6d4)"
+			style="background: linear-gradient(135deg, #388E3C, #4CAF50)"
 		></div>
 	</div>
 </div>

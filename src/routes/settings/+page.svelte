@@ -307,7 +307,7 @@
 						</div>
 
 						{#if monthlyIncome && monthlyIncome > 0}
-							<div class="rounded-xl p-4" style="background: rgba(13,148,136,0.1); border: 1px solid rgba(13,148,136,0.2)">
+							<div class="rounded-xl p-4" style="background: rgba(56,142,60,0.1); border: 1px solid rgba(56,142,60,0.2)">
 								<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
 									<i class="fa-solid fa-chart-line text-sw-accent mr-2"></i>
 									If you save <span class="font-semibold">20%</span> of your income (${Math.round(monthlyIncome * 0.2).toLocaleString()}/month) at <span class="font-semibold">{fallbackPercentage}%</span> annual return, 
@@ -468,14 +468,14 @@
 								onclick={handleThemeToggle}
 								disabled={!isPro}
 								class="relative w-14 h-8 rounded-full transition-all duration-300 {isPro ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}"
-								style="background: {isDark ? 'linear-gradient(135deg, #0d9488, #14b8a6)' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+								style="background: {isDark ? 'linear-gradient(135deg, #0d9488, #4CAF50)' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
 							>
 								<span 
 									class="absolute top-1 w-6 h-6 rounded-full transition-all duration-300 flex items-center justify-center shadow-md"
 									style="left: {isDark ? '1.75rem' : '0.25rem'}; background: {isDark ? '#0a0a0a' : '#ffffff'}"
 								>
 									{#if isDark}
-										<i class="fa-solid fa-moon text-xs text-teal-400"></i>
+										<i class="fa-solid fa-moon text-xs text-green-400"></i>
 									{:else}
 										<i class="fa-solid fa-sun text-xs" style="color: {isDark ? '#a3a3a3' : '#f59e0b'}"></i>
 									{/if}

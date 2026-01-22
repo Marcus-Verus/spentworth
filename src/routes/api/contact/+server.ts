@@ -67,16 +67,12 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 				<h2 style="color: #0d9488;">New Contact Form Submission</h2>
 				<div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
 					<p style="margin: 0 0 10px 0;"><strong>From:</strong> ${escapeHtml(name)}</p>
-					<p style="margin: 0 0 10px 0;"><strong>Email:</strong> ${escapeHtml(email)}</p>
-					<p style="margin: 0;"><strong>IP:</strong> ${clientIp}</p>
+					<p style="margin: 0;"><strong>Email:</strong> ${escapeHtml(email)}</p>
 				</div>
 				<h3 style="color: #333;">Message:</h3>
 				<div style="background: #fff; padding: 20px; border: 1px solid #e5e5e5; border-radius: 8px;">
 					<p style="margin: 0; white-space: pre-wrap;">${escapeHtml(message)}</p>
 				</div>
-				<p style="color: #666; font-size: 12px; margin-top: 20px;">
-					Sent from SpentWorth Contact Form on ${new Date().toISOString()}
-				</p>
 			</div>
 		`;
 

@@ -172,7 +172,7 @@
 				<div 
 					class="p-4 rounded-xl text-sm font-medium"
 					style="background: {submitStatus.type === 'success' ? 'rgba(13, 148, 136, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; 
-						   color: {submitStatus.type === 'success' ? '#0d9488' : '#ef4444'};
+						   color: {submitStatus.type === 'success' ? '#388E3C' : '#ef4444'};
 						   border: 1px solid {submitStatus.type === 'success' ? 'rgba(13, 148, 136, 0.3)' : 'rgba(239, 68, 68, 0.3)'}"
 				>
 					{#if submitStatus.type === 'success'}
@@ -244,7 +244,7 @@
 				type="submit"
 				disabled={isSubmitting || !turnstileToken}
 				class="w-full py-3.5 rounded-xl font-display font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
-				style="background: #0d9488; color: #ffffff"
+				style="background: #388E3C; color: #ffffff"
 			>
 				{#if isSubmitting}
 					<i class="fa-solid fa-spinner fa-spin mr-2"></i>
@@ -282,5 +282,79 @@
 			</div>
 		</div>
 	</main>
+
+	<!-- Footer -->
+	<footer class="border-t" style="border-color: {isDark ? '#2a2a2a' : '#e5e5e5'}; background: {isDark ? '#0a0a0a' : '#faf7f2'}">
+		<div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+			<!-- Main Footer Content -->
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+				<!-- Brand Column -->
+				<div class="col-span-2 md:col-span-1">
+					<div class="flex items-center gap-2 mb-4">
+						<div class="rounded-xl bg-sw-accent flex items-center justify-center text-white p-1.5">
+							<Logo size="sm" class="text-white" />
+						</div>
+						<span class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
+					</div>
+				<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+					Know where your money goes. Build the life you want.
+				</p>
+				<div class="flex items-center gap-3">
+					<a href="https://x.com/spentworthapp" target="_blank" rel="noopener" aria-label="Follow us on X (Twitter)" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:text-sw-accent" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+						<i class="fa-brands fa-x-twitter"></i>
+					</a>
+					<a href="https://instagram.com/spentworth" target="_blank" rel="noopener" aria-label="Follow us on Instagram" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:text-sw-accent" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+						<i class="fa-brands fa-instagram"></i>
+					</a>
+					<a href="https://reddit.com/u/SpentWorthOfficial" target="_blank" rel="noopener" aria-label="Follow us on Reddit" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:text-sw-accent" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+						<i class="fa-brands fa-reddit"></i>
+					</a>
+					<a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="Follow us on LinkedIn" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:text-sw-accent" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+						<i class="fa-brands fa-linkedin"></i>
+					</a>
+				</div>
+				</div>
+
+				<!-- Product -->
+				<div>
+					<h4 class="font-display font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Product</h4>
+					<ul class="space-y-2.5">
+						<li><a href="/pricing" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Pricing</a></li>
+						<li><a href="/#features" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Features</a></li>
+						<li><a href="/#how-it-works" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">How It Works</a></li>
+					</ul>
+				</div>
+
+				<!-- Company -->
+				<div>
+					<h4 class="font-display font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Company</h4>
+					<ul class="space-y-2.5">
+						<li><a href="/about" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">About</a></li>
+						<li><a href="/contact" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Contact</a></li>
+					</ul>
+				</div>
+
+				<!-- Legal -->
+				<div>
+					<h4 class="font-display font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Legal</h4>
+					<ul class="space-y-2.5">
+						<li><a href="/privacy" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Privacy Policy</a></li>
+						<li><a href="/terms" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Terms of Service</a></li>
+						<li><a href="/security" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Security</a></li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Bottom Bar -->
+			<div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+				<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+					© {new Date().getFullYear()} SpentWorth. All rights reserved.
+				</p>
+				<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">
+					Made with <i class="fa-solid fa-heart text-red-500"></i> for people who care about their financial future
+				</p>
+			</div>
+		</div>
+	</footer>
 </div>
 

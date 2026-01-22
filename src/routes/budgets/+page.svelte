@@ -104,7 +104,7 @@
 	let healthGrade = $derived.by(() => {
 		if (healthScore >= 90) return { grade: 'A+', color: '#10b981', message: 'Outstanding!' };
 		if (healthScore >= 80) return { grade: 'A', color: '#10b981', message: 'Excellent' };
-		if (healthScore >= 70) return { grade: 'B', color: '#0d9488', message: 'Great job' };
+		if (healthScore >= 70) return { grade: 'B', color: '#388E3C', message: 'Great job' };
 		if (healthScore >= 60) return { grade: 'C', color: '#f59e0b', message: 'Room to improve' };
 		if (healthScore >= 50) return { grade: 'D', color: '#f97316', message: 'Needs attention' };
 		return { grade: 'F', color: '#ef4444', message: 'Time to refocus' };
@@ -249,7 +249,7 @@
 	// Colors for charts
 	const COLORS = [
 		'#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444',
-		'#ec4899', '#6366f1', '#14b8a6', '#f97316', '#84cc16'
+		'#ec4899', '#6366f1', '#4CAF50', '#f97316', '#84cc16'
 	];
 
 	// Get spending by category from budgets
@@ -489,7 +489,7 @@
 	function getProgressColor(percentUsed: number): string {
 		if (percentUsed >= 100) return '#ef4444'; // red
 		if (percentUsed >= 80) return '#f59e0b'; // amber
-		return '#0d9488'; // teal
+		return '#388E3C'; // green
 	}
 
 	function getTrendIcon(trend: 'improving' | 'worsening' | 'stable'): string {
@@ -506,7 +506,7 @@
 
 	function getVelocityColor(status: string): string {
 		if (status === 'under') return '#10b981';
-		if (status === 'on-track') return '#0d9488';
+		if (status === 'on-track') return '#388E3C';
 		if (status === 'watch') return '#f59e0b';
 		return '#ef4444';
 	}
@@ -558,11 +558,11 @@
 			{@const isAtLimit = remaining <= 0}
 			<div 
 				class="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-				style="background: {isAtLimit ? 'rgba(239,68,68,0.1)' : 'rgba(13,148,136,0.1)'}; border: 1px solid {isAtLimit ? 'rgba(239,68,68,0.3)' : 'rgba(13,148,136,0.3)'};"
+				style="background: {isAtLimit ? 'rgba(239,68,68,0.1)' : 'rgba(56,142,60,0.1)'}; border: 1px solid {isAtLimit ? 'rgba(239,68,68,0.3)' : 'rgba(56,142,60,0.3)'};"
 			>
 				<div class="flex items-center gap-3">
-					<div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: {isAtLimit ? 'rgba(239,68,68,0.2)' : 'rgba(13,148,136,0.2)'}">
-						<i class="fa-solid {isAtLimit ? 'fa-triangle-exclamation' : 'fa-wallet'} text-sm" style="color: {isAtLimit ? '#ef4444' : '#0d9488'}"></i>
+					<div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: {isAtLimit ? '#ef4444' : '#388E3C'}">
+						<i class="fa-solid {isAtLimit ? 'fa-triangle-exclamation' : 'fa-wallet'} text-sm text-white"></i>
 					</div>
 					<div>
 						<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
@@ -591,7 +591,7 @@
 							<circle cx="50" cy="50" r="45" fill="none" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} stroke-width="8"/>
 							<circle 
 								cx="50" cy="50" r="45" fill="none" 
-								stroke="#0d9488" stroke-width="8" stroke-linecap="round"
+								stroke="#388E3C" stroke-width="8" stroke-linecap="round"
 								class="animate-spin origin-center"
 								style="stroke-dasharray: 180; stroke-dashoffset: 90;"
 							/>
@@ -604,10 +604,10 @@
 			<!-- Empty State -->
 			<div class="text-center py-12 sm:py-20">
 				<div class="max-w-md mx-auto">
-					<div class="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center relative" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
-						<i class="fa-solid fa-wallet text-4xl text-sw-accent"></i>
-						<div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 2px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							<i class="fa-solid fa-plus text-sm text-sw-accent"></i>
+					<div class="w-24 h-24 mx-auto mb-6 rounded-full bg-green-600 flex items-center justify-center relative">
+						<i class="fa-solid fa-wallet text-4xl text-white"></i>
+						<div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shadow-md">
+							<i class="fa-solid fa-plus text-sm text-white"></i>
 						</div>
 					</div>
 					<h2 class="font-display text-2xl font-bold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
@@ -738,7 +738,7 @@
 								class="flex items-start gap-3 {i !== recommendations.length - 1 ? 'pb-3' : ''}"
 								style="{i !== recommendations.length - 1 ? `border-bottom: 1px solid ${isDark ? '#2a2a2a' : '#f0ebe3'}` : ''}"
 							>
-								<i class="fa-solid {rec.icon} text-sm mt-0.5 flex-shrink-0" style="color: {rec.type === 'danger' ? '#ef4444' : rec.type === 'warning' ? '#f59e0b' : rec.type === 'success' ? '#10b981' : '#0d9488'}"></i>
+								<i class="fa-solid {rec.icon} text-sm mt-0.5 flex-shrink-0" style="color: {rec.type === 'danger' ? '#ef4444' : rec.type === 'warning' ? '#f59e0b' : rec.type === 'success' ? '#10b981' : '#388E3C'}"></i>
 								<div class="flex-1 min-w-0">
 									<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
 										<span class="font-medium">{rec.title}</span>
@@ -834,7 +834,7 @@
 					<h2 class="font-display text-lg font-semibold mb-3 flex items-center gap-2" style="color: {isDark ? '#ffffff' : '#171717'}">
 						<i class="fa-solid fa-check-circle text-sw-accent text-sm"></i>
 						On Track
-						<span class="text-xs font-normal px-2 py-0.5 rounded-full" style="background: rgba(13,148,136,0.15); color: #0d9488">{onTrack.length}</span>
+						<span class="text-xs font-normal px-2 py-0.5 rounded-full" style="background: rgba(56,142,60,0.15); color: #388E3C">{onTrack.length}</span>
 					</h2>
 					<div class="rounded-xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 						{#each onTrack as budget, index}
@@ -896,11 +896,11 @@
 
 			<!-- Opportunity Cost Teaser -->
 			{#if summary && summary.totalRemaining > 0}
-				<a href="/insights" class="block rounded-xl p-4 transition-all hover:scale-[1.01]" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.1) 0%, rgba(13,148,136,0.05) 100%)' : 'linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(13,148,136,0.02) 100%)'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
+				<a href="/insights" class="block rounded-xl p-4 transition-all hover:scale-[1.01]" style="background: {isDark ? 'linear-gradient(135deg, rgba(56,142,60,0.1) 0%, rgba(56,142,60,0.05) 100%)' : 'linear-gradient(135deg, rgba(56,142,60,0.08) 0%, rgba(56,142,60,0.02) 100%)'}; border: 1px solid {isDark ? 'rgba(56,142,60,0.3)' : 'rgba(56,142,60,0.2)'}">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-3">
-							<div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(13,148,136,0.15)">
-								<i class="fa-solid fa-seedling text-sw-accent"></i>
+							<div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
+								<i class="fa-solid fa-seedling text-white"></i>
 							</div>
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">
@@ -969,7 +969,7 @@
 						<button 
 							onclick={() => { useCustomCategory = !useCustomCategory; if (!useCustomCategory) customCategoryName = ''; }}
 							class="text-xs font-medium transition-colors"
-							style="color: {useCustomCategory ? '#ef4444' : '#0d9488'}"
+							style="color: {useCustomCategory ? '#ef4444' : '#388E3C'}"
 						>
 							{useCustomCategory ? 'Use preset' : '+ Custom category'}
 						</button>
@@ -1011,7 +1011,7 @@
 				</div>
 
 				<!-- Preview -->
-				<div class="rounded-xl p-4" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
+				<div class="rounded-xl p-4" style="background: {isDark ? 'rgba(56,142,60,0.1)' : 'rgba(56,142,60,0.08)'}">
 					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
 						<i class="fa-solid fa-lightbulb text-sw-accent mr-2"></i>
 						Every dollar you save from this budget and invest could grow to 

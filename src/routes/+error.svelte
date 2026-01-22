@@ -29,8 +29,8 @@
 		<div class="text-center max-w-md">
 			<!-- Large 404 or Error Icon -->
 			<div class="mb-6">
-				<div class="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-4" style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.12)'}; border: 2px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
-					<i class="fa-solid {is404 ? 'fa-compass' : 'fa-triangle-exclamation'} text-4xl text-sw-accent"></i>
+				<div class="w-24 h-24 mx-auto rounded-full bg-green-600 flex items-center justify-center mb-4">
+					<i class="fa-solid {is404 ? 'fa-compass' : 'fa-triangle-exclamation'} text-4xl text-white"></i>
 				</div>
 			</div>
 			

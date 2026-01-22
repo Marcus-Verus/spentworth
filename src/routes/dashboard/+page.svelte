@@ -241,7 +241,7 @@
 	// Donut chart
 	const COLORS = [
 		'#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444',
-		'#ec4899', '#6366f1', '#14b8a6', '#f97316', '#84cc16'
+		'#ec4899', '#6366f1', '#4CAF50', '#f97316', '#84cc16'
 	];
 
 	function getDonutPath(startAngle: number, endAngle: number, radius: number = 80, innerRadius: number = 50) {
@@ -341,7 +341,7 @@
 						disabled={updating}
 						class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap"
 						style="background: {selectedDateRange === option.value 
-							? (isDark ? 'linear-gradient(135deg, #0d9488, #0f766e)' : '#0d9488') 
+							? (isDark ? 'linear-gradient(135deg, #388E3C, #2E7D32)' : '#388E3C') 
 							: (isDark ? '#262626' : '#f5f0e8')}; 
 							color: {selectedDateRange === option.value 
 								? '#ffffff' 
@@ -404,7 +404,7 @@
 					</p>
 				</div>
 				
-				<div class="rounded-2xl p-5 sm:p-6 text-center" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.15), rgba(13,148,136,0.05))' : 'linear-gradient(135deg, rgba(13,148,136,0.1), rgba(13,148,136,0.02))'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
+				<div class="rounded-2xl p-5 sm:p-6 text-center" style="background: {isDark ? 'linear-gradient(135deg, rgba(56,142,60,0.15), rgba(56,142,60,0.05))' : 'linear-gradient(135deg, rgba(56,142,60,0.1), rgba(56,142,60,0.02))'}; border: 1px solid {isDark ? 'rgba(56,142,60,0.3)' : 'rgba(56,142,60,0.2)'}">
 					<p class="text-xs sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 						{projectionYears === null ? 'Opportunity Cost' : 'Potential Gain'}
 					</p>
@@ -422,8 +422,8 @@
 				<div class="rounded-xl p-4 mb-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-3">
-							<div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: {trends.change < 0 ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}">
-								<i class="fa-solid {trends.change < 0 ? 'fa-arrow-trend-down text-green-500' : 'fa-arrow-trend-up text-red-400'}"></i>
+							<div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: {trends.change < 0 ? '#22c55e' : '#ef4444'}">
+								<i class="fa-solid {trends.change < 0 ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up'} text-white"></i>
 							</div>
 							<div>
 								<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
@@ -486,7 +486,7 @@
 									<div class="w-full flex flex-col items-center justify-end" style="height: 100px;">
 										<div 
 											class="w-full rounded-t transition-all cursor-pointer relative group"
-											style="height: {Math.max(height, 4)}%; background: linear-gradient(to top, #0d9488, rgba(13,148,136,0.6));"
+											style="height: {Math.max(height, 4)}%; background: linear-gradient(to top, #388E3C, rgba(56,142,60,0.6));"
 											title="{formatMonth(month.month)}: {formatCurrency(month.spent)}"
 										></div>
 									</div>
@@ -530,8 +530,8 @@
 			<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 				<a href="/transactions" class="rounded-xl p-5 transition-all hover:scale-[1.02] group" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-center gap-4">
-						<div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(13,148,136,0.1)">
-							<i class="fa-solid fa-list text-xl text-sw-accent"></i>
+						<div class="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
+							<i class="fa-solid fa-list text-xl text-white"></i>
 						</div>
 						<div class="flex-1">
 							<p class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Transactions</p>
@@ -543,8 +543,8 @@
 
 				<a href="/budgets" class="rounded-xl p-5 transition-all hover:scale-[1.02] group" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-center gap-4">
-						<div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(99,102,241,0.1)">
-							<i class="fa-solid fa-wallet text-xl" style="color: #6366f1"></i>
+						<div class="w-12 h-12 rounded-xl bg-indigo-500 flex items-center justify-center">
+							<i class="fa-solid fa-wallet text-xl text-white"></i>
 						</div>
 						<div class="flex-1">
 							<p class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Budgets</p>
@@ -556,8 +556,8 @@
 
 				<a href="/insights" class="rounded-xl p-5 transition-all hover:scale-[1.02] group" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-center gap-4">
-						<div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(245,158,11,0.1)">
-							<i class="fa-solid fa-lightbulb text-xl" style="color: #f59e0b"></i>
+						<div class="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center">
+							<i class="fa-solid fa-lightbulb text-xl text-white"></i>
 						</div>
 						<div class="flex-1">
 							<p class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Insights</p>

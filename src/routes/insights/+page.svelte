@@ -232,7 +232,7 @@
 				icon: 'fa-binoculars', 
 				title: 'Opportunity Hunter', 
 				description: 'Identified 3+ savings opportunities',
-				color: '#0d9488',
+				color: '#388E3C',
 				earned: true
 			});
 		}
@@ -319,12 +319,12 @@
 	}
 
 	function getHeatmapColor(value: number): string {
-		// Scale from light to dark teal based on value (0-100)
-		if (value < 20) return isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)';
-		if (value < 40) return isDark ? 'rgba(13,148,136,0.25)' : 'rgba(13,148,136,0.2)';
-		if (value < 60) return isDark ? 'rgba(13,148,136,0.45)' : 'rgba(13,148,136,0.4)';
-		if (value < 80) return isDark ? 'rgba(13,148,136,0.65)' : 'rgba(13,148,136,0.6)';
-		return isDark ? 'rgba(13,148,136,0.85)' : 'rgba(13,148,136,0.8)';
+		// Scale from light to dark green based on value (0-100)
+		if (value < 20) return isDark ? 'rgba(56,142,60,0.1)' : 'rgba(56,142,60,0.08)';
+		if (value < 40) return isDark ? 'rgba(56,142,60,0.25)' : 'rgba(56,142,60,0.2)';
+		if (value < 60) return isDark ? 'rgba(56,142,60,0.45)' : 'rgba(56,142,60,0.4)';
+		if (value < 80) return isDark ? 'rgba(56,142,60,0.65)' : 'rgba(56,142,60,0.6)';
+		return isDark ? 'rgba(56,142,60,0.85)' : 'rgba(56,142,60,0.8)';
 	}
 
 	function getTypeIcon(type: string): string {
@@ -340,7 +340,7 @@
 
 	function getTypeColor(type: string): string {
 		switch (type) {
-			case 'opportunity': return '#0d9488';
+			case 'opportunity': return '#388E3C';
 			case 'trend': return '#6366f1';
 			case 'subscription': return '#f59e0b';
 			case 'achievement': return '#10b981';
@@ -461,7 +461,7 @@
 							<circle cx="50" cy="50" r="45" fill="none" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} stroke-width="6"/>
 							<circle 
 								cx="50" cy="50" r="45" fill="none" 
-								stroke="#0d9488" stroke-width="6" stroke-linecap="round"
+								stroke="#388E3C" stroke-width="6" stroke-linecap="round"
 								class="animate-spin origin-center"
 								style="stroke-dasharray: 180; stroke-dashoffset: 90;"
 							/>
@@ -830,7 +830,7 @@
 						<button 
 							onclick={() => showAddSubModal = true}
 							class="p-2 rounded-lg transition-colors"
-							style="background: rgba(13,148,136,0.1); color: #0d9488"
+							style="background: rgba(56,142,60,0.1); color: #388E3C"
 							title="Add subscription"
 						>
 							<i class="fa-solid fa-plus text-sm"></i>
@@ -843,7 +843,7 @@
 								{@const tenYearCost = calculateWhatIf(charge.monthlyEstimate, 10)}
 								<div 
 									class="px-4 sm:px-6 py-2.5 flex items-center gap-2 transition-colors"
-									style="background: {selectedWhatIf?.merchant === charge.merchant ? 'rgba(13,148,136,0.1)' : 'transparent'}; border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}; {isCancelled ? 'opacity: 0.5;' : ''}"
+									style="background: {selectedWhatIf?.merchant === charge.merchant ? 'rgba(56,142,60,0.1)' : 'transparent'}; border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}; {isCancelled ? 'opacity: 0.5;' : ''}"
 								>
 									<button 
 										onclick={() => selectedWhatIf = charge}
@@ -924,8 +924,8 @@
 					<!-- What-If Calculator -->
 					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 						<div class="flex items-center gap-3 mb-4">
-							<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(13,148,136,0.1)">
-								<i class="fa-solid fa-calculator text-sw-accent"></i>
+							<div class="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center">
+								<i class="fa-solid fa-calculator text-white"></i>
 							</div>
 							<div>
 								<h3 class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">What If Calculator</h3>
@@ -949,7 +949,7 @@
 											<button 
 												onclick={() => whatIfYears = years}
 												class="px-3 py-1.5 text-xs rounded-md transition-colors"
-												style="background: {whatIfYears === years ? '#0d9488' : 'transparent'}; color: {whatIfYears === years ? '#ffffff' : (isDark ? '#a3a3a3' : '#737373')}"
+												style="background: {whatIfYears === years ? '#388E3C' : 'transparent'}; color: {whatIfYears === years ? '#ffffff' : (isDark ? '#a3a3a3' : '#737373')}"
 											>
 												{years}yr
 											</button>
@@ -1065,7 +1065,7 @@
 						newSubFrequency === 'semi-annually' ? newSubAmount / 6 :
 						newSubAmount / 12}
 					{@const tenYearCost = calculateWhatIf(monthlyEst, 10)}
-					<div class="rounded-xl p-4" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
+					<div class="rounded-xl p-4" style="background: {isDark ? 'rgba(56,142,60,0.1)' : 'rgba(56,142,60,0.08)'}">
 						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
 							<span class="font-medium text-sw-accent">{formatCurrency(monthlyEst)}/mo</span> → 
 							<span class="font-semibold text-sw-accent">{formatCurrency(tenYearCost)}</span> invested over 10 years

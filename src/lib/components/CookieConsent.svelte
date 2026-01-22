@@ -150,15 +150,15 @@
 				<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#f9fafb'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-center justify-between mb-2">
 						<div class="flex items-center gap-3">
-							<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(13,148,136,0.15)">
-								<i class="fa-solid fa-chart-simple text-sm text-sw-accent"></i>
+							<div class="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
+								<i class="fa-solid fa-chart-simple text-sm text-white"></i>
 							</div>
 							<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Analytics</span>
 						</div>
 						<button
 							onclick={() => analyticsEnabled = !analyticsEnabled}
 							class="relative w-12 h-7 rounded-full transition-all duration-300"
-							style="background: {analyticsEnabled ? 'linear-gradient(135deg, #0d9488, #14b8a6)' : (isDark ? '#2a2a2a' : '#d4d4d4')}"
+							style="background: {analyticsEnabled ? 'linear-gradient(135deg, #388E3C, #4CAF50)' : (isDark ? '#2a2a2a' : '#d4d4d4')}"
 							aria-label="Toggle analytics cookies"
 						>
 							<span 

@@ -166,11 +166,11 @@
 			{@const isAtLimit = remaining <= 0}
 			<div 
 				class="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-				style="background: {isAtLimit ? 'rgba(239,68,68,0.1)' : 'rgba(13,148,136,0.1)'}; border: 1px solid {isAtLimit ? 'rgba(239,68,68,0.3)' : 'rgba(13,148,136,0.3)'};"
+				style="background: {isAtLimit ? 'rgba(239,68,68,0.1)' : 'rgba(56,142,60,0.1)'}; border: 1px solid {isAtLimit ? 'rgba(239,68,68,0.3)' : 'rgba(56,142,60,0.3)'};"
 			>
 				<div class="flex items-center gap-3">
-					<div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: {isAtLimit ? 'rgba(239,68,68,0.2)' : 'rgba(13,148,136,0.2)'}">
-						<i class="fa-solid {isAtLimit ? 'fa-triangle-exclamation' : 'fa-file-import'} text-sm" style="color: {isAtLimit ? '#ef4444' : '#0d9488'}"></i>
+					<div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background: {isAtLimit ? '#ef4444' : '#388E3C'}">
+						<i class="fa-solid {isAtLimit ? 'fa-triangle-exclamation' : 'fa-file-import'} text-sm text-white"></i>
 					</div>
 					<div>
 						<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
@@ -194,7 +194,7 @@
 		<!-- Upload area -->
 		<div
 			class="rounded-2xl mb-6 sm:mb-8 border-2 border-dashed transition-colors cursor-pointer p-4 sm:p-6 active:scale-[0.99] touch-action-manipulation"
-			style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border-color: {dragOver ? '#0d9488' : (isDark ? '#2a2a2a' : '#d4cfc5')}; {dragOver ? 'background: rgba(13,148,136,0.05);' : ''}"
+			style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border-color: {dragOver ? '#388E3C' : (isDark ? '#2a2a2a' : '#d4cfc5')}; {dragOver ? 'background: rgba(56,142,60,0.05);' : ''}"
 			ondrop={handleDrop}
 			ondragover={handleDragOver}
 			ondragleave={handleDragLeave}

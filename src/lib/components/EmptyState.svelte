@@ -76,8 +76,8 @@
 				<div class="w-4 h-16 rounded-t bg-sw-accent/50"></div>
 			</div>
 			<!-- Sparkle -->
-			<div class="absolute -top-2 -right-2 w-8 h-8 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}">
-				<i class="fa-solid fa-sparkles text-sw-accent text-sm"></i>
+			<div class="absolute -top-2 -right-2 w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
+				<i class="fa-solid fa-sparkles text-white text-sm"></i>
 			</div>
 		{:else if type === 'no-imports'}
 			<!-- Upload illustration -->
@@ -89,8 +89,8 @@
 				<div class="w-16 h-1 rounded" style="background: {isDark ? '#2a2a2a' : '#d4cfc5'}"></div>
 			</div>
 			<!-- File icon -->
-			<div class="absolute -bottom-2 -right-2 w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#262626' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: 0 2px 8px rgba(0,0,0,0.1)">
-				<i class="fa-solid fa-file-csv text-sw-accent"></i>
+			<div class="absolute -bottom-2 -right-2 w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center shadow-lg">
+				<i class="fa-solid fa-file-csv text-white"></i>
 			</div>
 		{:else if type === 'no-goals'}
 			<!-- Target illustration -->
@@ -104,11 +104,11 @@
 					</div>
 				</div>
 			</div>
-			<!-- Flag icon -->
-			<div class="absolute -top-2 -right-2 w-8 h-8 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}">
-				<i class="fa-solid fa-flag text-sw-accent text-sm"></i>
-			</div>
-		{:else if type === 'no-transactions'}
+		<!-- Flag icon -->
+		<div class="absolute -top-2 -right-2 w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
+			<i class="fa-solid fa-flag text-white text-sm"></i>
+		</div>
+	{:else if type === 'no-transactions'}
 			<!-- List illustration -->
 			<div 
 				class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-2 p-4"
@@ -120,8 +120,8 @@
 				<div class="w-1/2 h-3 rounded" style="background: {isDark ? '#262626' : '#e5e5e5'}"></div>
 			</div>
 			<!-- Search icon -->
-			<div class="absolute -bottom-2 -right-2 w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#262626' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: 0 2px 8px rgba(0,0,0,0.1)">
-				<i class="fa-solid fa-magnifying-glass" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+			<div class="absolute -bottom-2 -right-2 w-10 h-10 rounded-lg bg-stone-500 flex items-center justify-center shadow-lg">
+				<i class="fa-solid fa-magnifying-glass text-white"></i>
 			</div>
 		{:else}
 			<!-- Error illustration -->

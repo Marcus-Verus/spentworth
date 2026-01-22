@@ -447,7 +447,7 @@
 							<button 
 								onclick={applyFilters}
 								class="flex-1 px-3 py-2 rounded-lg text-sm font-medium text-white"
-								style="background: linear-gradient(135deg, #0d9488, #0f766e)"
+								style="background: linear-gradient(135deg, #388E3C, #2E7D32)"
 							>
 								Apply
 							</button>
@@ -473,7 +473,7 @@
 								<button 
 									onclick={() => { categoryFilter = stat.category; applyFilters(); }}
 									class="w-full flex items-center justify-between text-xs p-2 rounded-lg transition-colors hover:bg-sw-accent/10"
-									style="background: {categoryFilter === stat.category ? 'rgba(13,148,136,0.1)' : 'transparent'}"
+									style="background: {categoryFilter === stat.category ? 'rgba(56,142,60,0.1)' : 'transparent'}"
 								>
 									<span style="color: {isDark ? '#ffffff' : '#171717'}">{stat.category}</span>
 									<span class="font-mono" style="color: {isDark ? '#a3a3a3' : '#737373'}">{formatCurrency(stat.total)}</span>
@@ -537,14 +537,14 @@
 						<button 
 							onclick={() => toggleSort('date')}
 							class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-							style="background: {sortBy === 'date' ? 'rgba(13,148,136,0.15)' : (isDark ? '#262626' : '#f5f0e8')}; color: {sortBy === 'date' ? '#0d9488' : (isDark ? '#a3a3a3' : '#737373')}"
+							style="background: {sortBy === 'date' ? 'rgba(56,142,60,0.15)' : (isDark ? '#262626' : '#f5f0e8')}; color: {sortBy === 'date' ? '#388E3C' : (isDark ? '#a3a3a3' : '#737373')}"
 						>
 							Date {#if sortBy === 'date'}<i class="fa-solid fa-arrow-{sortOrder === 'desc' ? 'down' : 'up'} ml-1 text-[10px]"></i>{/if}
 						</button>
 						<button 
 							onclick={() => toggleSort('amount')}
 							class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-							style="background: {sortBy === 'amount' ? 'rgba(13,148,136,0.15)' : (isDark ? '#262626' : '#f5f0e8')}; color: {sortBy === 'amount' ? '#0d9488' : (isDark ? '#a3a3a3' : '#737373')}"
+							style="background: {sortBy === 'amount' ? 'rgba(56,142,60,0.15)' : (isDark ? '#262626' : '#f5f0e8')}; color: {sortBy === 'amount' ? '#388E3C' : (isDark ? '#a3a3a3' : '#737373')}"
 						>
 							Amount {#if sortBy === 'amount'}<i class="fa-solid fa-arrow-{sortOrder === 'desc' ? 'down' : 'up'} ml-1 text-[10px]"></i>{/if}
 						</button>
@@ -566,7 +566,7 @@
 								{search || categoryFilter || dateFrom || dateTo ? 'Try adjusting your filters' : 'Import some transactions to get started'}
 							</p>
 							{#if !search && !categoryFilter}
-								<a href="/imports" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white" style="background: linear-gradient(135deg, #0d9488, #0f766e)">
+								<a href="/imports" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white" style="background: linear-gradient(135deg, #388E3C, #2E7D32)">
 									<i class="fa-solid fa-upload"></i>
 									Import Transactions
 								</a>
@@ -593,7 +593,7 @@
 							{#each transactions as tx}
 								<div 
 									class="p-4 flex items-center gap-4 transition-colors hover:bg-sw-accent/5"
-									style="background: {selectedIds.has(tx.id) ? (isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.05)') : 'transparent'}"
+									style="background: {selectedIds.has(tx.id) ? (isDark ? 'rgba(56,142,60,0.1)' : 'rgba(56,142,60,0.05)') : 'transparent'}"
 								>
 									<!-- Checkbox -->
 									<label class="flex-shrink-0 cursor-pointer">
@@ -824,7 +824,7 @@
 						onclick={saveTransaction}
 						disabled={editSaving || !editForm.amount}
 						class="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-						style="background: linear-gradient(135deg, #0d9488, #0f766e)"
+						style="background: linear-gradient(135deg, #388E3C, #2E7D32)"
 					>
 						{#if editSaving}
 							<i class="fa-solid fa-spinner fa-spin mr-2"></i>
@@ -841,7 +841,7 @@
 {#if selectedIds.size > 0}
 	<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 		<div class="flex items-center gap-2 pr-3 border-r" style="border-color: {isDark ? '#3a3a3a' : '#e5e5e5'}">
-			<div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style="background: linear-gradient(135deg, #0d9488, #0f766e)">
+			<div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style="background: linear-gradient(135deg, #388E3C, #2E7D32)">
 				{selectedIds.size}
 			</div>
 			<span class="text-sm font-medium hidden sm:inline" style="color: {isDark ? '#ffffff' : '#171717'}">selected</span>
@@ -850,7 +850,7 @@
 		<button 
 			onclick={() => { bulkCategory = ''; showBulkModal = true; }}
 			class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-all hover:scale-105"
-			style="background: linear-gradient(135deg, #0d9488, #0f766e)"
+			style="background: linear-gradient(135deg, #388E3C, #2E7D32)"
 		>
 			<i class="fa-solid fa-tag"></i>
 			<span class="hidden sm:inline">Categorize</span>
@@ -878,8 +878,8 @@
 			onclick={(e) => e.stopPropagation()}
 		>
 			<div class="flex items-center gap-3 mb-4">
-				<div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(13,148,136,0.1)">
-					<i class="fa-solid fa-tags text-xl text-sw-accent"></i>
+				<div class="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
+					<i class="fa-solid fa-tags text-xl text-white"></i>
 				</div>
 				<div>
 					<h3 class="font-display font-semibold text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">
@@ -968,7 +968,7 @@
 						onclick={bulkCategorize}
 						disabled={bulkSaving || !bulkCategory}
 						class="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-						style="background: linear-gradient(135deg, #0d9488, #0f766e)"
+						style="background: linear-gradient(135deg, #388E3C, #2E7D32)"
 					>
 						{#if bulkSaving}
 							<i class="fa-solid fa-spinner fa-spin mr-2"></i>
@@ -992,8 +992,8 @@
 			onclick={(e) => e.stopPropagation()}
 		>
 			<div class="flex items-center gap-3 mb-4">
-				<div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(13,148,136,0.1)">
-					<i class="fa-solid fa-tags text-xl text-sw-accent"></i>
+				<div class="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
+					<i class="fa-solid fa-tags text-xl text-white"></i>
 				</div>
 				<div>
 					<h3 class="font-display font-semibold text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">
@@ -1009,7 +1009,7 @@
 				<p class="text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 					You categorized <span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">"{applyToAllMerchant}"</span> as:
 				</p>
-				<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full" style="background: rgba(13,148,136,0.1); border: 1px solid rgba(13,148,136,0.3)">
+				<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full" style="background: rgba(56,142,60,0.1); border: 1px solid rgba(56,142,60,0.3)">
 					<i class="fa-solid fa-tag text-xs text-sw-accent"></i>
 					<span class="text-sm font-medium text-sw-accent">{applyToAllCategory}</span>
 				</div>
@@ -1042,7 +1042,7 @@
 					onclick={applyToAllTransactions}
 					disabled={applyingToAll}
 					class="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-					style="background: linear-gradient(135deg, #0d9488, #0f766e)"
+					style="background: linear-gradient(135deg, #388E3C, #2E7D32)"
 				>
 					{#if applyingToAll}
 						<i class="fa-solid fa-spinner fa-spin mr-2"></i>

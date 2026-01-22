@@ -523,7 +523,7 @@
 					<button
 						onclick={() => { tab = tabItem.id as PreviewTab; currentPage = 1; loadRows(); }}
 						class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap -mb-[1px]"
-						style="border-color: {tab === tabItem.id ? '#0d9488' : 'transparent'}; color: {tab === tabItem.id ? '#0d9488' : (isDark ? '#a3a3a3' : '#525252')}"
+						style="border-color: {tab === tabItem.id ? '#388E3C' : 'transparent'}; color: {tab === tabItem.id ? '#388E3C' : (isDark ? '#a3a3a3' : '#525252')}"
 					>
 						<span class="hidden sm:inline">{tabItem.label}</span>
 						<span class="sm:hidden">{tabItem.labelShort}</span>
@@ -601,7 +601,7 @@
 							{#each rows as row (row.id)}
 								<tr 
 									class="transition-all duration-300 {departingRows.has(row.id) ? 'opacity-0 scale-95 -translate-x-4' : 'opacity-100'}"
-									style="background: {selected.has(row.id) ? 'rgba(13,148,136,0.05)' : 'transparent'}; border-bottom: 1px solid {isDark ? '#1f1f1f' : '#f0f0f0'}"
+									style="background: {selected.has(row.id) ? 'rgba(56,142,60,0.05)' : 'transparent'}; border-bottom: 1px solid {isDark ? '#1f1f1f' : '#f0f0f0'}"
 								>
 									<td class="px-3 py-2.5">
 										<div class="flex justify-center">
@@ -688,7 +688,7 @@
 					{#each rows as row (row.id)}
 						<div 
 							class="rounded-xl p-3 transition-all duration-300 {departingRows.has(row.id) ? 'opacity-0 scale-95 -translate-x-4 h-0 p-0 mb-0 overflow-hidden' : 'opacity-100'}"
-							style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {selected.has(row.id) ? 'rgba(13,148,136,0.5)' : (isDark ? '#2a2a2a' : '#e5e5e5')}; {selected.has(row.id) ? 'background: rgba(13,148,136,0.03)' : ''}"
+							style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {selected.has(row.id) ? 'rgba(56,142,60,0.5)' : (isDark ? '#2a2a2a' : '#e5e5e5')}; {selected.has(row.id) ? 'background: rgba(56,142,60,0.03)' : ''}"
 						>
 							<!-- Top row: checkbox, merchant, amount -->
 							<div class="flex items-start gap-3 mb-3">

@@ -120,7 +120,7 @@
 			<div class="flex items-center justify-between h-16">
 				<!-- Logo -->
 				<a href="/" class="flex items-center gap-3 group">
-					<div class="rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white p-2 shadow-md shadow-teal-500/15 group-hover:shadow-lg group-hover:shadow-teal-500/20 transition-all group-hover:scale-[1.02]">
+					<div class="rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white p-2 shadow-md shadow-green-500/15 group-hover:shadow-lg group-hover:shadow-green-500/20 transition-all group-hover:scale-[1.02]">
 						<Logo size="md" class="text-white" />
 					</div>
 					<span class="font-display text-xl font-bold text-stone-800 tracking-tight">SpentWorth</span>
@@ -138,10 +138,10 @@
 					<!-- Auth -->
 					<div class="flex items-center gap-2 pl-4 border-l border-stone-200">
 						{#if data.session}
-							<a href="/dashboard" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-500/25">Dashboard</a>
+							<a href="/dashboard" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-green-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-green-500/25">Dashboard</a>
 						{:else}
 							<a href="/login" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors">Log in</a>
-							<a href="/signup" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-500/25">Get Started</a>
+							<a href="/signup" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-green-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-green-500/25">Get Started</a>
 						{/if}
 					</div>
 				</div>
@@ -301,11 +301,11 @@
 						/month
 					</span>
 					{#if billingCycle === 'yearly'}
-						<div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-50 border border-teal-200">
+						<div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-50 border border-green-200">
 							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 							</svg>
-							<span class="text-xs font-semibold text-teal-700">2 months free • $49.99/year</span>
+							<span class="text-xs font-semibold text-green-700">2 months free • $49.99/year</span>
 						</div>
 					{:else}
 						<p class="text-xs mt-2 text-stone-500">
@@ -317,7 +317,7 @@
 				<button 
 					onclick={handleProCheckout}
 					disabled={isLoading}
-					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed bg-teal-600 text-white hover:bg-teal-500"
+					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed bg-teal-600 text-white hover:bg-green-500"
 				>
 					{#if isLoading}
 						<i class="fa-solid fa-spinner fa-spin mr-2"></i>
@@ -376,4 +376,78 @@
 		</div>
 
 	</main>
+
+	<!-- Footer -->
+	<footer class="border-t border-stone-200 bg-stone-50">
+		<div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+			<!-- Main Footer Content -->
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+				<!-- Brand Column -->
+				<div class="col-span-2 md:col-span-1">
+					<div class="flex items-center gap-2 mb-4">
+						<div class="rounded-xl bg-sw-accent flex items-center justify-center text-white p-1.5">
+							<Logo size="sm" class="text-white" />
+						</div>
+						<span class="font-display text-lg font-semibold text-stone-800">SpentWorth</span>
+					</div>
+				<p class="text-sm mb-4 text-stone-600">
+					Know where your money goes. Build the life you want.
+				</p>
+				<div class="flex items-center gap-3">
+					<a href="https://x.com/spentworthapp" target="_blank" rel="noopener" aria-label="Follow us on X (Twitter)" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-white text-stone-600 hover:text-sw-accent">
+						<i class="fa-brands fa-x-twitter"></i>
+					</a>
+					<a href="https://instagram.com/spentworth" target="_blank" rel="noopener" aria-label="Follow us on Instagram" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-white text-stone-600 hover:text-sw-accent">
+						<i class="fa-brands fa-instagram"></i>
+					</a>
+					<a href="https://reddit.com/u/SpentWorthOfficial" target="_blank" rel="noopener" aria-label="Follow us on Reddit" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-white text-stone-600 hover:text-sw-accent">
+						<i class="fa-brands fa-reddit"></i>
+					</a>
+					<a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="Follow us on LinkedIn" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-white text-stone-600 hover:text-sw-accent">
+						<i class="fa-brands fa-linkedin"></i>
+					</a>
+				</div>
+				</div>
+
+				<!-- Product -->
+				<div>
+					<h4 class="font-display font-semibold mb-4 text-stone-800">Product</h4>
+					<ul class="space-y-2.5">
+						<li><a href="/pricing" class="text-sm transition-colors hover:text-sw-accent text-stone-600">Pricing</a></li>
+						<li><a href="/#features" class="text-sm transition-colors hover:text-sw-accent text-stone-600">Features</a></li>
+						<li><a href="/#how-it-works" class="text-sm transition-colors hover:text-sw-accent text-stone-600">How It Works</a></li>
+					</ul>
+				</div>
+
+				<!-- Company -->
+				<div>
+					<h4 class="font-display font-semibold mb-4 text-stone-800">Company</h4>
+					<ul class="space-y-2.5">
+						<li><a href="/about" class="text-sm transition-colors hover:text-sw-accent text-stone-600">About</a></li>
+						<li><a href="/contact" class="text-sm transition-colors hover:text-sw-accent text-stone-600">Contact</a></li>
+					</ul>
+				</div>
+
+				<!-- Legal -->
+				<div>
+					<h4 class="font-display font-semibold mb-4 text-stone-800">Legal</h4>
+					<ul class="space-y-2.5">
+						<li><a href="/privacy" class="text-sm transition-colors hover:text-sw-accent text-stone-600">Privacy Policy</a></li>
+						<li><a href="/terms" class="text-sm transition-colors hover:text-sw-accent text-stone-600">Terms of Service</a></li>
+						<li><a href="/security" class="text-sm transition-colors hover:text-sw-accent text-stone-600">Security</a></li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Bottom Bar -->
+			<div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-stone-200">
+				<p class="text-xs text-stone-500">
+					© {new Date().getFullYear()} SpentWorth. All rights reserved.
+				</p>
+				<p class="text-xs text-stone-500">
+					Made with <i class="fa-solid fa-heart text-red-500"></i> for people who care about their financial future
+				</p>
+			</div>
+		</div>
+	</footer>
 </div>
