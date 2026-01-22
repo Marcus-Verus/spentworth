@@ -65,7 +65,7 @@
 				'Email digest (coming soon)',
 				'Priority support'
 			],
-			cta: 'Start Free Trial',
+			cta: 'Upgrade to Pro',
 			ctaHref: '/signup?plan=pro',
 			highlighted: true
 		}
@@ -291,7 +291,7 @@
 						<i class="fa-solid fa-spinner fa-spin mr-2"></i>
 						Processing...
 					{:else}
-						Start 14-Day Free Trial
+						Upgrade to Pro
 					{/if}
 				</button>
 
@@ -309,14 +309,6 @@
 					{/each}
 				</ul>
 			</div>
-		</div>
-
-		<!-- Trial info -->
-		<div class="mt-8 text-center">
-			<p class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
-				<i class="fa-solid fa-gift mr-1 text-sw-accent"></i>
-				14-day free trial on Pro • No credit card required to start • Cancel anytime
-			</p>
 		</div>
 
 		<!-- FAQ Section -->
@@ -337,14 +329,6 @@
 					{
 						q: 'What happens when I hit the free tier limits?',
 						a: 'You can still view your existing data, but you won\'t be able to import new transactions until you upgrade or the next month.'
-					},
-					{
-						q: 'Do you offer refunds?',
-						a: 'Yes, if you\'re not satisfied within the first 14 days, we\'ll refund your payment in full.'
-					},
-					{
-						q: 'How does the free trial work?',
-						a: 'Start your 14-day free trial with full Pro access. You\'ll only be charged after the trial ends, and you can cancel anytime before that.'
 					}
 				] as faq}
 					<div class="rounded-xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">

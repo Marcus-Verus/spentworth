@@ -70,7 +70,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			success_url: `${PUBLIC_BASE_URL}/dashboard?checkout=success`,
 			cancel_url: `${PUBLIC_BASE_URL}/pricing?checkout=canceled`,
 			subscription_data: {
-				trial_period_days: 14,
 				metadata: {
 					user_id: user.id
 				}
