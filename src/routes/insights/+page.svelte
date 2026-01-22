@@ -260,59 +260,50 @@
 		<!-- Page Header -->
 		<div class="mb-6 sm:mb-8">
 			<h1 class="font-display text-2xl sm:text-3xl font-bold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
-				<span class="text-gradient">AI-Powered</span> Insights
+				Spending Insights
 			</h1>
 			<p class="text-sm sm:text-base" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-				Personalized recommendations based on your spending patterns
+				Patterns and opportunities based on your transaction history
 			</p>
 		</div>
 
 		{#if loading}
 			<div class="flex items-center justify-center py-20">
 				<div class="text-center">
-					<div class="relative w-20 h-20 mx-auto mb-4">
-						<div class="absolute inset-0 rounded-full animate-ping" style="background: rgba(13,148,136,0.2)"></div>
-						<div class="relative w-20 h-20 rounded-full flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 2px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							<i class="fa-solid fa-brain text-2xl text-sw-accent animate-pulse"></i>
-						</div>
+					<div class="relative w-16 h-16 mx-auto mb-4">
+						<svg class="w-16 h-16 -rotate-90" viewBox="0 0 100 100">
+							<circle cx="50" cy="50" r="45" fill="none" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} stroke-width="6"/>
+							<circle 
+								cx="50" cy="50" r="45" fill="none" 
+								stroke="#0d9488" stroke-width="6" stroke-linecap="round"
+								class="animate-spin origin-center"
+								style="stroke-dasharray: 180; stroke-dashoffset: 90;"
+							/>
+						</svg>
 					</div>
-					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Analyzing your spending patterns...</p>
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Loading insights...</p>
 				</div>
 			</div>
 		{:else}
 			<!-- Hero Summary Card -->
 			{#if summary && summary.potentialSavings > 0}
-				<div class="rounded-2xl p-6 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden" style="background: {isDark ? 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f9f6f1 100%)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<!-- Background decoration -->
-					<div class="absolute top-0 right-0 w-64 h-64 opacity-10" style="background: radial-gradient(circle, #0d9488 0%, transparent 70%);"></div>
-					<div class="absolute bottom-0 left-0 w-48 h-48 opacity-5" style="background: radial-gradient(circle, #f59e0b 0%, transparent 70%);"></div>
-					
-					<div class="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-						<div class="flex items-center gap-5">
-							<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center relative" style="background: linear-gradient(135deg, rgba(13,148,136,0.2) 0%, rgba(13,148,136,0.1) 100%)">
-								<i class="fa-solid fa-gem text-2xl sm:text-3xl text-sw-accent"></i>
-								<div class="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold" style="background: #f59e0b; color: #ffffff">
-									{summary.highPriority}
-								</div>
-							</div>
-							<div>
-								<p class="text-xs uppercase tracking-wider mb-1" style="color: {isDark ? '#737373' : '#9ca3af'}">Potential 10-Year Value</p>
-								<p class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-sw-accent">
-									{formatCurrency(animatedSavings)}
-								</p>
-								<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-									from {summary.totalInsights} insights • {summary.highPriority} high priority
-								</p>
-							</div>
+				<div class="rounded-2xl p-6 sm:p-8 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+						<div>
+							<p class="text-xs uppercase tracking-wider mb-2" style="color: {isDark ? '#737373' : '#9ca3af'}">Potential 10-Year Value</p>
+							<p class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-sw-accent mb-2">
+								{formatCurrency(animatedSavings)}
+							</p>
+							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								from {summary.totalInsights} insights{#if summary.highPriority > 0} • <span style="color: #ef4444">{summary.highPriority} high priority</span>{/if}
+							</p>
 						</div>
 						
 						<div class="flex flex-wrap gap-3">
-							<a href="/budgets" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-[1.02]" style="background: {isDark ? '#2a2a2a' : '#ffffff'}; border: 1px solid {isDark ? '#404040' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}">
-								<i class="fa-solid fa-wallet text-sw-accent"></i>
+							<a href="/budgets" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-[1.02]" style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}">
 								View Budgets
 							</a>
 							<a href="/dashboard" class="btn-primary inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium">
-								<i class="fa-solid fa-chart-pie"></i>
 								Dashboard
 							</a>
 						</div>
@@ -323,26 +314,25 @@
 			<!-- Achievement Badges -->
 			{#if achievements.length > 0}
 				<div class="mb-6 sm:mb-8">
-					<h2 class="font-display font-semibold text-lg mb-4 flex items-center gap-2" style="color: {isDark ? '#ffffff' : '#171717'}">
-						<i class="fa-solid fa-medal text-sw-gold"></i>
-						Your Achievements
+					<h2 class="font-display font-semibold text-lg mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+						Achievements
 					</h2>
 					<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
 						{#each achievements as badge}
 							<div 
-								class="rounded-xl p-4 text-center transition-all {badge.earned ? 'hover:scale-[1.02]' : 'opacity-50'}"
-								style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {badge.earned ? badge.color + '40' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+								class="rounded-xl p-4 text-center transition-all {badge.earned ? '' : 'opacity-40'}"
+								style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
 							>
 								<div 
 									class="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center"
-									style="background: {badge.earned ? badge.color + '20' : (isDark ? '#2a2a2a' : '#f0f0f0')}"
+									style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}"
 								>
-									<i class="fa-solid {badge.icon} text-lg" style="color: {badge.earned ? badge.color : (isDark ? '#525252' : '#9ca3af')}"></i>
+									<i class="fa-solid {badge.icon} text-lg" style="color: {badge.earned ? badge.color : (isDark ? '#404040' : '#c4c4c4')}"></i>
 								</div>
 								<p class="font-medium text-sm mb-0.5" style="color: {isDark ? '#ffffff' : '#171717'}">{badge.title}</p>
 								<p class="text-[10px] leading-relaxed" style="color: {isDark ? '#737373' : '#9ca3af'}">{badge.description}</p>
 								{#if !badge.earned}
-									<div class="mt-2 text-[10px] font-medium" style="color: {isDark ? '#525252' : '#9ca3af'}">
+									<div class="mt-2 text-[10px]" style="color: {isDark ? '#404040' : '#c4c4c4'}">
 										<i class="fa-solid fa-lock mr-1"></i> Locked
 									</div>
 								{/if}
@@ -357,9 +347,7 @@
 				<!-- Spending Heatmap -->
 				<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-center gap-2 mb-4">
-						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(13,148,136,0.15)">
-							<i class="fa-solid fa-calendar-days text-sm text-sw-accent"></i>
-						</div>
+						<i class="fa-solid fa-calendar-days text-sw-accent"></i>
 						<div>
 							<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Spending Rhythm</h3>
 							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">When you spend the most</p>
@@ -406,23 +394,19 @@
 				<!-- Quick Stats -->
 				<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-center gap-2 mb-4">
-						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(99,102,241,0.15)">
-							<i class="fa-solid fa-chart-simple text-sm" style="color: #6366f1"></i>
-						</div>
+						<i class="fa-solid fa-chart-simple" style="color: #6366f1"></i>
 						<div>
 							<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Pattern Analysis</h3>
 							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Your spending behaviors</p>
 						</div>
 					</div>
 					
-					<div class="space-y-4">
+					<div class="space-y-3">
 						<div class="flex items-center justify-between p-3 rounded-xl" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
 							<div class="flex items-center gap-3">
-								<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
-									<i class="fa-solid fa-calendar-day text-sw-accent"></i>
-								</div>
+								<i class="fa-solid fa-calendar-day text-sw-accent"></i>
 								<div>
-									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Peak Spending Day</p>
+									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Peak Day</p>
 									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{spendingPatterns.peakDay.percent}% of weekly spend</p>
 								</div>
 							</div>
@@ -431,11 +415,9 @@
 						
 						<div class="flex items-center justify-between p-3 rounded-xl" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
 							<div class="flex items-center gap-3">
-								<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
-									<i class="fa-solid fa-clock" style="color: #6366f1"></i>
-								</div>
+								<i class="fa-solid fa-clock" style="color: #6366f1"></i>
 								<div>
-									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Peak Spending Time</p>
+									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Peak Time</p>
 									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{spendingPatterns.peakTime.percent}% of purchases</p>
 								</div>
 							</div>
@@ -444,9 +426,7 @@
 						
 						<div class="flex items-center justify-between p-3 rounded-xl" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
 							<div class="flex items-center gap-3">
-								<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
-									<i class="fa-solid fa-arrow-trend-down text-green-500"></i>
-								</div>
+								<i class="fa-solid fa-arrow-trend-down text-green-500"></i>
 								<div>
 									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Most Improved</p>
 									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{Math.abs(spendingPatterns.topCategory.change)}% decrease</p>
@@ -474,9 +454,7 @@
 						
 						<div class="lg:col-span-2 rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 							<div class="flex items-center gap-2 mb-4">
-								<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(239,68,68,0.15)">
-									<i class="fa-solid fa-money-bill-trend-up text-sm" style="color: #ef4444"></i>
-								</div>
+								<i class="fa-solid fa-money-bill-trend-up" style="color: #ef4444"></i>
 								<div>
 									<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Opportunity Cost by Category</h3>
 									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Where your money could grow most</p>
@@ -592,22 +570,19 @@
 							onclick={() => expandedInsight = isExpanded ? null : insight.id}
 						>
 							<div class="flex items-start gap-4">
-								<!-- Type Icon -->
-								<div 
-									class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-									style="background: {typeColor}15"
-								>
-									<i class="fa-solid {getTypeIcon(insight.type)} text-base sm:text-lg" style="color: {typeColor}"></i>
-								</div>
+								<!-- Type Icon - just the icon, no colored background -->
+								<i class="fa-solid {getTypeIcon(insight.type)} text-lg mt-1 flex-shrink-0" style="color: {typeColor}"></i>
 								
 								<div class="flex-1 min-w-0">
 									<div class="flex flex-wrap items-center gap-2 mb-1">
 										<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">
 											{insight.title}
 										</h3>
-										<span class="px-2 py-0.5 rounded-full text-[10px] font-medium" style="background: {priorityBadge.bg}; color: {priorityBadge.color}">
-											{priorityBadge.text}
-										</span>
+										{#if insight.priority === 'high'}
+											<span class="px-2 py-0.5 rounded-full text-[10px] font-medium" style="background: {isDark ? '#2a2a2a' : '#f0f0f0'}; color: #ef4444">
+												High Impact
+											</span>
+										{/if}
 									</div>
 									
 									<p class="text-sm leading-relaxed mb-2" style="color: {isDark ? '#a3a3a3' : '#525252'}">
@@ -618,7 +593,6 @@
 									<div class="flex flex-wrap items-center gap-3">
 										{#if insight.opportunityCost && insight.type !== 'achievement'}
 											<div class="flex items-center gap-1.5 text-sm">
-												<i class="fa-solid fa-chart-line text-xs text-sw-accent"></i>
 												<span class="font-mono font-medium text-sw-accent">{formatCurrency(insight.opportunityCost)}</span>
 												<span class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">potential</span>
 											</div>
@@ -695,43 +669,33 @@
 			<!-- Empty State - No Data -->
 			{#if insights.length === 0 && !loading}
 				<div class="text-center py-16 rounded-2xl" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<div class="relative w-24 h-24 mx-auto mb-6">
-						<div class="absolute inset-0 rounded-full" style="background: radial-gradient(circle, rgba(13,148,136,0.2) 0%, transparent 70%);"></div>
-						<div class="relative w-24 h-24 rounded-full flex items-center justify-center" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
-							<i class="fa-solid fa-brain text-4xl" style="color: {isDark ? '#404040' : '#d4d4d4'}"></i>
-						</div>
+					<div class="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
+						<i class="fa-solid fa-lightbulb text-3xl" style="color: {isDark ? '#404040' : '#d4d4d4'}"></i>
 					</div>
 					<h3 class="font-display font-bold text-xl mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
 						No insights yet
 					</h3>
 					<p class="text-sm mb-6 max-w-md mx-auto" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						Import your transactions and we'll analyze your spending patterns to provide personalized insights and recommendations.
+						Import your transactions and we'll analyze your spending patterns to find opportunities and trends.
 					</p>
 					<a href="/imports" class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl">
-						<i class="fa-solid fa-file-arrow-up"></i>
 						Import Transactions
 					</a>
 				</div>
 			{/if}
 
-			<!-- Pro Tip Section -->
-			{#if insights.length > 0}
-				<div class="mt-8 rounded-2xl p-5 sm:p-6 relative overflow-hidden" style="background: {isDark ? 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(139,92,246,0.05) 100%)' : 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.02) 100%)'}; border: 1px solid {isDark ? 'rgba(139,92,246,0.3)' : 'rgba(139,92,246,0.2)'}">
+			<!-- Tip Section -->
+			{#if insights.length > 0 && summary && summary.potentialSavings > 500}
+				<div class="mt-8 rounded-2xl p-5 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-start gap-4">
-						<div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(139,92,246,0.2)">
-							<i class="fa-solid fa-wand-magic-sparkles text-lg" style="color: #8b5cf6"></i>
-						</div>
+						<i class="fa-solid fa-lightbulb text-amber-500 mt-0.5"></i>
 						<div>
 							<h3 class="font-display font-semibold text-base mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
-								Pro Tip: Automate Your Savings
+								The Power of Small Changes
 							</h3>
 							<p class="text-sm leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-								Set up automatic transfers to move your monthly budget surplus to investments. Even small amounts compound significantly over time — ${50}/month becomes ${8,700} in 10 years at 7% return.
+								Cutting back just $50/month and investing it instead could grow to $8,700 in 10 years at 7% return. Look for recurring expenses you could reduce — every small win compounds over time.
 							</p>
-							<a href="/settings" class="inline-flex items-center gap-1.5 mt-3 text-sm font-medium hover:underline" style="color: #8b5cf6">
-								Set up automation
-								<i class="fa-solid fa-arrow-right text-xs"></i>
-							</a>
 						</div>
 					</div>
 				</div>

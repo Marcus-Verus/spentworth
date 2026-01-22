@@ -656,22 +656,17 @@
 			{#if recommendations.length > 0}
 				<div class="mb-6 sm:mb-8">
 					<h2 class="font-display font-semibold text-lg mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
-						<i class="fa-solid fa-lightbulb text-sw-accent mr-2"></i>
-						Smart Insights
+						Insights
 					</h2>
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 						{#each recommendations as rec}
-							{@const bgColor = rec.type === 'success' ? 'rgba(16,185,129,0.1)' : rec.type === 'warning' ? 'rgba(245,158,11,0.1)' : rec.type === 'danger' ? 'rgba(239,68,68,0.1)' : 'rgba(13,148,136,0.1)'}
-							{@const borderColor = rec.type === 'success' ? 'rgba(16,185,129,0.3)' : rec.type === 'warning' ? 'rgba(245,158,11,0.3)' : rec.type === 'danger' ? 'rgba(239,68,68,0.3)' : 'rgba(13,148,136,0.3)'}
 							{@const iconColor = rec.type === 'success' ? '#10b981' : rec.type === 'warning' ? '#f59e0b' : rec.type === 'danger' ? '#ef4444' : '#0d9488'}
 							
-							<div class="rounded-xl p-4 transition-all hover:scale-[1.02]" style="background: {bgColor}; border: 1px solid {borderColor}">
+							<div class="rounded-xl p-4 transition-all hover:scale-[1.02]" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 								<div class="flex items-start gap-3">
-									<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {iconColor}20">
-										<i class="fa-solid {rec.icon} text-sm" style="color: {iconColor}"></i>
-									</div>
+									<i class="fa-solid {rec.icon} text-sm mt-0.5" style="color: {iconColor}"></i>
 									<div class="flex-1 min-w-0">
-										<p class="font-medium text-sm mb-0.5 truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{rec.title}</p>
+										<p class="font-medium text-sm mb-0.5" style="color: {isDark ? '#ffffff' : '#171717'}">{rec.title}</p>
 										<p class="text-xs leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#737373'}">{rec.description}</p>
 									</div>
 								</div>
@@ -683,11 +678,9 @@
 
 			<!-- Budget Streaks (if any) -->
 			{#if budgetStreaks.length > 0}
-				<div class="rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8" style="background: {isDark ? 'rgba(16,185,129,0.05)' : 'rgba(16,185,129,0.05)'}; border: 1px solid {isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.15)'}">
+				<div class="rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="flex items-center gap-3 mb-3">
-						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: rgba(16,185,129,0.2)">
-							<i class="fa-solid fa-fire text-sm text-green-500"></i>
-						</div>
+						<i class="fa-solid fa-fire text-orange-500"></i>
 						<div>
 							<p class="font-display font-semibold text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Budget Streaks</p>
 							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Consecutive months under budget</p>
@@ -695,10 +688,9 @@
 					</div>
 					<div class="flex flex-wrap gap-2">
 						{#each budgetStreaks as streak}
-							<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: {isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'}">
+							<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
 								<span style="color: {isDark ? '#ffffff' : '#171717'}">{streak.category}</span>
-								<span class="inline-flex items-center gap-1 font-mono font-medium text-green-500">
-									<i class="fa-solid fa-fire text-xs"></i>
+								<span class="inline-flex items-center gap-1 font-mono font-medium text-orange-500">
 									{streak.streak}
 								</span>
 							</div>
@@ -831,9 +823,11 @@
 					{/if}
 				</div>
 			{:else if budgets.length > 0}
-				<div class="text-center py-4 rounded-xl" style="background: {isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.08)'}; border: 1px solid {isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.15)'}">
-					<i class="fa-solid fa-check-circle text-2xl text-green-500 mb-2"></i>
-					<p class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">All categories budgeted!</p>
+				<div class="text-center py-4 rounded-xl" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-check text-green-500 mr-2"></i>
+						All categories budgeted
+					</p>
 				</div>
 			{/if}
 		{/if}
