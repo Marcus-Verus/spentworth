@@ -1,19 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { initTheme, getTheme, toggleTheme } from '$lib/stores/theme';
 	import Logo from '$lib/components/Logo.svelte';
 
-	let isDark = $state(false);
-
-	onMount(() => {
-		initTheme();
-		isDark = getTheme() === 'dark';
-	});
-
-	function handleThemeToggle() {
-		toggleTheme();
-		isDark = getTheme() === 'dark';
-	}
+	// Public pages always use light mode (dark mode is Pro-only)
+	const isDark = false;
 </script>
 
 <svelte:head>
@@ -30,17 +19,7 @@
 				</div>
 				<span class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
 			</a>
-			<button
-				onclick={handleThemeToggle}
-				class="p-2 rounded-lg transition-colors"
-				style="color: {isDark ? '#a3a3a3' : '#737373'}"
-			>
-				{#if isDark}
-					<i class="fa-solid fa-sun"></i>
-				{:else}
-					<i class="fa-solid fa-moon"></i>
-				{/if}
-			</button>
+			<a href="/login" class="text-sm font-medium" style="color: #737373">Log in</a>
 		</div>
 	</header>
 

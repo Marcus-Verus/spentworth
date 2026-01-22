@@ -7,21 +7,39 @@
 	interface Props {
 		showLogo?: boolean;
 		onLogout?: (() => void) | undefined;
+		userPlan?: 'free' | 'pro';
 	}
 
-	let { showLogo = true, onLogout = undefined }: Props = $props();
+	let { showLogo = true, onLogout = undefined, userPlan = 'free' }: Props = $props();
 
 	let mobileMenuOpen = $state(false);
 	let isDark = $state(false);
+	let plan = $state<'free' | 'pro'>('free');
 	
-	onMount(() => {
+	onMount(async () => {
 		initTheme();
 		isDark = getTheme() === 'dark';
+		
+		// Fetch subscription status if not provided
+		if (userPlan === 'free') {
+			try {
+				const res = await fetch('/api/stripe/subscription');
+				if (res.ok) {
+					const data = await res.json();
+					plan = data.plan;
+				}
+			} catch {
+				// Ignore errors, default to free
+			}
+		} else {
+			plan = userPlan;
+		}
 	});
 
 	interface NavItem {
 		href: string;
 		label: string;
+		highlight?: boolean;
 	}
 
 	const navItems: NavItem[] = [
@@ -68,6 +86,24 @@
 					{item.label}
 				</a>
 			{/each}
+			{#if plan === 'free'}
+				<a 
+					href="/pricing" 
+					class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-sw-accent to-emerald-500 text-white hover:opacity-90 transition-opacity shadow-sm"
+				>
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+					</svg>
+					Upgrade
+				</a>
+			{:else}
+				<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-sw-accent/10 text-sw-accent">
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+					</svg>
+					Pro
+				</span>
+			{/if}
 			{#if onLogout}
 				<button onclick={onLogout} class="text-sw-text-dim hover:text-sw-text transition-colors text-sm">
 					Logout
@@ -106,6 +142,25 @@
 						{item.label}
 					</a>
 				{/each}
+				{#if plan === 'free'}
+					<a 
+						href="/pricing" 
+						onclick={closeMenu}
+						class="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-gradient-to-r from-sw-accent to-emerald-500 text-white font-medium"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+						</svg>
+						Upgrade to Pro
+					</a>
+				{:else}
+					<div class="flex items-center gap-2 px-3 py-2.5 text-sw-accent">
+						<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						<span class="font-medium">Pro Plan Active</span>
+					</div>
+				{/if}
 				{#if onLogout}
 					<button 
 						onclick={() => { closeMenu(); onLogout?.(); }}

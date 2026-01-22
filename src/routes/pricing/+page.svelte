@@ -10,13 +10,32 @@
 	let isLoading = $state(false);
 	let checkoutError = $state<string | null>(null);
 	let isLoggedIn = $state(false);
+	let isPro = $state(false);
 
-	onMount(() => {
+	onMount(async () => {
 		initTheme();
 		isDark = getTheme() === 'dark';
 		
 		// Check if user is logged in
 		isLoggedIn = !!$page.data.session;
+		
+		// Check if user is Pro (only Pro users can use dark mode)
+		if (isLoggedIn) {
+			try {
+				const res = await fetch('/api/stripe/subscription');
+				if (res.ok) {
+					const data = await res.json();
+					isPro = data.plan === 'pro';
+				}
+			} catch {
+				// Ignore errors
+			}
+		}
+		
+		// If not Pro, force light mode on this page
+		if (!isPro && isDark) {
+			isDark = false;
+		}
 		
 		// Check for canceled checkout
 		const params = new URLSearchParams(window.location.search);
@@ -28,6 +47,7 @@
 	});
 
 	function handleThemeToggle() {
+		if (!isPro) return; // Only Pro users can toggle theme
 		toggleTheme();
 		isDark = getTheme() === 'dark';
 	}
@@ -134,18 +154,20 @@
 				<span class="font-display text-lg font-semibold hidden sm:inline" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
 			</a>
 			<div class="flex items-center gap-2 sm:gap-4">
-				<button
-					onclick={handleThemeToggle}
-					class="p-2 rounded-lg transition-colors"
-					style="color: {isDark ? '#a3a3a3' : '#737373'}"
-					aria-label="Toggle theme"
-				>
-					{#if isDark}
-						<i class="fa-solid fa-sun"></i>
-					{:else}
-						<i class="fa-solid fa-moon"></i>
-					{/if}
-				</button>
+				{#if isPro}
+					<button
+						onclick={handleThemeToggle}
+						class="p-2 rounded-lg transition-colors"
+						style="color: {isDark ? '#a3a3a3' : '#737373'}"
+						aria-label="Toggle theme"
+					>
+						{#if isDark}
+							<i class="fa-solid fa-sun"></i>
+						{:else}
+							<i class="fa-solid fa-moon"></i>
+						{/if}
+					</button>
+				{/if}
 				{#if isLoggedIn}
 					<a href="/dashboard" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2">Dashboard</a>
 				{:else}

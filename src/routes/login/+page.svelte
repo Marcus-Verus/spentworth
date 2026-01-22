@@ -137,7 +137,10 @@
 				</div>
 
 				<div>
-					<label for="password" class="label">Password</label>
+					<div class="flex items-center justify-between mb-1">
+						<label for="password" class="label mb-0">Password</label>
+						<a href="/forgot-password" class="text-xs text-sw-accent hover:underline">Forgot password?</a>
+					</div>
 					<input
 						id="password"
 						type="password"
