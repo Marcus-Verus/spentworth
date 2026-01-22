@@ -288,7 +288,7 @@
 		</section>
 
 		<!-- Visual Demo Section - Spending Breakdown -->
-		<section class="border-t border-sw-border/30 relative overflow-hidden">
+		<section id="features" class="border-t border-sw-border/30 relative overflow-hidden scroll-mt-20">
 			<!-- Background with app demo -->
 			<div class="absolute inset-0 opacity-5 sm:opacity-10">
 				<div class="absolute inset-0" style="background: linear-gradient(135deg, {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.05)'} 0%, transparent 50%);"></div>
@@ -778,7 +778,7 @@
 		</section>
 
 		<!-- Feature Highlights - Visual Bridge Section -->
-		<section id="features" class="border-t border-sw-border/30 relative overflow-hidden scroll-mt-20" style="background: {isDark ? '#0f0f0f' : '#faf7f2'}">
+		<section class="border-t border-sw-border/30 relative overflow-hidden" style="background: {isDark ? '#0f0f0f' : '#faf7f2'}">
 			<!-- Decorative background elements -->
 			<div class="absolute inset-0 overflow-hidden pointer-events-none">
 				<div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl" style="background: {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.15)'}; transform: translate(-50%, -50%);"></div>
@@ -824,7 +824,7 @@
 		</section>
 
 		<!-- How it works -->
-		<section id="how-it-works" class="border-t border-sw-border/30 relative overflow-hidden scroll-mt-20">
+		<section id="how-it-works" class="border-t border-sw-border/30 relative overflow-hidden scroll-mt-24 sm:scroll-mt-20">
 			<!-- Background with subtle pattern -->
 			<div class="absolute inset-0 opacity-5">
 				<div class="absolute inset-0" style="background: linear-gradient(45deg, transparent 48%, {isDark ? 'rgba(13,148,136,0.05)' : 'rgba(13,148,136,0.02)'} 50%, transparent 52%); background-size: 40px 40px;"></div>
