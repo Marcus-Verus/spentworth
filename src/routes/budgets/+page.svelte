@@ -617,28 +617,23 @@
 						</div>
 					</div>
 					
-					<!-- Dual progress visualization -->
-					<div class="relative mb-4">
-						<!-- Time progress (background track) -->
-						<div class="h-1.5 rounded-full" style="background: {isDark ? '#262626' : '#e8e4dc'}">
-							<div 
-								class="h-full rounded-full transition-all duration-500"
-								style="width: {monthProgress}%; background: {isDark ? '#404040' : '#c4bfb5'}"
-							></div>
-						</div>
-						<!-- Spend progress (foreground) -->
-						<div class="h-2 rounded-full -mt-0.5 relative" style="background: transparent">
-							<div 
-								class="h-full rounded-full transition-all duration-1000 ease-out"
-								style="width: {Math.min((summary?.totalSpent || 0) / (summary?.totalBudget || 1) * 100, 100)}%; background: {getVelocityColor(spendingVelocity.status)}"
-							></div>
-							<!-- Time marker -->
-							<div 
-								class="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
-								style="left: {monthProgress}%; background: {isDark ? '#737373' : '#737373'}"
-							></div>
-						</div>
+				<!-- Progress visualization -->
+				<div class="relative mb-4">
+					<!-- Track background -->
+					<div class="h-2 rounded-full relative" style="background: {isDark ? '#262626' : '#e8e4dc'}">
+						<!-- Spend progress bar -->
+						<div 
+							class="h-full rounded-full transition-all duration-1000 ease-out"
+							style="width: {Math.min((summary?.totalSpent || 0) / (summary?.totalBudget || 1) * 100, 100)}%; background: {getVelocityColor(spendingVelocity.status)}"
+						></div>
+						<!-- Time marker (where you should be) -->
+						<div 
+							class="absolute top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full z-10"
+							style="left: {monthProgress}%; background: {isDark ? '#a3a3a3' : '#525252'}"
+							title="Day {new Date().getDate()} of month"
+						></div>
 					</div>
+				</div>
 					
 					<!-- Status message -->
 					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">{spendingVelocity.message}</p>
@@ -698,16 +693,16 @@
 							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Consecutive months under budget</p>
 						</div>
 					</div>
-					<div class="flex flex-wrap gap-2">
-						{#each budgetStreaks as streak}
-							<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
-								<span style="color: {isDark ? '#ffffff' : '#171717'}">{streak.category}</span>
-								<span class="inline-flex items-center gap-1 font-mono font-medium text-orange-500">
-									{streak.streak}
-								</span>
-							</div>
-						{/each}
-					</div>
+				<div class="flex flex-wrap gap-2">
+					{#each budgetStreaks as streak}
+						<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
+							<span style="color: {isDark ? '#ffffff' : '#171717'}">{streak.category}</span>
+							<span class="inline-flex items-center justify-center w-6 h-6 rounded-full font-mono text-xs font-semibold" style="background: {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}; color: {isDark ? '#14b8a6' : '#0d9488'}">
+								{streak.streak}
+							</span>
+						</div>
+					{/each}
+				</div>
 				</div>
 			{/if}
 
