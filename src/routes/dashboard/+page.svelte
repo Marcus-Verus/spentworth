@@ -497,22 +497,22 @@
 				<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
 					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
 						<p class="text-xs sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Biggest Splurge</p>
-						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.biggestPurchase.amount)}</p>
+						<p class="font-display font-semibold text-base sm:text-lg tracking-tight" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.biggestPurchase.amount)}</p>
 						<p class="text-[10px] sm:text-xs truncate" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.biggestPurchase.merchant}</p>
 					</div>
 					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
 						<p class="text-xs sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Spendy Day</p>
-						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{summary.biggestSpendingDay.day}s</p>
+						<p class="font-display font-semibold text-base sm:text-lg tracking-tight" style="color: {isDark ? '#ffffff' : '#171717'}">{summary.biggestSpendingDay.day}s</p>
 						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{formatCurrency(summary.biggestSpendingDay.spent)}</p>
 					</div>
 					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
 						<p class="text-xs sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly Avg</p>
-						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.totalSpent / Math.max(summary.monthly.length, 1))}</p>
+						<p class="font-display font-semibold text-base sm:text-lg tracking-tight" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.totalSpent / Math.max(summary.monthly.length, 1))}</p>
 						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.monthly.length} months</p>
 					</div>
 					<div class="rounded-xl p-3 sm:p-4" style="background: {isDark ? 'rgba(38,38,38,0.6)' : 'rgba(245,240,232,0.6)'}; border: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#d4cfc5'}">
 						<p class="text-xs sm:text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subscriptions</p>
-						<p class="font-mono text-base sm:text-lg" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</p>
+						<p class="font-display font-semibold text-base sm:text-lg tracking-tight" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary.recurringCharges.reduce((a, r) => a + r.monthlyEstimate, 0))}/mo</p>
 						<p class="text-[10px] sm:text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{summary.recurringCharges.length} detected</p>
 					</div>
 				</div>

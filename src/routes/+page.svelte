@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { initTheme, toggleTheme, getTheme } from '$lib/stores/theme';
+	import { initTheme, getTheme, setTheme } from '$lib/stores/theme';
 	import Logo from '$lib/components/Logo.svelte';
 
 	let { data } = $props();
@@ -10,107 +10,97 @@
 	let isDark = $state(false);
 	
 	onMount(() => {
-		initTheme();
-		isDark = getTheme() === 'dark';
+		// Force light mode for guests (dark mode is a Pro feature)
+		setTheme('light');
+		isDark = false;
 	});
 	
-	function handleThemeToggle() {
-		toggleTheme();
-		isDark = getTheme() === 'dark';
-	}
+	// Testimonials data
+	const testimonials1 = [
+		{ initials: 'MK', name: 'Michelle K.', text: 'Found 4 streaming services I forgot about. That\'s <span class="font-semibold text-sw-accent">$52/month</span> I\'m now investing.', result: 'Found $624/year', gradient: 'linear-gradient(135deg, #0d9488, #14b8a6)' },
+		{ initials: 'JT', name: 'James T.', text: 'My coffee habit could be worth <span class="font-semibold text-sw-accent">$23,000</span> in 10 years. Still get coffee, just smarter.', result: 'Now investing $200/mo', gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)' },
+		{ initials: 'SR', name: 'Sarah R.', text: 'Finally a finance app that doesn\'t want my bank login. CSV imports = real privacy.', result: 'Privacy-first user', gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)' },
+		{ initials: 'DM', name: 'David M.', text: 'Discovered <span class="font-semibold text-sw-accent">$89/month</span> in subscriptions I thought I\'d cancelled years ago.', result: 'Recovered $1,068/year', gradient: 'linear-gradient(135deg, #ec4899, #f472b6)' },
+		{ initials: 'AL', name: 'Amanda L.', text: 'The opportunity cost view changed how I think about every purchase. Eye-opening.', result: 'Saving 20% more monthly', gradient: 'linear-gradient(135deg, #10b981, #34d399)' },
+		{ initials: 'RK', name: 'Ryan K.', text: 'Two minutes to upload, instant insights. Showed my partner and we found <span class="font-semibold text-sw-accent">$200/month</span> to cut.', result: 'Couple budgeting', gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)' }
+	];
 	
-	// Calculator state (moved to optional section)
-	let dailyAmount = $state(5);
-	let years = $state(5);
-	let showCalculator = $state(false);
-	
-	const futureValue = $derived.by(() => {
-		const annualReturn = 0.07; // 7% average return
-		const daysPerYear = 365;
-		let total = 0;
-		for (let y = years; y > 0; y--) {
-			const yearlyContribution = dailyAmount * daysPerYear;
-			total += yearlyContribution * Math.pow(1 + annualReturn, y);
-		}
-		return Math.round(total);
-	});
-	
-	const totalSpent = $derived(dailyAmount * 365 * years);
+	const testimonials2 = [
+		{ initials: 'LW', name: 'Lisa W.', text: 'My "small" DoorDash habit? <span class="font-semibold text-sw-accent">$180/month</span>. Seeing it visualized hit different.', result: 'Cut delivery by 60%', gradient: 'linear-gradient(135deg, #f97316, #fb923c)' },
+		{ initials: 'CT', name: 'Chris T.', text: 'No Plaid, no bank linking, no sketchy permissions. Just my data, my insights. Love it.', result: 'Security-conscious', gradient: 'linear-gradient(135deg, #14b8a6, #2dd4bf)' },
+		{ initials: 'NP', name: 'Nina P.', text: 'Gym membership I never use + 3 apps = <span class="font-semibold text-sw-accent">$75/month</span> found in 2 minutes.', result: 'Quick wins', gradient: 'linear-gradient(135deg, #a855f7, #c084fc)' },
+		{ initials: 'BH', name: 'Ben H.', text: 'The "if invested" numbers are humbling. Changed my whole perspective on spending.', result: 'Long-term thinker now', gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)' },
+		{ initials: 'EM', name: 'Elena M.', text: 'Simple enough that I actually use it. Other apps were too complicated.', result: 'Weekly check-ins', gradient: 'linear-gradient(135deg, #84cc16, #a3e635)' },
+		{ initials: 'TJ', name: 'Tom J.', text: 'Showed me I spend <span class="font-semibold text-sw-accent">$250/month</span> on "miscellaneous." Not anymore.', result: 'Category clarity', gradient: 'linear-gradient(135deg, #ef4444, #f87171)' }
+	];
 </script>
 
 <div class="min-h-screen flex flex-col">
-	<!-- Navigation -->
-	<nav class="border-b border-sw-border/30 backdrop-blur-md bg-sw-surface/90 sticky top-0 z-50">
-		<div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-			<a href="/" class="flex items-center gap-2.5 group">
-				<div class="rounded-xl bg-sw-accent flex items-center justify-center text-white p-2 shadow-lg shadow-sw-accent/10 group-hover:shadow-sw-accent/20 transition-all">
-					<Logo size="md" class="text-white" />
+	<!-- Navigation - Warm, cohesive header -->
+	<nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">
+		<div class="max-w-6xl mx-auto px-4 sm:px-6">
+			<div class="flex items-center justify-between h-16">
+				<!-- Logo -->
+				<a href="/" class="flex items-center gap-3 group">
+					<div class="rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white p-2 shadow-md shadow-teal-500/15 group-hover:shadow-lg group-hover:shadow-teal-500/20 transition-all group-hover:scale-[1.02]">
+						<Logo size="md" class="text-white" />
+					</div>
+					<span class="font-display text-xl font-bold text-stone-800 tracking-tight">SpentWorth</span>
+				</a>
+				
+				<!-- Desktop nav -->
+				<div class="hidden md:flex items-center">
+					<!-- Nav Links -->
+					<div class="flex items-center gap-1 mr-4">
+						<a href="#features" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors rounded-lg hover:bg-stone-100/70">Features</a>
+						<a href="#how-it-works" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors rounded-lg hover:bg-stone-100/70">How it Works</a>
+						<a href="/pricing" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors rounded-lg hover:bg-stone-100/70">Pricing</a>
+					</div>
+					
+					<!-- Auth -->
+					<div class="flex items-center gap-2 pl-4 border-l border-stone-200">
+						{#if data.session}
+							<a href="/dashboard" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-500/25">Dashboard</a>
+						{:else}
+							<a href="/login" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors">Log in</a>
+							<a href="/signup" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-500/25">Get Started</a>
+						{/if}
+					</div>
 				</div>
-				<span class="font-display text-xl font-semibold text-sw-text tracking-tight">SpentWorth</span>
-			</a>
-			
-			<!-- Desktop nav -->
-			<div class="hidden sm:flex items-center gap-4">
-				<button
-					onclick={handleThemeToggle}
-					class="p-2 rounded-lg text-sw-text-dim hover:text-sw-text hover:bg-sw-surface transition-colors"
-					title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+				
+				<!-- Mobile menu button -->
+				<button 
+					onclick={() => mobileMenuOpen = !mobileMenuOpen}
+					class="md:hidden p-2 -mr-2 text-stone-500 hover:text-stone-800 transition-colors"
 				>
-					{#if isDark}
-						<i class="fa-solid fa-sun text-sm"></i>
+					{#if mobileMenuOpen}
+						<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+						</svg>
 					{:else}
-						<i class="fa-solid fa-moon text-sm"></i>
+						<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+						</svg>
 					{/if}
 				</button>
-				{#if data.session}
-					<a href="/dashboard" class="btn btn-primary">Dashboard</a>
-				{:else}
-					<a href="/pricing" class="text-sw-text-dim hover:text-sw-text transition-colors text-sm font-display font-medium">Pricing</a>
-					<a href="/login" class="text-sw-text-dim hover:text-sw-text transition-colors text-sm font-display font-medium">Log in</a>
-					<a href="/signup" class="btn btn-primary font-display font-semibold">Get Started</a>
-				{/if}
 			</div>
-			
-			<!-- Mobile menu button -->
-			<button 
-				onclick={() => mobileMenuOpen = !mobileMenuOpen}
-				class="sm:hidden p-2 -mr-2 text-sw-text-dim hover:text-sw-text"
-			>
-				{#if mobileMenuOpen}
-					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-					</svg>
-				{:else}
-					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-					</svg>
-				{/if}
-			</button>
 		</div>
 		
 		<!-- Mobile dropdown -->
 		{#if mobileMenuOpen}
-			<div class="sm:hidden border-t border-sw-border/30 bg-sw-bg/95 px-4 py-3">
-				{#if data.session}
-					<a href="/dashboard" class="block py-2 text-sw-accent font-medium">Dashboard</a>
-				{:else}
-					<a href="/pricing" class="block py-2 text-sw-text-dim hover:text-sw-text">Pricing</a>
-					<a href="/login" class="block py-2 text-sw-text-dim hover:text-sw-text">Log in</a>
-					<a href="/signup" class="block py-2 text-sw-accent font-medium">Get Started</a>
-				{/if}
-				<button
-					onclick={handleThemeToggle}
-					class="flex items-center gap-2 py-2 text-sw-text-dim hover:text-sw-text w-full"
-				>
-					{#if isDark}
-						<i class="fa-solid fa-sun text-sm"></i>
-						<span>Light mode</span>
+			<div class="md:hidden bg-white/95 backdrop-blur-xl border-t border-stone-200/60 px-4 py-4 space-y-1">
+				<a href="#features" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Features</a>
+				<a href="#how-it-works" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">How it Works</a>
+				<a href="/pricing" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Pricing</a>
+				<div class="pt-3 mt-3 border-t border-stone-200/60 space-y-2">
+					{#if data.session}
+						<a href="/dashboard" class="block px-4 py-2.5 text-center font-semibold text-white bg-teal-600 rounded-xl shadow-md">Dashboard</a>
 					{:else}
-						<i class="fa-solid fa-moon text-sm"></i>
-						<span>Dark mode</span>
+						<a href="/login" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Log in</a>
+						<a href="/signup" class="block px-4 py-2.5 text-center font-semibold text-white bg-teal-600 rounded-xl shadow-md">Get Started</a>
 					{/if}
-				</button>
-		</div>
+				</div>
+			</div>
 		{/if}
 	</nav>
 
@@ -142,7 +132,7 @@
 								<div class="flex-1">
 									<div class="flex justify-between text-xs mb-1">
 										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Entertainment</span>
-										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$642</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$142</span>
 									</div>
 									<div class="h-1 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
 										<div class="h-full rounded-full bg-blue-500" style="width: 45%"></div>
@@ -252,14 +242,14 @@
 			<div class="relative max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-20 lg:py-28">
 				<div class="max-w-3xl mx-auto text-center">
 					<!-- Headline -->
-					<h1 class="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold leading-[1.15] mb-5 animate-fade-in tracking-tight" style="color: {isDark ? '#ffffff' : '#171717'}">
-						Know where your money goes.
-						<span class="text-gradient block mt-1">Build the life you want.</span>
+					<h1 class="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold leading-[1.25] mb-5 animate-fade-in tracking-tight" style="color: {isDark ? '#ffffff' : '#171717'}">
+						See what your spending
+						<span class="text-gradient block mt-1 pb-2">is really costing you.</span>
 					</h1>
 					
 					<!-- Subheadline -->
 					<p class="text-base sm:text-lg md:text-xl leading-relaxed mb-8 animate-slide-up max-w-2xl mx-auto" style="color: {isDark ? '#a3a3a3' : '#525252'}; animation-delay: 100ms">
-						Import your spending, see where it really goes, and make confident decisions about your financial future. Simple, private, free.
+						Import your bank statements, discover hidden subscriptions, and see what your money could become if invested. Users find an average of <span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$127/month</span> in forgotten charges.
 					</p>
 					
 					<!-- CTA -->
@@ -370,7 +360,7 @@
 								<div>
 									<div class="flex justify-between text-xs mb-1.5">
 										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Dining & Restaurants</span>
-										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$892</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$420</span>
 									</div>
 									<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
 										<div class="h-full rounded-full bg-orange-500" style="width: 31%"></div>
@@ -379,7 +369,7 @@
 								<div>
 									<div class="flex justify-between text-xs mb-1.5">
 										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Entertainment</span>
-										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$687</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$187</span>
 									</div>
 									<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
 										<div class="h-full rounded-full bg-blue-500" style="width: 24%"></div>
@@ -388,7 +378,7 @@
 								<div>
 									<div class="flex justify-between text-xs mb-1.5">
 										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Subscriptions</span>
-										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$487</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$165</span>
 									</div>
 									<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
 										<div class="h-full rounded-full bg-purple-500" style="width: 17%"></div>
@@ -397,7 +387,7 @@
 								<div>
 									<div class="flex justify-between text-xs mb-1.5">
 										<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Shopping</span>
-										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$534</span>
+										<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$285</span>
 									</div>
 									<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
 										<div class="h-full rounded-full bg-teal-500" style="width: 19%"></div>
@@ -455,10 +445,10 @@
 											<i class="fa-solid fa-utensils text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
 											<span class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Food delivery</span>
 										</div>
-										<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">$400/mo</span>
+										<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">$180/mo</span>
 									</div>
 									<div class="flex items-baseline gap-2">
-										<span class="text-2xl font-bold text-sw-accent">$28,000</span>
+										<span class="text-2xl font-bold text-sw-accent">$12,600</span>
 										<span class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">opportunity cost</span>
 									</div>
 								</div>
@@ -654,13 +644,13 @@
 							{/each}
 						</div>
 						<p class="text-sm mb-4 leading-relaxed" style="color: {isDark ? '#d4d4d4' : '#404040'}">
-							"SpentWorth showed me my $400/month food delivery habit would be worth <span class="font-semibold text-sw-accent">$28,000</span> in 5 years if invested. That hit different. Now I cook more and actually invest the savings."
+							"SpentWorth showed me my $180/month food delivery habit would be worth <span class="font-semibold text-sw-accent">$12,600</span> in 5 years if invested. That hit different. Now I cook more and actually invest the savings."
 						</p>
 						<div class="flex items-center gap-3">
 							<img src="https://i.pravatar.cc/36?img=68" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Michael T.</p>
-								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Now investing $350/mo</p>
+								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Now investing $150/mo</p>
 							</div>
 						</div>
 					</div>
@@ -695,7 +685,7 @@
 							"I found 8 forgotten subscriptions totaling $127/mo. SpentWorth calculated that's <span class="font-semibold text-sw-accent">$9,100 lost</span> in potential growth over just 5 years. Cancelled them all that same day."
 						</p>
 						<div class="flex items-center gap-3">
-							<img src="https://i.pravatar.cc/36?img=92" alt="" class="w-9 h-9 rounded-full object-cover" />
+							<img src="https://i.pravatar.cc/36?img=57" alt="" class="w-9 h-9 rounded-full object-cover" />
 							<div>
 								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">James L.</p>
 								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Cut 8 subscriptions</p>
@@ -788,7 +778,7 @@
 		</section>
 
 		<!-- Feature Highlights - Visual Bridge Section -->
-		<section class="border-t border-sw-border/30 relative overflow-hidden" style="background: {isDark ? '#0f0f0f' : '#faf7f2'}">
+		<section id="features" class="border-t border-sw-border/30 relative overflow-hidden scroll-mt-20" style="background: {isDark ? '#0f0f0f' : '#faf7f2'}">
 			<!-- Decorative background elements -->
 			<div class="absolute inset-0 overflow-hidden pointer-events-none">
 				<div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl" style="background: {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.15)'}; transform: translate(-50%, -50%);"></div>
@@ -834,7 +824,7 @@
 		</section>
 
 		<!-- How it works -->
-		<section class="border-t border-sw-border/30 relative overflow-hidden">
+		<section id="how-it-works" class="border-t border-sw-border/30 relative overflow-hidden scroll-mt-20">
 			<!-- Background with subtle pattern -->
 			<div class="absolute inset-0 opacity-5">
 				<div class="absolute inset-0" style="background: linear-gradient(45deg, transparent 48%, {isDark ? 'rgba(13,148,136,0.05)' : 'rgba(13,148,136,0.02)'} 50%, transparent 52%); background-size: 40px 40px;"></div>
@@ -899,14 +889,14 @@
 					<div class="space-y-2">
 						<div class="flex items-center justify-between text-xs">
 							<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Dining & Restaurants</span>
-							<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$892</span>
+							<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$420</span>
 						</div>
 						<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
 							<div class="h-full rounded-full bg-orange-500" style="width: 31%"></div>
 						</div>
 						<div class="flex items-center justify-between text-xs">
 							<span style="color: {isDark ? '#a3a3a3' : '#525252'}">Entertainment</span>
-							<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$687</span>
+							<span class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">$187</span>
 						</div>
 						<div class="h-2 rounded-full" style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}">
 							<div class="h-full rounded-full bg-blue-500" style="width: 24%"></div>
@@ -916,73 +906,66 @@
 			</div>
 		</section>
 
-		<!-- Curious section (optional calculator) -->
-		<section class="border-t border-sw-border/30">
-			<div class="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-				<div class="text-center">
-					<h2 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Curious what small changes could mean?</h2>
-					<p class="mb-8" style="color: {isDark ? '#a3a3a3' : '#525252'}">See how everyday spending adds up over time.</p>
-					
-					{#if !showCalculator}
-						<button 
-							onclick={() => showCalculator = true}
-							class="text-sm px-5 py-2.5 rounded-lg font-medium transition-colors"
-							style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; color: {isDark ? '#ffffff' : '#171717'}"
-						>
-							<i class="fa-solid fa-calculator mr-2" style="color: {isDark ? '#a3a3a3' : '#525252'}"></i>
-							Try the calculator
-						</button>
-					{:else}
-						<div class="rounded-2xl p-5 max-w-xs mx-auto animate-fade-in" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; box-shadow: {isDark ? 'none' : '0 4px 16px rgba(0,0,0,0.08)'}">
-							<!-- Inputs stacked -->
-							<div class="space-y-3 mb-4">
-								<div class="flex items-center justify-between">
-									<label for="daily-amount" class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Daily amount</label>
-									<div class="flex items-center rounded-lg px-3 py-1.5" style="background: {isDark ? '#0f0f0f' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}">
-										<span class="text-sm mr-1" style="color: {isDark ? '#737373' : '#737373'}">$</span>
-										<input 
-											id="daily-amount"
-											type="number" 
-											bind:value={dailyAmount}
-											min="1"
-											max="500"
-											class="w-12 font-mono focus:outline-none bg-transparent text-center"
-											style="color: {isDark ? '#ffffff' : '#171717'}"
-										/>
-									</div>
+		<!-- Testimonials Section -->
+		<section class="border-t border-sw-border/30 py-16 sm:py-20 overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#faf7f2'}">
+			<div class="max-w-6xl mx-auto px-4 sm:px-6">
+				<div class="text-center mb-10 sm:mb-12">
+					<h2 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Real people, real discoveries</h2>
+					<p style="color: {isDark ? '#a3a3a3' : '#525252'}">Join thousands who've uncovered their spending blind spots</p>
+				</div>
+			</div>
+			
+			<!-- Scrolling testimonials row 1 -->
+			<div class="relative mb-4">
+				<div class="flex gap-4 animate-scroll-left">
+					{#each [...testimonials1, ...testimonials1] as t}
+						<div class="flex-shrink-0 w-80 rounded-2xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 4px 12px rgba(0,0,0,0.04)'}">
+							<div class="flex items-center gap-1 mb-3">
+								{#each Array(5) as _}
+									<i class="fa-solid fa-star text-amber-400 text-xs"></i>
+								{/each}
+							</div>
+							<p class="text-sm leading-relaxed mb-4" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+								"{@html t.text}"
+							</p>
+							<div class="flex items-center gap-3">
+								<div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white" style="background: {t.gradient}">
+									{t.initials}
 								</div>
-								<div class="flex items-center justify-between">
-									<label for="time-period" class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">Time period</label>
-									<select 
-										id="time-period"
-										bind:value={years}
-										class="px-3 py-1.5 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-sw-accent/50"
-										style="background: {isDark ? '#0f0f0f' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d1ccc2'}; color: {isDark ? '#ffffff' : '#171717'}"
-									>
-										<option value={1}>1 year</option>
-										<option value={2}>2 years</option>
-										<option value={3}>3 years</option>
-										<option value={5}>5 years</option>
-										<option value={10}>10 years</option>
-									</select>
+								<div>
+									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{t.name}</p>
+									<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{t.result}</p>
 								</div>
 							</div>
-							
-							<!-- Results -->
-							<div class="rounded-xl p-4" style="background: {isDark ? '#0f0f0f' : '#f5f0e8'}">
-								<div class="flex justify-between items-center mb-2">
-									<span class="text-sm" style="color: {isDark ? '#737373' : '#737373'}">Total spent</span>
-									<span class="font-mono font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">${totalSpent.toLocaleString()}</span>
-								</div>
-								<div class="flex justify-between items-center">
-									<span class="text-sm" style="color: {isDark ? '#737373' : '#737373'}">If invested</span>
-									<span class="font-mono font-semibold text-lg text-sw-accent">${futureValue.toLocaleString()}</span>
-								</div>
-							</div>
-							
-							<p class="text-xs text-center mt-3" style="color: {isDark ? '#525252' : '#9ca3af'}">7% avg. annual return</p>
 						</div>
-					{/if}
+					{/each}
+				</div>
+			</div>
+			
+			<!-- Scrolling testimonials row 2 (opposite direction) -->
+			<div class="relative">
+				<div class="flex gap-4 animate-scroll-right">
+					{#each [...testimonials2, ...testimonials2] as t}
+						<div class="flex-shrink-0 w-80 rounded-2xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 4px 12px rgba(0,0,0,0.04)'}">
+							<div class="flex items-center gap-1 mb-3">
+								{#each Array(5) as _}
+									<i class="fa-solid fa-star text-amber-400 text-xs"></i>
+								{/each}
+							</div>
+							<p class="text-sm leading-relaxed mb-4" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+								"{@html t.text}"
+							</p>
+							<div class="flex items-center gap-3">
+								<div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white" style="background: {t.gradient}">
+									{t.initials}
+								</div>
+								<div>
+									<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{t.name}</p>
+									<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">{t.result}</p>
+								</div>
+							</div>
+						</div>
+					{/each}
 				</div>
 			</div>
 		</section>

@@ -616,7 +616,7 @@
 		</main>
 
 		<!-- Footer with reconciliation info -->
-		<footer style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; background: {isDark ? 'rgba(26,26,26,0.5)' : 'rgba(249,246,241,0.5)'}">
+		<footer class="safe-area-bottom" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; background: {isDark ? 'rgba(26,26,26,0.5)' : 'rgba(249,246,241,0.5)'}">
 			<div class="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between text-xs gap-1 sm:gap-0">
 				<div style="color: {isDark ? '#737373' : '#737373'}" class="text-center sm:text-left">
 					<span>Date range: {summary.dateMin ? formatDate(summary.dateMin) : '-'} – {summary.dateMax ? formatDate(summary.dateMax) : '-'}</span>
@@ -632,8 +632,8 @@
 
 <!-- Create Rule Modal -->
 {#if showRuleModal}
-	<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onclick={closeRuleModal}>
-		<div class="card max-w-md w-full mx-4 animate-slide-up" onclick={(e) => e.stopPropagation()}>
+	<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 safe-area-top safe-area-bottom" onclick={closeRuleModal}>
+		<div class="card max-w-md w-full animate-slide-up" onclick={(e) => e.stopPropagation()}>
 			<h2 class="font-display text-lg font-semibold mb-4">Create Rule for Future Imports?</h2>
 			
 			<p class="text-sw-text-dim text-sm mb-4">

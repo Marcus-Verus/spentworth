@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
-	import { initTheme, getTheme } from '$lib/stores/theme';
+	import { initTheme, getTheme, setTheme, toggleTheme } from '$lib/stores/theme';
 
 	let { data } = $props();
 
@@ -13,10 +13,22 @@
 	let saving = $state(false);
 	let saved = $state(false);
 	let isDark = $state(false);
+	
+	// Pro tier check - for now, check localStorage. Will be replaced with actual subscription check
+	let isPro = $state(false);
 
 	onMount(async () => {
 		initTheme();
 		isDark = getTheme() === 'dark';
+		
+		// Check if user has Pro (placeholder - will check Stripe subscription later)
+		isPro = localStorage.getItem('sw_pro_tier') === 'true';
+		
+		// If not Pro and dark mode is on, reset to light
+		if (!isPro && isDark) {
+			setTheme('light');
+			isDark = false;
+		}
 
 		const res = await fetch('/api/settings');
 		const json = await res.json();
@@ -29,6 +41,12 @@
 		}
 		loading = false;
 	});
+	
+	function handleThemeToggle() {
+		if (!isPro) return;
+		toggleTheme();
+		isDark = getTheme() === 'dark';
+	}
 
 	async function saveSettings() {
 		saving = true;
@@ -158,6 +176,61 @@
 							</label>
 							<p class="text-sm mt-1 ml-8" style="color: {isDark ? '#a3a3a3' : '#737373'}">If enabled, uses 7% annual return when historical prices aren't available</p>
 						</div>
+					</div>
+				</div>
+
+				<!-- Appearance Settings (Pro Feature) -->
+				<div class="rounded-2xl p-6 relative overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<div class="flex items-center justify-between mb-4">
+						<h2 class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+							<i class="fa-solid fa-palette text-sw-accent mr-2"></i>Appearance
+						</h2>
+						{#if !isPro}
+							<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 border border-amber-500/30">
+								<i class="fa-solid fa-crown mr-1"></i>Pro
+							</span>
+						{/if}
+					</div>
+					
+					<div class="space-y-4">
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Dark Mode</p>
+								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									{isPro ? 'Switch between light and dark themes' : 'Upgrade to Pro to unlock dark mode'}
+								</p>
+							</div>
+							<button
+								onclick={handleThemeToggle}
+								disabled={!isPro}
+								class="relative w-14 h-8 rounded-full transition-all duration-300 {isPro ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}"
+								style="background: {isDark ? 'linear-gradient(135deg, #0d9488, #14b8a6)' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+							>
+								<span 
+									class="absolute top-1 w-6 h-6 rounded-full transition-all duration-300 flex items-center justify-center shadow-md"
+									style="left: {isDark ? '1.75rem' : '0.25rem'}; background: {isDark ? '#0a0a0a' : '#ffffff'}"
+								>
+									{#if isDark}
+										<i class="fa-solid fa-moon text-xs text-teal-400"></i>
+									{:else}
+										<i class="fa-solid fa-sun text-xs" style="color: {isDark ? '#a3a3a3' : '#f59e0b'}"></i>
+									{/if}
+								</span>
+							</button>
+						</div>
+						
+						{#if !isPro}
+							<a 
+								href="/pricing" 
+								class="block mt-4 p-4 rounded-xl text-center transition-all hover:scale-[1.01]"
+								style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.1)); border: 1px solid rgba(245,158,11,0.2)"
+							>
+								<p class="text-sm font-medium" style="color: {isDark ? '#fbbf24' : '#d97706'}">
+									<i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i>
+									Upgrade to Pro for dark mode and more
+								</p>
+							</a>
+						{/if}
 					</div>
 				</div>
 

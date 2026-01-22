@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { initTheme, toggleTheme, getTheme } from '$lib/stores/theme';
+	import { initTheme, getTheme } from '$lib/stores/theme';
 	import Logo from '$lib/components/Logo.svelte';
 
 	interface Props {
@@ -18,11 +18,6 @@
 		initTheme();
 		isDark = getTheme() === 'dark';
 	});
-	
-	function handleThemeToggle() {
-		toggleTheme();
-		isDark = getTheme() === 'dark';
-	}
 
 	interface NavItem {
 		href: string;
@@ -73,17 +68,6 @@
 					{item.label}
 				</a>
 			{/each}
-			<button
-				onclick={handleThemeToggle}
-				class="p-2 rounded-lg text-sw-text-dim hover:text-sw-text hover:bg-sw-surface transition-colors"
-				title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-			>
-				{#if isDark}
-					<i class="fa-solid fa-sun text-sm"></i>
-				{:else}
-					<i class="fa-solid fa-moon text-sm"></i>
-				{/if}
-			</button>
 			{#if onLogout}
 				<button onclick={onLogout} class="text-sw-text-dim hover:text-sw-text transition-colors text-sm">
 					Logout
@@ -122,18 +106,6 @@
 						{item.label}
 					</a>
 				{/each}
-				<button 
-					onclick={handleThemeToggle}
-					class="w-full text-left px-3 py-2.5 rounded-lg text-sw-text-dim hover:text-sw-text hover:bg-sw-surface/50 transition-colors flex items-center gap-2"
-				>
-					{#if isDark}
-						<i class="fa-solid fa-sun text-sm"></i>
-						<span>Light mode</span>
-					{:else}
-						<i class="fa-solid fa-moon text-sm"></i>
-						<span>Dark mode</span>
-					{/if}
-				</button>
 				{#if onLogout}
 					<button 
 						onclick={() => { closeMenu(); onLogout?.(); }}

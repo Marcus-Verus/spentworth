@@ -81,13 +81,14 @@
 				<div class="rounded-xl bg-sw-accent flex items-center justify-center text-white p-1.5">
 					<Logo size="sm" class="text-white" />
 				</div>
-				<span class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
+				<span class="font-display text-lg font-semibold hidden sm:inline" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
 			</a>
-			<div class="flex items-center gap-4">
+			<div class="flex items-center gap-2 sm:gap-4">
 				<button
 					onclick={handleThemeToggle}
 					class="p-2 rounded-lg transition-colors"
 					style="color: {isDark ? '#a3a3a3' : '#737373'}"
+					aria-label="Toggle theme"
 				>
 					{#if isDark}
 						<i class="fa-solid fa-sun"></i>
@@ -95,8 +96,8 @@
 						<i class="fa-solid fa-moon"></i>
 					{/if}
 				</button>
-				<a href="/login" class="text-sm font-medium" style="color: {isDark ? '#a3a3a3' : '#737373'}">Log in</a>
-				<a href="/signup" class="btn-primary text-sm px-4 py-2">Sign up</a>
+				<a href="/login" class="text-sm font-medium hidden sm:block" style="color: {isDark ? '#a3a3a3' : '#737373'}">Log in</a>
+				<a href="/signup" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2">Sign up</a>
 			</div>
 		</div>
 	</header>

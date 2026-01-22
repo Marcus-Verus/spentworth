@@ -600,36 +600,48 @@
 				</div>
 
 				<!-- Spending Velocity Card -->
-				<div class="rounded-2xl p-5 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<div class="flex items-center gap-2 mb-4">
-						<div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: {getVelocityColor(spendingVelocity.status)}20">
-							<i class="fa-solid fa-gauge-high text-sm" style="color: {getVelocityColor(spendingVelocity.status)}"></i>
-						</div>
+				<div class="rounded-2xl p-5 sm:p-6 relative overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<!-- Subtle background accent -->
+					<div class="absolute top-0 right-0 w-32 h-32 opacity-[0.03] pointer-events-none" style="background: radial-gradient(circle, {getVelocityColor(spendingVelocity.status)} 0%, transparent 70%)"></div>
+					
+					<div class="flex items-start justify-between gap-4 mb-5">
 						<div>
-							<p class="text-xs uppercase tracking-wider" style="color: {isDark ? '#737373' : '#9ca3af'}">Spending Velocity</p>
+							<p class="font-display text-sm font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Month Pace</p>
+							<p class="text-xs" style="color: {isDark ? '#525252' : '#a3a3a3'}">Day {new Date().getDate()} of {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}</p>
+						</div>
+						<div class="text-right">
+							<p class="font-display text-2xl font-bold tracking-tight" style="color: {getVelocityColor(spendingVelocity.status)}">
+								{Math.round(spendingVelocity.ratio * 100)}%
+							</p>
+							<p class="text-[10px] uppercase tracking-wide" style="color: {isDark ? '#525252' : '#a3a3a3'}">velocity</p>
 						</div>
 					</div>
 					
-					<!-- Velocity Bar -->
-					<div class="relative h-3 rounded-full overflow-hidden mb-3" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
-						<!-- Expected progress marker -->
-						<div 
-							class="absolute top-0 bottom-0 w-0.5 z-10"
-							style="left: {monthProgress}%; background: {isDark ? '#525252' : '#9ca3af'}"
-						></div>
-						<!-- Actual spending bar -->
-						<div 
-							class="h-full rounded-full transition-all duration-1000 ease-out"
-							style="width: {Math.min((summary?.totalSpent || 0) / (summary?.totalBudget || 1) * 100, 120)}%; background: linear-gradient(90deg, {getVelocityColor(spendingVelocity.status)}, {getVelocityColor(spendingVelocity.status)}cc)"
-						></div>
+					<!-- Dual progress visualization -->
+					<div class="relative mb-4">
+						<!-- Time progress (background track) -->
+						<div class="h-1.5 rounded-full" style="background: {isDark ? '#262626' : '#e8e4dc'}">
+							<div 
+								class="h-full rounded-full transition-all duration-500"
+								style="width: {monthProgress}%; background: {isDark ? '#404040' : '#c4bfb5'}"
+							></div>
+						</div>
+						<!-- Spend progress (foreground) -->
+						<div class="h-2 rounded-full -mt-0.5 relative" style="background: transparent">
+							<div 
+								class="h-full rounded-full transition-all duration-1000 ease-out"
+								style="width: {Math.min((summary?.totalSpent || 0) / (summary?.totalBudget || 1) * 100, 100)}%; background: {getVelocityColor(spendingVelocity.status)}"
+							></div>
+							<!-- Time marker -->
+							<div 
+								class="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
+								style="left: {monthProgress}%; background: {isDark ? '#737373' : '#737373'}"
+							></div>
+						</div>
 					</div>
 					
-					<div class="flex items-center justify-between text-xs mb-2" style="color: {isDark ? '#737373' : '#9ca3af'}">
-						<span>{monthProgress}% through month</span>
-						<span>{Math.round((summary?.totalSpent || 0) / (summary?.totalBudget || 1) * 100)}% spent</span>
-					</div>
-					
-					<p class="text-sm font-medium" style="color: {getVelocityColor(spendingVelocity.status)}">{spendingVelocity.message}</p>
+					<!-- Status message -->
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">{spendingVelocity.message}</p>
 				</div>
 
 				<!-- Summary Stats Card -->

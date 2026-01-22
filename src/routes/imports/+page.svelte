@@ -122,7 +122,7 @@
 
 		<!-- Upload area -->
 		<div
-			class="rounded-2xl mb-6 sm:mb-8 border-2 border-dashed transition-colors cursor-pointer p-4 sm:p-6"
+			class="rounded-2xl mb-6 sm:mb-8 border-2 border-dashed transition-colors cursor-pointer p-4 sm:p-6 active:scale-[0.99] touch-action-manipulation"
 			style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border-color: {dragOver ? '#0d9488' : (isDark ? '#2a2a2a' : '#d4cfc5')}; {dragOver ? 'background: rgba(13,148,136,0.05);' : ''}"
 			ondrop={handleDrop}
 			ondragover={handleDragOver}
@@ -130,7 +130,7 @@
 			role="button"
 			tabindex="0"
 		>
-			<label class="flex flex-col items-center justify-center py-8 sm:py-12 cursor-pointer">
+			<label class="flex flex-col items-center justify-center py-8 sm:py-12 cursor-pointer min-h-[120px]">
 				<input
 					type="file"
 					accept=".csv"

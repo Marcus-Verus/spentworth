@@ -57,17 +57,17 @@
 	}
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: {isDark ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.6)'}; backdrop-filter: blur(4px);">
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 safe-area-top safe-area-bottom" style="background: {isDark ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.6)'}; backdrop-filter: blur(4px);">
 	<div 
-		class="w-full max-w-lg rounded-3xl p-8 relative overflow-hidden"
+		class="w-full max-w-lg rounded-3xl p-6 sm:p-8 relative overflow-hidden max-h-[90vh] overflow-y-auto"
 		style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25)"
 	>
 		<!-- Progress dots -->
-		<div class="flex justify-center gap-2 mb-8">
+		<div class="flex justify-center gap-2 mb-6 sm:mb-8">
 			{#each steps as _, i}
 				<button
 					onclick={() => step = i}
-					class="w-2 h-2 rounded-full transition-all"
+					class="w-2 h-2 rounded-full transition-all min-w-[8px] min-h-[8px]"
 					style="background: {step === i ? '#0d9488' : (isDark ? '#404040' : '#d4d4d4')}; {step === i ? 'width: 24px;' : ''}"
 					aria-label="Go to step {i + 1}"
 				></button>
@@ -78,18 +78,18 @@
 		<div class="text-center">
 			<!-- Icon -->
 			<div 
-				class="w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center"
+				class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center"
 				style="background: {isDark ? 'rgba(13,148,136,0.15)' : 'rgba(13,148,136,0.1)'};"
 			>
-				<i class="{steps[step].icon} text-3xl text-sw-accent"></i>
+				<i class="{steps[step].icon} text-2xl sm:text-3xl text-sw-accent"></i>
 			</div>
 			
 			<!-- Title & Subtitle -->
-			<h2 class="font-display text-2xl font-bold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">{steps[step].title}</h2>
-			<p class="text-sm mb-4" style="color: #0d9488">{steps[step].subtitle}</p>
+			<h2 class="font-display text-xl sm:text-2xl font-bold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">{steps[step].title}</h2>
+			<p class="text-sm mb-3 sm:mb-4" style="color: #0d9488">{steps[step].subtitle}</p>
 			
 			<!-- Description -->
-			<p class="text-sm leading-relaxed mb-8" style="color: {isDark ? '#a3a3a3' : '#737373'}">{steps[step].content}</p>
+			<p class="text-sm leading-relaxed mb-6 sm:mb-8" style="color: {isDark ? '#a3a3a3' : '#737373'}">{steps[step].content}</p>
 		</div>
 		
 		<!-- Actions -->
