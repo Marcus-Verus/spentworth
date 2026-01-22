@@ -33,6 +33,8 @@
 	let newCategory = $state('');
 	let newLimit = $state(500);
 	let saving = $state(false);
+	let useCustomCategory = $state(false);
+	let customCategoryName = $state('');
 
 	// Quick Setup state - bulk budget creation
 	let quickSetupBudgets = $state<Record<string, number>>({});
@@ -300,7 +302,8 @@
 	}
 
 	async function saveBudget() {
-		if (!newCategory || newLimit <= 0) return;
+		const categoryToSave = useCustomCategory ? customCategoryName.trim() : newCategory;
+		if (!categoryToSave || newLimit <= 0) return;
 		
 		saving = true;
 		try {
@@ -308,7 +311,7 @@
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					category: newCategory,
+					category: categoryToSave,
 					monthlyLimit: newLimit
 				})
 			});
@@ -317,6 +320,8 @@
 				showAddModal = false;
 				newCategory = '';
 				newLimit = 500;
+				useCustomCategory = false;
+				customCategoryName = '';
 				await loadBudgets();
 			}
 		} catch (e) {
@@ -695,9 +700,9 @@
 					</div>
 				<div class="flex flex-wrap gap-2">
 					{#each budgetStreaks as streak}
-						<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
+						<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 							<span style="color: {isDark ? '#ffffff' : '#171717'}">{streak.category}</span>
-							<span class="inline-flex items-center justify-center w-6 h-6 rounded-full font-mono text-xs font-semibold" style="background: {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}; color: {isDark ? '#14b8a6' : '#0d9488'}">
+							<span class="inline-flex items-center justify-center w-6 h-6 rounded-full font-mono text-xs font-bold" style="background: {isDark ? '#262626' : '#ffffff'}; color: {isDark ? '#ffffff' : '#171717'}; border: 1px solid {isDark ? '#404040' : '#d4cfc5'}">
 								{streak.streak}
 							</span>
 						</div>
@@ -851,16 +856,36 @@
 			
 			<div class="space-y-4">
 				<div>
-					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
-					<select 
-						bind:value={newCategory}
-						class="w-full px-4 py-3 rounded-xl text-base"
-						style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-					>
-						{#each availableCategories as category}
-							<option value={category}>{category}</option>
-						{/each}
-					</select>
+					<div class="flex items-center justify-between mb-2">
+						<label class="block text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
+						<button 
+							onclick={() => { useCustomCategory = !useCustomCategory; if (!useCustomCategory) customCategoryName = ''; }}
+							class="text-xs font-medium transition-colors"
+							style="color: {useCustomCategory ? '#ef4444' : '#0d9488'}"
+						>
+							{useCustomCategory ? 'Use preset' : '+ Custom category'}
+						</button>
+					</div>
+					
+					{#if useCustomCategory}
+						<input 
+							type="text"
+							bind:value={customCategoryName}
+							placeholder="Enter custom category name..."
+							class="w-full px-4 py-3 rounded-xl text-base"
+							style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+						/>
+					{:else}
+						<select 
+							bind:value={newCategory}
+							class="w-full px-4 py-3 rounded-xl text-base"
+							style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+						>
+							{#each availableCategories as category}
+								<option value={category}>{category}</option>
+							{/each}
+						</select>
+					{/if}
 				</div>
 				
 				<div>
@@ -889,7 +914,7 @@
 
 			<div class="flex gap-3 mt-6">
 				<button 
-					onclick={() => showAddModal = false}
+					onclick={() => { showAddModal = false; useCustomCategory = false; customCategoryName = ''; }}
 					class="flex-1 px-4 py-3 rounded-xl font-display font-semibold transition-colors"
 					style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}"
 				>
@@ -897,7 +922,7 @@
 				</button>
 				<button 
 					onclick={saveBudget}
-					disabled={saving || !newCategory || newLimit <= 0}
+					disabled={saving || (useCustomCategory ? !customCategoryName.trim() : !newCategory) || newLimit <= 0}
 					class="flex-1 btn-primary py-3"
 				>
 					{#if saving}
