@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import { initTheme, getTheme, setTheme, toggleTheme } from '$lib/stores/theme';
+	import type { SubscriptionInfo } from '../api/stripe/subscription/+server';
 
 	let { data } = $props();
 
@@ -14,15 +15,29 @@
 	let saved = $state(false);
 	let isDark = $state(false);
 	
-	// Pro tier check - for now, check localStorage. Will be replaced with actual subscription check
-	let isPro = $state(false);
+	// Subscription state
+	let subscription = $state<SubscriptionInfo | null>(null);
+	let loadingPortal = $state(false);
+	
+	// Pro tier check based on subscription
+	let isPro = $derived(
+		subscription?.plan === 'pro' && 
+		['active', 'trialing'].includes(subscription?.status || '')
+	);
 
 	onMount(async () => {
 		initTheme();
 		isDark = getTheme() === 'dark';
 		
-		// Check if user has Pro (placeholder - will check Stripe subscription later)
-		isPro = localStorage.getItem('sw_pro_tier') === 'true';
+		// Fetch subscription status
+		try {
+			const subRes = await fetch('/api/stripe/subscription');
+			if (subRes.ok) {
+				subscription = await subRes.json();
+			}
+		} catch (err) {
+			console.error('Failed to fetch subscription:', err);
+		}
 		
 		// If not Pro and dark mode is on, reset to light
 		if (!isPro && isDark) {
@@ -68,6 +83,22 @@
 		setTimeout(() => saved = false, 2000);
 	}
 
+	async function openBillingPortal() {
+		loadingPortal = true;
+		try {
+			const res = await fetch('/api/stripe/portal', { method: 'POST' });
+			if (res.ok) {
+				const { url } = await res.json();
+				window.location.href = url;
+			} else {
+				console.error('Failed to open billing portal');
+			}
+		} catch (err) {
+			console.error('Portal error:', err);
+		}
+		loadingPortal = false;
+	}
+
 	// Calculate potential savings growth (7% annual return over 10 years)
 	function calculateFutureValue(monthlySavings: number): number {
 		let total = 0;
@@ -75,6 +106,30 @@
 			total = (total + monthlySavings) * Math.pow(1.07, 1/12);
 		}
 		return Math.round(total);
+	}
+
+	function formatDate(dateStr: string | null): string {
+		if (!dateStr) return '';
+		return new Date(dateStr).toLocaleDateString('en-US', {
+			month: 'long',
+			day: 'numeric',
+			year: 'numeric'
+		});
+	}
+
+	function getStatusBadge(status: string) {
+		switch (status) {
+			case 'active':
+				return { text: 'Active', class: 'bg-green-500/20 text-green-600 border-green-500/30' };
+			case 'trialing':
+				return { text: 'Trial', class: 'bg-blue-500/20 text-blue-600 border-blue-500/30' };
+			case 'past_due':
+				return { text: 'Past Due', class: 'bg-red-500/20 text-red-600 border-red-500/30' };
+			case 'canceled':
+				return { text: 'Canceled', class: 'bg-gray-500/20 text-gray-600 border-gray-500/30' };
+			default:
+				return { text: 'Free', class: 'bg-gray-500/20 text-gray-600 border-gray-500/30' };
+		}
 	}
 </script>
 
@@ -90,6 +145,93 @@
 			</div>
 		{:else}
 			<div class="space-y-8">
+				<!-- Subscription Status -->
+				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<div class="flex items-center justify-between mb-4">
+						<h2 class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+							<i class="fa-solid fa-credit-card text-sw-accent mr-2"></i>Subscription
+						</h2>
+						{#if subscription}
+							{@const badge = getStatusBadge(subscription.status)}
+							<span class="px-2.5 py-1 text-xs font-semibold rounded-full border {badge.class}">
+								{badge.text}
+							</span>
+						{/if}
+					</div>
+					
+					{#if subscription && isPro}
+						<div class="space-y-4">
+							<div class="flex items-center justify-between">
+								<div>
+									<p class="font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+										SpentWorth Pro
+										{#if subscription.interval}
+											<span class="text-sm font-normal" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+												({subscription.interval === 'yearly' ? 'Annual' : 'Monthly'})
+											</span>
+										{/if}
+									</p>
+									{#if subscription.status === 'trialing' && subscription.trialEnd}
+										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+											Trial ends {formatDate(subscription.trialEnd)}
+										</p>
+									{:else if subscription.currentPeriodEnd}
+										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+											{subscription.cancelAtPeriodEnd ? 'Cancels' : 'Renews'} {formatDate(subscription.currentPeriodEnd)}
+										</p>
+									{/if}
+								</div>
+								<button
+									onclick={openBillingPortal}
+									disabled={loadingPortal}
+									class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+									style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+								>
+									{#if loadingPortal}
+										<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+									{/if}
+									Manage Billing
+								</button>
+							</div>
+							
+							{#if subscription.cancelAtPeriodEnd}
+								<div class="rounded-xl p-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2)">
+									<p class="text-sm" style="color: {isDark ? '#fca5a5' : '#dc2626'}">
+										<i class="fa-solid fa-exclamation-triangle mr-2"></i>
+										Your subscription will end on {formatDate(subscription.currentPeriodEnd)}. 
+										<button onclick={openBillingPortal} class="underline font-medium">Reactivate</button>
+									</p>
+								</div>
+							{/if}
+						</div>
+					{:else}
+						<div class="space-y-4">
+							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								You're on the free plan. Upgrade to Pro for unlimited imports, advanced insights, and more.
+							</p>
+							<div class="flex items-center gap-3">
+								<a 
+									href="/pricing" 
+									class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-sw-accent text-white hover:bg-sw-accent/90"
+								>
+									<i class="fa-solid fa-crown mr-1.5"></i>
+									Upgrade to Pro
+								</a>
+								{#if subscription?.hasStripeCustomer}
+									<button
+										onclick={openBillingPortal}
+										disabled={loadingPortal}
+										class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+										style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+									>
+										View Billing History
+									</button>
+								{/if}
+							</div>
+						</div>
+					{/if}
+				</div>
+
 				<!-- Income Settings -->
 				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
 					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">

@@ -1,15 +1,30 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { initTheme, getTheme, toggleTheme } from '$lib/stores/theme';
 	import Logo from '$lib/components/Logo.svelte';
 
 	let isDark = $state(false);
 	let billingCycle = $state<'monthly' | 'yearly'>('yearly');
+	let isLoading = $state(false);
+	let checkoutError = $state<string | null>(null);
+	let isLoggedIn = $state(false);
 
 	onMount(() => {
 		initTheme();
 		isDark = getTheme() === 'dark';
+		
+		// Check if user is logged in
+		isLoggedIn = !!$page.data.session;
+		
+		// Check for canceled checkout
+		const params = new URLSearchParams(window.location.search);
+		if (params.get('checkout') === 'canceled') {
+			checkoutError = 'Checkout was canceled. You can try again anytime.';
+			// Clean up URL
+			window.history.replaceState({}, '', '/pricing');
+		}
 	});
 
 	function handleThemeToggle() {
@@ -67,6 +82,41 @@
 		const yearly = plans.pro.yearlyPrice * 12;
 		return Math.round(((monthly - yearly) / monthly) * 100);
 	}
+
+	async function handleProCheckout() {
+		if (!isLoggedIn) {
+			// Redirect to signup with plan info
+			goto(`/signup?plan=pro&interval=${billingCycle}`);
+			return;
+		}
+
+		isLoading = true;
+		checkoutError = null;
+
+		try {
+			const response = await fetch('/api/stripe/checkout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ interval: billingCycle })
+			});
+
+			if (!response.ok) {
+				const data = await response.json();
+				throw new Error(data.message || 'Failed to start checkout');
+			}
+
+			const { url } = await response.json();
+			
+			if (url) {
+				window.location.href = url;
+			} else {
+				throw new Error('No checkout URL returned');
+			}
+		} catch (err) {
+			checkoutError = err instanceof Error ? err.message : 'Something went wrong';
+			isLoading = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -96,8 +146,12 @@
 						<i class="fa-solid fa-moon"></i>
 					{/if}
 				</button>
-				<a href="/login" class="text-sm font-medium hidden sm:block" style="color: {isDark ? '#a3a3a3' : '#737373'}">Log in</a>
-				<a href="/signup" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2">Sign up</a>
+				{#if isLoggedIn}
+					<a href="/dashboard" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2">Dashboard</a>
+				{:else}
+					<a href="/login" class="text-sm font-medium hidden sm:block" style="color: {isDark ? '#a3a3a3' : '#737373'}">Log in</a>
+					<a href="/signup" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2">Sign up</a>
+				{/if}
 			</div>
 		</div>
 	</header>
@@ -112,6 +166,13 @@
 				Start free. Upgrade when you're ready.
 			</p>
 		</div>
+
+		<!-- Error message -->
+		{#if checkoutError}
+			<div class="mb-6 p-4 rounded-xl text-center" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3)">
+				<p class="text-red-500 text-sm">{checkoutError}</p>
+			</div>
+		{/if}
 
 		<!-- Billing Toggle -->
 		<div class="flex items-center justify-center gap-3 mb-10">
@@ -147,64 +208,115 @@
 
 		<!-- Pricing Cards -->
 		<div class="grid md:grid-cols-2 gap-6">
-			{#each Object.values(plans) as plan}
-				<div 
-					class="rounded-2xl p-6 sm:p-8 relative"
-					style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: {plan.highlighted ? '2px solid #0d9488' : `1px solid ${isDark ? '#2a2a2a' : '#e5e5e5'}`}"
-				>
-					{#if plan.highlighted}
-						<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-sw-accent text-white text-xs font-medium">
-							Most Popular
-						</div>
-					{/if}
-
-					<div class="mb-6">
-						<h2 class="font-display text-xl font-semibold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
-							{plan.name}
-						</h2>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-							{plan.description}
-						</p>
-					</div>
-
-					<div class="mb-6">
-						<span class="font-display text-4xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">
-							{getPrice(plan)}
-						</span>
-						{#if plan.monthlyPrice > 0}
-							<span class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
-								/month
-							</span>
-							{#if billingCycle === 'yearly'}
-								<p class="text-xs mt-1" style="color: {isDark ? '#737373' : '#9ca3af'}">
-									Billed annually (${plan.yearlyPrice * 12}/year)
-								</p>
-							{/if}
-						{:else}
-							<span class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
-								forever
-							</span>
-						{/if}
-					</div>
-
-					<a 
-						href={plan.ctaHref}
-						class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6"
-						style="background: {plan.highlighted ? '#0d9488' : (isDark ? '#2a2a2a' : '#f5f0e8')}; color: {plan.highlighted ? '#ffffff' : (isDark ? '#ffffff' : '#171717')}"
-					>
-						{plan.cta}
-					</a>
-
-					<ul class="space-y-3">
-						{#each plan.features as feature}
-							<li class="flex items-start gap-3 text-sm">
-								<i class="fa-solid fa-check text-sw-accent mt-0.5"></i>
-								<span style="color: {isDark ? '#a3a3a3' : '#525252'}">{feature}</span>
-							</li>
-						{/each}
-					</ul>
+			<!-- Free Plan -->
+			<div 
+				class="rounded-2xl p-6 sm:p-8 relative"
+				style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
+			>
+				<div class="mb-6">
+					<h2 class="font-display text-xl font-semibold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+						{plans.free.name}
+					</h2>
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						{plans.free.description}
+					</p>
 				</div>
-			{/each}
+
+				<div class="mb-6">
+					<span class="font-display text-4xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">
+						Free
+					</span>
+					<span class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
+						forever
+					</span>
+				</div>
+
+				<a 
+					href={plans.free.ctaHref}
+					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6"
+					style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+				>
+					{plans.free.cta}
+				</a>
+
+				<ul class="space-y-3">
+					{#each plans.free.features as feature}
+						<li class="flex items-start gap-3 text-sm">
+							<i class="fa-solid fa-check text-sw-accent mt-0.5"></i>
+							<span style="color: {isDark ? '#a3a3a3' : '#525252'}">{feature}</span>
+						</li>
+					{/each}
+				</ul>
+			</div>
+
+			<!-- Pro Plan -->
+			<div 
+				class="rounded-2xl p-6 sm:p-8 relative"
+				style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 2px solid #0d9488"
+			>
+				<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-sw-accent text-white text-xs font-medium">
+					Most Popular
+				</div>
+
+				<div class="mb-6">
+					<h2 class="font-display text-xl font-semibold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+						{plans.pro.name}
+					</h2>
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						{plans.pro.description}
+					</p>
+				</div>
+
+				<div class="mb-6">
+					<span class="font-display text-4xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">
+						{getPrice(plans.pro)}
+					</span>
+					<span class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
+						/month
+					</span>
+					{#if billingCycle === 'yearly'}
+						<p class="text-xs mt-1" style="color: {isDark ? '#737373' : '#9ca3af'}">
+							Billed annually (${plans.pro.yearlyPrice * 12}/year)
+						</p>
+					{/if}
+				</div>
+
+				<button 
+					onclick={handleProCheckout}
+					disabled={isLoading}
+					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
+					style="background: #0d9488; color: #ffffff"
+				>
+					{#if isLoading}
+						<i class="fa-solid fa-spinner fa-spin mr-2"></i>
+						Processing...
+					{:else}
+						Start 14-Day Free Trial
+					{/if}
+				</button>
+
+				<p class="text-xs text-center mb-4" style="color: {isDark ? '#737373' : '#9ca3af'}">
+					<i class="fa-solid fa-lock mr-1"></i>
+					Secure checkout powered by Stripe
+				</p>
+
+				<ul class="space-y-3">
+					{#each plans.pro.features as feature}
+						<li class="flex items-start gap-3 text-sm">
+							<i class="fa-solid fa-check text-sw-accent mt-0.5"></i>
+							<span style="color: {isDark ? '#a3a3a3' : '#525252'}">{feature}</span>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		</div>
+
+		<!-- Trial info -->
+		<div class="mt-8 text-center">
+			<p class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
+				<i class="fa-solid fa-gift mr-1 text-sw-accent"></i>
+				14-day free trial on Pro • No credit card required to start • Cancel anytime
+			</p>
 		</div>
 
 		<!-- FAQ Section -->
@@ -229,6 +341,10 @@
 					{
 						q: 'Do you offer refunds?',
 						a: 'Yes, if you\'re not satisfied within the first 14 days, we\'ll refund your payment in full.'
+					},
+					{
+						q: 'How does the free trial work?',
+						a: 'Start your 14-day free trial with full Pro access. You\'ll only be charged after the trial ends, and you can cancel anytime before that.'
 					}
 				] as faq}
 					<div class="rounded-xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
@@ -245,4 +361,3 @@
 
 	</main>
 </div>
-
