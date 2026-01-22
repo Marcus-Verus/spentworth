@@ -44,11 +44,13 @@ export const GET: RequestHandler = async ({ locals }) => {
 	const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString().slice(0, 10);
 
 	// Fetch all transactions for analysis
+	// Only include purchases (kind = 'purchase') to exclude refunds/income from insights
 	const { data: transactions } = await locals.supabase
 		.from('transactions')
 		.select('amount, category, merchant, merchant_norm, date')
 		.eq('user_id', user.id)
 		.eq('included_in_spend', true)
+		.eq('kind', 'purchase')
 		.gte('date', threeMonthsAgo)
 		.order('date', { ascending: false });
 

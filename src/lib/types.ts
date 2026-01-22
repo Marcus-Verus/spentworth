@@ -311,33 +311,182 @@ export type PreviewTab = 'included' | 'excluded' | 'needs_review' | 'duplicates'
 // Sort options
 export type SortOption = 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
 
-// Default categories (aligned with Rocket Money / Mint standards)
-export const CATEGORIES = [
-	'Auto & Transport',
-	'Groceries',
-	'Dining & Restaurants',
-	'Coffee & Drinks',
-	'Food Delivery',
-	'Shopping',
-	'Home & Garden',
-	'Subscriptions',
-	'Travel & Vacation',
-	'Entertainment',
-	'Healthcare & Medical',
-	'Utilities',
-	'Housing & Rent',
-	'Personal Care',
-	'Fitness & Gym',
-	'Pets',
-	'Insurance',
-	'Education',
-	'Gifts & Donations',
-	'Kids & Family',
-	'Electronics',
-	'Uncategorized'
-] as const;
+// Category hierarchy with subcategories (Rocket Money style)
+export const CATEGORY_HIERARCHY: Record<string, string[]> = {
+	'Auto & Transport': [
+		'Gas & Fuel',
+		'Parking',
+		'Auto Insurance',
+		'Auto Payment',
+		'Auto Maintenance',
+		'Ride Share',
+		'Public Transit',
+		'Tolls'
+	],
+	'Coffee & Drinks': [
+		'Coffee Shops',
+		'Bars & Alcohol',
+		'Smoothies & Juice'
+	],
+	'Dining & Restaurants': [
+		'Fast Food',
+		'Casual Dining',
+		'Fine Dining',
+		'Takeout',
+		'Food Trucks'
+	],
+	'Education': [
+		'Tuition',
+		'Books & Supplies',
+		'Student Loans',
+		'Online Courses'
+	],
+	'Electronics': [
+		'Computers',
+		'Phones & Tablets',
+		'Accessories',
+		'Software'
+	],
+	'Entertainment': [
+		'Movies & TV',
+		'Music & Concerts',
+		'Games',
+		'Sports & Recreation',
+		'Hobbies',
+		'Streaming Services'
+	],
+	'Fitness & Gym': [
+		'Gym Membership',
+		'Fitness Classes',
+		'Sports Equipment',
+		'Supplements'
+	],
+	'Food Delivery': [
+		'Delivery Apps',
+		'Meal Kits'
+	],
+	'Gifts & Donations': [
+		'Gifts',
+		'Charity',
+		'Religious'
+	],
+	'Groceries': [
+		'Supermarket',
+		'Specialty Foods',
+		'Organic & Natural',
+		'Warehouse Clubs'
+	],
+	'Healthcare & Medical': [
+		'Doctor',
+		'Dentist',
+		'Vision',
+		'Pharmacy',
+		'Mental Health',
+		'Medical Equipment'
+	],
+	'Home & Garden': [
+		'Home Improvement',
+		'Garden & Lawn',
+		'Furniture',
+		'Home Decor',
+		'Cleaning Supplies'
+	],
+	'Housing & Rent': [
+		'Rent',
+		'Mortgage',
+		'HOA Fees',
+		'Home Insurance'
+	],
+	'Insurance': [
+		'Life Insurance',
+		'Health Insurance',
+		'Renters Insurance',
+		'Other Insurance'
+	],
+	'Kids & Family': [
+		'Childcare',
+		'Kids Activities',
+		'Toys & Games',
+		'Baby Supplies',
+		'Kids Clothing'
+	],
+	'Personal Care': [
+		'Hair & Salon',
+		'Spa & Massage',
+		'Cosmetics',
+		'Skincare'
+	],
+	'Pets': [
+		'Pet Food',
+		'Vet',
+		'Pet Supplies',
+		'Pet Grooming'
+	],
+	'Shopping': [
+		'Clothing',
+		'Shoes',
+		'Accessories',
+		'Online Shopping',
+		'Department Stores'
+	],
+	'Subscriptions': [
+		'Streaming',
+		'Software',
+		'News & Magazines',
+		'Memberships',
+		'Other Subscriptions'
+	],
+	'Travel & Vacation': [
+		'Flights',
+		'Hotels',
+		'Car Rental',
+		'Vacation Packages',
+		'Cruises'
+	],
+	'Utilities': [
+		'Electric',
+		'Gas',
+		'Water',
+		'Internet',
+		'Phone',
+		'Cable & TV',
+		'Trash'
+	],
+	'Uncategorized': []
+};
 
-export type Category = (typeof CATEGORIES)[number];
+// Default categories (aligned with Rocket Money / Mint standards) - alphabetically sorted
+export const CATEGORIES = Object.keys(CATEGORY_HIERARCHY).sort() as readonly string[];
+
+// Flat list of all subcategories with their parent category
+export const SUBCATEGORY_MAP: Record<string, string> = Object.entries(CATEGORY_HIERARCHY).reduce(
+	(acc, [category, subcategories]) => {
+		for (const sub of subcategories) {
+			acc[sub] = category;
+		}
+		return acc;
+	},
+	{} as Record<string, string>
+);
+
+// Get all subcategories for a given category
+export function getSubcategories(category: string): string[] {
+	return CATEGORY_HIERARCHY[category] || [];
+}
+
+// Get parent category for a subcategory
+export function getParentCategory(subcategory: string): string | null {
+	return SUBCATEGORY_MAP[subcategory] || null;
+}
+
+// Format category display (e.g., "Dining & Restaurants › Fast Food")
+export function formatCategoryDisplay(category: string | null, subcategory: string | null): string {
+	if (!category) return 'Uncategorized';
+	if (!subcategory) return category;
+	return `${category} › ${subcategory}`;
+}
+
+export type Category = string;
 
 // Budget types
 export interface Budget {

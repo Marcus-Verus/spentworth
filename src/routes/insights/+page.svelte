@@ -6,6 +6,172 @@
 	let isDark = $state(false);
 	let isPro = $state(false);
 
+	// Subscriptions state
+	interface RecurringCharge {
+		id?: string; // For user-defined subscriptions
+		merchant: string;
+		avgAmount: number;
+		frequency: string;
+		monthlyEstimate: number;
+		yearlyEstimate: number;
+		count: number;
+		isUserDefined?: boolean;
+		isCancelled?: boolean;
+	}
+	let autoDetectedSubs = $state<RecurringCharge[]>([]);
+	let userDefinedSubs = $state<RecurringCharge[]>([]);
+	let subscriptions = $derived([...userDefinedSubs, ...autoDetectedSubs]);
+	let cancelledSubscriptions = $state<Set<string>>(new Set());
+	let selectedWhatIf = $state<RecurringCharge | null>(null);
+	let whatIfYears = $state(10);
+	
+	// Add subscription modal state
+	let showAddSubModal = $state(false);
+	let newSubName = $state('');
+	let newSubAmount = $state<number>(10);
+	let newSubFrequency = $state<'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'semi-annually' | 'yearly'>('monthly');
+	let savingSub = $state(false);
+
+	function loadCancelledSubscriptions() {
+		if (typeof window === 'undefined') return;
+		const saved = localStorage.getItem('sw_cancelled_subscriptions');
+		if (saved) {
+			cancelledSubscriptions = new Set(JSON.parse(saved));
+		}
+	}
+
+	function toggleSubscriptionCancelled(sub: RecurringCharge) {
+		if (sub.isUserDefined && sub.id) {
+			// For user-defined subs, toggle via API
+			const newCancelled = !sub.isCancelled;
+			fetch('/api/subscriptions', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id: sub.id, isCancelled: newCancelled })
+			}).then(() => {
+				userDefinedSubs = userDefinedSubs.map(s => 
+					s.id === sub.id ? { ...s, isCancelled: newCancelled } : s
+				);
+			});
+		} else {
+			// For auto-detected subs, use localStorage
+			if (cancelledSubscriptions.has(sub.merchant)) {
+				cancelledSubscriptions.delete(sub.merchant);
+			} else {
+				cancelledSubscriptions.add(sub.merchant);
+			}
+			cancelledSubscriptions = new Set(cancelledSubscriptions);
+			localStorage.setItem('sw_cancelled_subscriptions', JSON.stringify([...cancelledSubscriptions]));
+		}
+	}
+	
+	function isSubCancelled(sub: RecurringCharge): boolean {
+		if (sub.isUserDefined) return sub.isCancelled || false;
+		return cancelledSubscriptions.has(sub.merchant);
+	}
+
+	function calculateWhatIf(monthlyAmount: number, years: number) {
+		const annualReturn = 0.07;
+		let total = 0;
+		for (let month = 0; month < years * 12; month++) {
+			total = (total + monthlyAmount) * Math.pow(1 + annualReturn, 1/12);
+		}
+		return total;
+	}
+
+	async function loadSubscriptions() {
+		try {
+			// Load auto-detected subscriptions
+			const res = await fetch('/api/dashboard/summary');
+			const json = await res.json();
+			if (json.ok && json.data.recurringCharges) {
+				autoDetectedSubs = json.data.recurringCharges.map((r: RecurringCharge) => ({
+					...r,
+					isUserDefined: false
+				}));
+			}
+			
+			// Load user-defined subscriptions
+			const userRes = await fetch('/api/subscriptions');
+			const userJson = await userRes.json();
+			if (userJson.ok) {
+				userDefinedSubs = userJson.data.map((s: { id: string; name: string; amount: number; frequency: string; monthlyEstimate: number; yearlyEstimate: number; isCancelled: boolean }) => ({
+					id: s.id,
+					merchant: s.name,
+					avgAmount: s.amount,
+					frequency: s.frequency.charAt(0).toUpperCase() + s.frequency.slice(1),
+					monthlyEstimate: s.monthlyEstimate,
+					yearlyEstimate: s.yearlyEstimate,
+					count: 0,
+					isUserDefined: true,
+					isCancelled: s.isCancelled
+				}));
+			}
+			
+			// Select first subscription for what-if if none selected
+			const allSubs = [...userDefinedSubs, ...autoDetectedSubs];
+			if (allSubs.length > 0 && !selectedWhatIf) {
+				selectedWhatIf = allSubs[0];
+			}
+		} catch (e) {
+			console.error('Failed to load subscriptions:', e);
+		}
+	}
+	
+	async function saveNewSubscription() {
+		if (!newSubName || newSubAmount <= 0) return;
+		
+		savingSub = true;
+		try {
+			const res = await fetch('/api/subscriptions', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: newSubName,
+					amount: newSubAmount,
+					frequency: newSubFrequency
+				})
+			});
+			
+			const json = await res.json();
+			if (json.ok) {
+				const s = json.data;
+				userDefinedSubs = [...userDefinedSubs, {
+					id: s.id,
+					merchant: s.name,
+					avgAmount: s.amount,
+					frequency: s.frequency.charAt(0).toUpperCase() + s.frequency.slice(1),
+					monthlyEstimate: s.monthlyEstimate,
+					yearlyEstimate: s.yearlyEstimate,
+					count: 0,
+					isUserDefined: true,
+					isCancelled: false
+				}];
+				showAddSubModal = false;
+				newSubName = '';
+				newSubAmount = 10;
+				newSubFrequency = 'monthly';
+			}
+		} catch (e) {
+			console.error('Failed to save subscription:', e);
+		}
+		savingSub = false;
+	}
+	
+	async function deleteSubscription(id: string) {
+		if (!confirm('Delete this subscription?')) return;
+		
+		try {
+			await fetch(`/api/subscriptions?id=${id}`, { method: 'DELETE' });
+			userDefinedSubs = userDefinedSubs.filter(s => s.id !== id);
+			if (selectedWhatIf?.id === id) {
+				selectedWhatIf = subscriptions[0] || null;
+			}
+		} catch (e) {
+			console.error('Failed to delete subscription:', e);
+		}
+	}
+
 	interface Insight {
 		id: string;
 		type: 'opportunity' | 'trend' | 'subscription' | 'achievement' | 'tip';
@@ -264,7 +430,8 @@
 			isDark = false;
 		}
 		
-		loadInsights();
+		loadCancelledSubscriptions();
+		await Promise.all([loadInsights(), loadSubscriptions()]);
 	});
 </script>
 
@@ -457,117 +624,67 @@
 				</div>
 			</div>
 
-			<!-- Insight Type Distribution -->
-			{#if insights.length > 0}
-				<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-					<!-- Opportunity Costs by Category -->
-					{#if insights.filter(i => i.opportunityCost && i.category).length > 0}
-						{@const categoryInsights = insights.filter(i => i.opportunityCost && i.category).reduce((acc, i) => {
-							const cat = i.category!;
-							if (!acc[cat]) acc[cat] = 0;
-							acc[cat] += i.opportunityCost || 0;
-							return acc;
-						}, {} as Record<string, number>)}
-						{@const sortedCategories = Object.entries(categoryInsights).sort((a, b) => b[1] - a[1]).slice(0, 6)}
-						{@const maxCost = Math.max(...sortedCategories.map(([_, cost]) => cost), 1)}
-						
-						<div class="lg:col-span-2 rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							<div class="flex items-center gap-2 mb-4">
-								<i class="fa-solid fa-money-bill-trend-up" style="color: #ef4444"></i>
-								<div>
-									<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Opportunity Cost by Category</h3>
-									<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Where your money could grow most</p>
-								</div>
-							</div>
-							
-							<div class="space-y-3">
-								{#each sortedCategories as [category, cost], i}
-									{@const width = (cost / maxCost) * 100}
-									<div class="group">
-										<div class="flex items-center justify-between mb-1">
-											<span class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{category}</span>
-											<span class="font-mono text-sm text-sw-accent">{formatCurrency(cost)}</span>
-										</div>
-										<div class="h-2 rounded-full overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
-											<div 
-												class="h-full rounded-full transition-all duration-700"
-												style="width: {width}%; background: linear-gradient(90deg, #ef4444, #f87171);"
-											></div>
-										</div>
-									</div>
-								{/each}
-							</div>
+			<!-- Opportunity Costs by Category (only show if meaningful data) -->
+			{#if insights.filter(i => i.opportunityCost && i.category).length >= 2}
+				{@const categoryInsights = insights.filter(i => i.opportunityCost && i.category).reduce((acc, i) => {
+					const cat = i.category!;
+					if (!acc[cat]) acc[cat] = 0;
+					acc[cat] += i.opportunityCost || 0;
+					return acc;
+				}, {} as Record<string, number>)}
+				{@const sortedCategories = Object.entries(categoryInsights).sort((a, b) => b[1] - a[1]).slice(0, 6)}
+				{@const maxCost = Math.max(...sortedCategories.map(([_, cost]) => cost), 1)}
+				
+				<div class="rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="flex items-center gap-2 mb-4">
+						<i class="fa-solid fa-money-bill-trend-up" style="color: #ef4444"></i>
+						<div>
+							<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Opportunity Cost by Category</h3>
+							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Where your money could grow most</p>
 						</div>
-					{/if}
-
-					<!-- Insight Types Donut -->
-					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-						<h3 class="font-display font-semibold mb-4 text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Insight Breakdown</h3>
-						{#if insights.length > 0}
-							{@const typeCounts = insights.reduce((acc, i) => {
-								acc[i.type] = (acc[i.type] || 0) + 1;
-								return acc;
-							}, {} as Record<string, number>)}
-							{@const total = insights.length}
-							{@const colors = ['#0d9488', '#6366f1', '#f59e0b', '#10b981', '#ec4899']}
-							{@const types = Object.entries(typeCounts)}
-							{@const typeLabels: Record<string, string> = {
-								'opportunity': 'Opportunities',
-								'trend': 'Trends',
-								'subscription': 'Subscriptions',
-								'achievement': 'Wins',
-								'tip': 'Tips'
-							}}
-							<div class="flex flex-col items-center gap-4">
-								<div class="relative">
-									<svg viewBox="0 0 200 200" class="w-32 h-32">
-									{#each types as [type, count], i}
-										{@const startAngle = types.slice(0, i).reduce((acc, [_, c]) => acc + (c / total) * 360, 0)}
-										{@const angle = (count / total) * 360}
-										{#if angle > 0.5}
-											<path d={getDonutPath(startAngle, startAngle + angle - 0.5)} fill={colors[i % colors.length]} class="hover:opacity-80 transition-opacity cursor-pointer">
-												<title>{type}: {count}</title>
-											</path>
-										{/if}
-									{/each}
-									<text x="100" y="95" text-anchor="middle" class="text-[10px]" style="fill: {isDark ? '#a3a3a3' : '#737373'}">Total</text>
-										<text x="100" y="115" text-anchor="middle" class="font-display font-bold text-base" style="fill: {isDark ? '#ffffff' : '#171717'}">{total}</text>
-									</svg>
+					</div>
+					
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+						{#each sortedCategories as [category, cost], i}
+							{@const width = (cost / maxCost) * 100}
+							<div class="group">
+								<div class="flex items-center justify-between mb-1">
+									<span class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{category}</span>
+									<span class="font-mono text-sm text-sw-accent">{formatCurrency(cost)}</span>
 								</div>
-								<div class="w-full space-y-1.5">
-									{#each types as [type, count], i}
-									<div class="flex items-center gap-2">
-										<div class="w-3 h-3 rounded-sm" style="background: {colors[i % colors.length]}"></div>
-										<span class="text-xs flex-1 capitalize" style="color: {isDark ? '#ffffff' : '#171717'}">{typeLabels[type] || type}</span>
-										<span class="font-mono text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">{count}</span>
-									</div>
-									{/each}
+								<div class="h-1.5 rounded-full overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
+									<div 
+										class="h-full rounded-full transition-all duration-700"
+										style="width: {width}%; background: linear-gradient(90deg, #ef4444, #f87171);"
+									></div>
 								</div>
 							</div>
-						{/if}
+						{/each}
 					</div>
 				</div>
 			{/if}
 
 			<!-- Filter Tabs -->
-			<div class="flex gap-1 mb-6 p-1.5 rounded-xl overflow-x-auto" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+			<div class="inline-flex rounded-xl p-1 mb-6" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
 				{#each [
 					{ value: 'all', label: 'All', icon: 'fa-layer-group' },
-					{ value: 'high', label: 'High Priority', icon: 'fa-fire' },
-					{ value: 'opportunity', label: 'Opportunities', icon: 'fa-lightbulb' },
+					{ value: 'high', label: 'Priority', icon: 'fa-bolt' },
+					{ value: 'opportunity', label: 'Savings', icon: 'fa-piggy-bank' },
 					{ value: 'trend', label: 'Trends', icon: 'fa-chart-line' },
 					{ value: 'achievement', label: 'Wins', icon: 'fa-trophy' }
 				] as tab}
 					<button
 						onclick={() => filter = tab.value as typeof filter}
-						class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
-						style="background: {filter === tab.value ? (isDark ? '#2a2a2a' : '#f5f0e8') : 'transparent'}; 
-							   color: {filter === tab.value ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#737373' : '#9ca3af')}"
+						class="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all"
+						style="background: {filter === tab.value ? (isDark ? '#1a1a1a' : '#ffffff') : 'transparent'}; 
+							   color: {filter === tab.value ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#737373' : '#737373')};
+							   box-shadow: {filter === tab.value ? (isDark ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.08)') : 'none'}"
 					>
-						<i class="fa-solid {tab.icon} text-xs"></i>
-						{tab.label}
+						<i class="fa-solid {tab.icon} text-xs {filter === tab.value ? 'text-sw-accent' : ''}"></i>
+						<span class="hidden sm:inline">{tab.label}</span>
 						{#if tab.value === 'high' && summary?.highPriority}
-							<span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style="background: #ef4444; color: #ffffff">{summary.highPriority}</span>
+							<span class="w-5 h-5 rounded-full text-xs flex items-center justify-center font-semibold" 
+								style="background: rgba(239,68,68,0.15); color: #ef4444">{summary.highPriority}</span>
 						{/if}
 					</button>
 				{/each}
@@ -676,32 +793,197 @@
 
 			<!-- Empty State -->
 			{#if filteredInsights.length === 0 && insights.length > 0}
-				<div class="text-center py-12 rounded-xl" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<div class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style="background: {isDark ? '#2a2a2a' : '#f0f0f0'}">
-						<i class="fa-solid fa-filter text-xl" style="color: {isDark ? '#525252' : '#9ca3af'}"></i>
-					</div>
-					<p class="text-sm font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">No matching insights</p>
-					<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Try selecting a different filter</p>
+				<div class="text-center py-8">
+					<p class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
+						No {filter === 'high' ? 'high priority' : filter} insights. 
+						<button onclick={() => filter = 'all'} class="underline hover:no-underline" style="color: {isDark ? '#a3a3a3' : '#737373'}">View all</button>
+					</p>
 				</div>
 			{/if}
 
 			<!-- Empty State - No Data -->
 			{#if insights.length === 0 && !loading}
-				<div class="text-center py-16 rounded-2xl" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<div class="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}">
-						<i class="fa-solid fa-lightbulb text-3xl" style="color: {isDark ? '#404040' : '#d4d4d4'}"></i>
-					</div>
-					<h3 class="font-display font-bold text-xl mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
-						No insights yet
-					</h3>
-					<p class="text-sm mb-6 max-w-md mx-auto" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						Import your transactions and we'll analyze your spending patterns to find opportunities and trends.
+				<div class="text-center py-12">
+					<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Import your transactions to get spending insights.
 					</p>
-					<a href="/imports" class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl">
+					<a href="/imports" class="btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm">
 						Import Transactions
 					</a>
 				</div>
 			{/if}
+
+			<!-- Subscriptions & What-If Calculator -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+				<!-- Recurring Charges -->
+				<div class="rounded-2xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between" style="border-bottom: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+						<div class="flex items-center gap-2">
+							<i class="fa-solid fa-repeat text-amber-500"></i>
+							<div>
+								<h3 class="font-display font-semibold text-base" style="color: {isDark ? '#ffffff' : '#171717'}">Subscriptions</h3>
+								<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									{subscriptions.length > 0 ? `${subscriptions.length} tracked` : 'Track your recurring charges'}
+								</p>
+							</div>
+						</div>
+						<button 
+							onclick={() => showAddSubModal = true}
+							class="p-2 rounded-lg transition-colors"
+							style="background: rgba(13,148,136,0.1); color: #0d9488"
+							title="Add subscription"
+						>
+							<i class="fa-solid fa-plus text-sm"></i>
+						</button>
+					</div>
+					{#if subscriptions.length > 0}
+						<div class="max-h-72 overflow-y-auto">
+							{#each subscriptions as charge}
+								{@const isCancelled = isSubCancelled(charge)}
+								{@const tenYearCost = calculateWhatIf(charge.monthlyEstimate, 10)}
+								<div 
+									class="px-4 sm:px-6 py-2.5 flex items-center gap-2 transition-colors"
+									style="background: {selectedWhatIf?.merchant === charge.merchant ? 'rgba(13,148,136,0.1)' : 'transparent'}; border-bottom: 1px solid {isDark ? 'rgba(64,64,64,0.3)' : '#f0f0f0'}; {isCancelled ? 'opacity: 0.5;' : ''}"
+								>
+									<button 
+										onclick={() => selectedWhatIf = charge}
+										class="flex-1 flex items-center justify-between text-left min-w-0"
+									>
+										<div class="min-w-0 flex-1 mr-3">
+											<div class="flex items-center gap-1.5">
+												<p class="font-medium text-sm truncate {isCancelled ? 'line-through' : ''}" style="color: {isDark ? '#ffffff' : '#171717'}">{charge.merchant}</p>
+												{#if charge.isUserDefined}
+													<span class="text-[9px] px-1.5 py-0.5 rounded" style="background: {isDark ? '#2a2a2a' : '#f0f0f0'}; color: {isDark ? '#737373' : '#9ca3af'}">manual</span>
+												{/if}
+											</div>
+											<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">
+												{#if isCancelled}
+													<span class="text-green-500">Cancelled</span>
+												{:else}
+													{formatCurrency(charge.monthlyEstimate)}/mo • {charge.frequency}
+												{/if}
+											</p>
+										</div>
+										{#if !isCancelled}
+											<div class="text-right flex-shrink-0">
+												<p class="font-mono text-sm text-sw-accent">{formatCurrency(tenYearCost)}</p>
+												<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">10yr cost</p>
+											</div>
+										{/if}
+									</button>
+									<div class="flex items-center gap-1 flex-shrink-0">
+										<button
+											onclick={() => toggleSubscriptionCancelled(charge)}
+											class="p-1.5 rounded-lg transition-colors"
+											style="background: {isCancelled ? 'rgba(34,197,94,0.1)' : 'transparent'}; color: {isCancelled ? '#22c55e' : (isDark ? '#525252' : '#a3a3a3')}"
+											title={isCancelled ? 'Mark as active' : 'Mark as cancelled'}
+										>
+											<i class="fa-solid {isCancelled ? 'fa-rotate-left' : 'fa-xmark'} text-xs"></i>
+										</button>
+										{#if charge.isUserDefined && charge.id}
+											<button
+												onclick={() => deleteSubscription(charge.id!)}
+												class="p-1.5 rounded-lg transition-colors hover:bg-red-500/10"
+												style="color: {isDark ? '#525252' : '#a3a3a3'}"
+												title="Delete"
+											>
+												<i class="fa-solid fa-trash text-xs"></i>
+											</button>
+										{/if}
+									</div>
+								</div>
+							{/each}
+						</div>
+						{@const activeTotal = subscriptions.filter(r => !isSubCancelled(r)).reduce((a, r) => a + r.monthlyEstimate, 0)}
+						{@const cancelledTotal = subscriptions.filter(r => isSubCancelled(r)).reduce((a, r) => a + r.monthlyEstimate, 0)}
+						<div class="px-4 sm:px-6 py-3" style="background: {isDark ? 'rgba(10,10,10,0.3)' : 'rgba(245,240,232,0.5)'}; border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<div class="flex justify-between text-sm">
+								<span style="color: {isDark ? '#a3a3a3' : '#737373'}">Active</span>
+								<span class="font-mono font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(activeTotal)}/mo</span>
+							</div>
+							{#if cancelledTotal > 0}
+								<div class="flex justify-between text-sm mt-1">
+									<span class="text-green-500">Saving</span>
+									<span class="font-mono font-medium text-green-500">+{formatCurrency(cancelledTotal)}/mo</span>
+								</div>
+							{/if}
+						</div>
+					{:else}
+						<div class="px-4 sm:px-6 py-8 text-center">
+							<p class="text-sm mb-3" style="color: {isDark ? '#737373' : '#9ca3af'}">No subscriptions detected yet</p>
+							<button 
+								onclick={() => showAddSubModal = true}
+								class="text-sm font-medium text-sw-accent hover:underline"
+							>
+								Add your first subscription
+							</button>
+						</div>
+					{/if}
+				</div>
+
+					<!-- What-If Calculator -->
+					<div class="rounded-2xl p-4 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+						<div class="flex items-center gap-3 mb-4">
+							<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(13,148,136,0.1)">
+								<i class="fa-solid fa-calculator text-sw-accent"></i>
+							</div>
+							<div>
+								<h3 class="font-display font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">What If Calculator</h3>
+								<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									{selectedWhatIf ? `If you cancelled ${selectedWhatIf.merchant}...` : 'Select a subscription'}
+								</p>
+							</div>
+						</div>
+						
+						{#if selectedWhatIf}
+							{@const monthlyAmount = selectedWhatIf.monthlyEstimate}
+							{@const futureValue = calculateWhatIf(monthlyAmount, whatIfYears)}
+							{@const totalContributed = monthlyAmount * whatIfYears * 12}
+							{@const gains = futureValue - totalContributed}
+							
+							<div class="space-y-4">
+								<div class="flex items-center gap-4">
+									<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Time horizon:</span>
+									<div class="flex rounded-lg p-1" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}">
+										{#each [5, 10, 20, 30] as years}
+											<button 
+												onclick={() => whatIfYears = years}
+												class="px-3 py-1.5 text-xs rounded-md transition-colors"
+												style="background: {whatIfYears === years ? '#0d9488' : 'transparent'}; color: {whatIfYears === years ? '#ffffff' : (isDark ? '#a3a3a3' : '#737373')}"
+											>
+												{years}yr
+											</button>
+										{/each}
+									</div>
+								</div>
+								
+								<div class="rounded-xl p-4 space-y-3" style="background: {isDark ? 'rgba(10,10,10,0.5)' : '#f9f6f1'}">
+									<div class="flex justify-between text-sm">
+										<span style="color: {isDark ? '#a3a3a3' : '#737373'}">Monthly savings</span>
+										<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(monthlyAmount)}</span>
+									</div>
+									<div class="flex justify-between text-sm">
+										<span style="color: {isDark ? '#a3a3a3' : '#737373'}">Total contributed</span>
+										<span class="font-mono" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(totalContributed)}</span>
+									</div>
+									<div class="flex justify-between text-sm">
+										<span style="color: {isDark ? '#a3a3a3' : '#737373'}">Investment gains (7%)</span>
+										<span class="font-mono text-sw-accent">+{formatCurrency(gains)}</span>
+									</div>
+									<div class="pt-3 flex justify-between items-center" style="border-top: 1px solid {isDark ? 'rgba(64,64,64,0.5)' : '#e5e5e5'}">
+										<span class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">In {whatIfYears} years</span>
+										<span class="font-display text-2xl font-bold text-sw-accent">{formatCurrency(futureValue)}</span>
+									</div>
+								</div>
+							</div>
+						{:else}
+							<div class="rounded-xl p-8 text-center" style="background: {isDark ? 'rgba(10,10,10,0.5)' : '#f9f6f1'}; border: 1px dashed {isDark ? '#2a2a2a' : '#d4cfc5'}">
+								<i class="fa-solid fa-hand-pointer text-sw-accent text-xl mb-2"></i>
+								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Select a subscription to see projections</p>
+							</div>
+						{/if}
+					</div>
+				</div>
 
 			<!-- Tip Section -->
 			{#if insights.length > 0 && summary && summary.potentialSavings > 500}
@@ -722,6 +1004,98 @@
 		{/if}
 	</main>
 </div>
+
+<!-- Add Subscription Modal -->
+{#if showAddSubModal}
+	<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+		<div class="rounded-2xl max-w-md w-full p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
+			<h2 class="font-display text-xl font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+				Add Subscription
+			</h2>
+			
+			<div class="space-y-4">
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Name</label>
+					<input 
+						type="text"
+						bind:value={newSubName}
+						placeholder="e.g., Netflix, Spotify, Gym"
+						class="w-full px-4 py-3 rounded-xl text-base"
+						style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					/>
+				</div>
+				
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Amount</label>
+					<div class="flex items-center rounded-xl overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
+						<span class="px-4 text-lg" style="color: {isDark ? '#737373' : '#9ca3af'}">$</span>
+						<input 
+							type="number" 
+							bind:value={newSubAmount}
+							min="0.01"
+							step="0.01"
+							class="flex-1 px-2 py-3 text-lg bg-transparent outline-none"
+							style="color: {isDark ? '#ffffff' : '#171717'}"
+						/>
+					</div>
+				</div>
+				
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Frequency</label>
+					<select 
+						bind:value={newSubFrequency}
+						class="w-full px-4 py-3 rounded-xl text-base"
+						style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					>
+						<option value="weekly">Weekly</option>
+						<option value="bi-weekly">Bi-weekly</option>
+						<option value="monthly">Monthly</option>
+						<option value="quarterly">Quarterly</option>
+						<option value="semi-annually">Semi-annually</option>
+						<option value="yearly">Yearly</option>
+					</select>
+				</div>
+				
+				<!-- Preview -->
+				{#if newSubName && newSubAmount > 0}
+					{@const monthlyEst = newSubFrequency === 'weekly' ? newSubAmount * 4 : 
+						newSubFrequency === 'bi-weekly' ? newSubAmount * 2 :
+						newSubFrequency === 'monthly' ? newSubAmount :
+						newSubFrequency === 'quarterly' ? newSubAmount / 3 :
+						newSubFrequency === 'semi-annually' ? newSubAmount / 6 :
+						newSubAmount / 12}
+					{@const tenYearCost = calculateWhatIf(monthlyEst, 10)}
+					<div class="rounded-xl p-4" style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.08)'}">
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+							<span class="font-medium text-sw-accent">{formatCurrency(monthlyEst)}/mo</span> → 
+							<span class="font-semibold text-sw-accent">{formatCurrency(tenYearCost)}</span> invested over 10 years
+						</p>
+					</div>
+				{/if}
+			</div>
+
+			<div class="flex gap-3 mt-6">
+				<button 
+					onclick={() => { showAddSubModal = false; newSubName = ''; newSubAmount = 10; }}
+					class="flex-1 px-4 py-3 rounded-xl font-display font-semibold transition-colors"
+					style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}"
+				>
+					Cancel
+				</button>
+				<button 
+					onclick={saveNewSubscription}
+					disabled={savingSub || !newSubName || newSubAmount <= 0}
+					class="flex-1 btn-primary py-3"
+				>
+					{#if savingSub}
+						<i class="fa-solid fa-spinner fa-spin mr-2"></i>
+					{/if}
+					Add Subscription
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	@keyframes slideUp {

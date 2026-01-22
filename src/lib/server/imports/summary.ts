@@ -58,8 +58,15 @@ export function computeBatchSummary(rows: RawRowWithEffective[]): BatchSummary {
 		} else if (row.effectiveIncludedInSpend) {
 			rowsIncluded++;
 			if (row.amountSigned !== null) {
-				// Amount is negative for purchases, so we use absolute value
-				totalIncludedSpend += Math.abs(row.amountSigned);
+				// IMPORTANT: Only count NEGATIVE amounts (actual spending) toward totalIncludedSpend
+				// Positive amounts are refunds/income and should NOT be added to spend totals
+				// They can optionally be subtracted (net spending) but we keep them neutral for clarity
+				if (row.amountSigned < 0) {
+					// Purchases are negative, convert to positive for display
+					totalIncludedSpend += Math.abs(row.amountSigned);
+				}
+				// Note: Positive amounts (refunds, income) don't contribute to totalIncludedSpend
+				// They're still "included" for visibility purposes but don't inflate the spending total
 			}
 		} else {
 			rowsExcluded++;

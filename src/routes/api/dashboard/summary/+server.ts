@@ -278,46 +278,46 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		count: number;
 	}> = [];
 	
-	// Categories that are typically NOT subscriptions (exclude these)
-	const nonSubscriptionCategories = new Set([
-		'Auto & Transport',
+	// Categories that are DEFINITELY subscriptions (prioritize these)
+	const subscriptionCategories = new Set([
+		'Subscriptions',
+		'Insurance',
+		'Utilities'
+	]);
+	
+	// Categories that are almost NEVER subscriptions (skip these entirely)
+	const neverSubscriptionCategories = new Set([
 		'Groceries',
 		'Dining & Restaurants',
 		'Coffee & Drinks',
 		'Food Delivery',
 		'Shopping',
-		'Home & Garden',
 		'Travel & Vacation',
-		'Entertainment',
-		'Healthcare & Medical',
-		'Housing & Rent',
-		'Personal Care',
-		'Fitness & Gym',
-		'Pets',
-		'Education',
-		'Gifts & Donations',
-		'Kids & Family',
-		'Electronics',
-		'Uncategorized'
+		'Gifts & Donations'
 	]);
 	
 	for (const [merchant, data] of merchantMap.entries()) {
 		if (data.count >= 2 && data.dates.length >= 2) {
-			// Skip categories that are typically not subscriptions
-			if (nonSubscriptionCategories.has(data.category)) {
+			// Always skip categories that are never subscriptions
+			if (neverSubscriptionCategories.has(data.category)) {
 				continue;
 			}
 			
-			// Check amount consistency - real subscriptions have very consistent amounts
-			// Calculate coefficient of variation (std dev / mean)
+			// For subscription/insurance/utility categories, be more lenient
+			const isLikelySubscription = subscriptionCategories.has(data.category);
+			
+			// Check amount consistency - real subscriptions have consistent amounts
 			const avgAmount = data.totalSpent / data.count;
 			const variance = data.amounts.reduce((sum, amt) => sum + Math.pow(amt - avgAmount, 2), 0) / data.amounts.length;
 			const stdDev = Math.sqrt(variance);
 			const coefficientOfVariation = avgAmount > 0 ? (stdDev / avgAmount) : 1;
 			
-			// Only consider as subscription if amount varies less than 15% (subscriptions are consistent)
-			// Exception: allow higher variance for very small amounts (rounding differences)
-			const isConsistentAmount = coefficientOfVariation < 0.15 || (avgAmount < 20 && coefficientOfVariation < 0.25);
+			// Amount consistency threshold - more lenient for known subscription categories
+			// Also more lenient for small amounts (rounding differences) or larger amounts (tax variations)
+			const varianceThreshold = isLikelySubscription ? 0.25 : 0.15;
+			const isConsistentAmount = coefficientOfVariation < varianceThreshold || 
+				(avgAmount < 20 && coefficientOfVariation < 0.30) ||
+				(avgAmount > 50 && coefficientOfVariation < 0.20);
 			
 			if (!isConsistentAmount) {
 				continue;
@@ -337,23 +337,30 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			if (intervals.length > 0) {
 				const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
 				
-				// Detect patterns
+				// Detect patterns - wider ranges for known subscription categories
 				let frequency = '';
 				let monthlyEstimate = 0;
 				
-				if (avgInterval >= 25 && avgInterval <= 35) {
+				// Monthly: 25-35 days (or 20-38 for known subscriptions)
+				const monthlyMin = isLikelySubscription ? 20 : 25;
+				const monthlyMax = isLikelySubscription ? 38 : 35;
+				
+				if (avgInterval >= monthlyMin && avgInterval <= monthlyMax) {
 					frequency = 'Monthly';
 					monthlyEstimate = avgAmount;
-				} else if (avgInterval >= 12 && avgInterval <= 16) {
+				} else if (avgInterval >= 12 && avgInterval <= 18) {
 					frequency = 'Bi-weekly';
 					monthlyEstimate = avgAmount * 2;
-				} else if (avgInterval >= 5 && avgInterval <= 9) {
+				} else if (avgInterval >= 5 && avgInterval <= 10) {
 					frequency = 'Weekly';
 					monthlyEstimate = avgAmount * 4;
-				} else if (avgInterval >= 85 && avgInterval <= 95) {
+				} else if (avgInterval >= 80 && avgInterval <= 100) {
 					frequency = 'Quarterly';
 					monthlyEstimate = avgAmount / 3;
-				} else if (avgInterval >= 355 && avgInterval <= 375) {
+				} else if (avgInterval >= 175 && avgInterval <= 195) {
+					frequency = 'Semi-annually';
+					monthlyEstimate = avgAmount / 6;
+				} else if (avgInterval >= 350 && avgInterval <= 380) {
 					frequency = 'Yearly';
 					monthlyEstimate = avgAmount / 12;
 				}

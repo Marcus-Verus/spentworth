@@ -2,7 +2,9 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import type { BatchSummary, RawRowEffective, PreviewTab, TransactionKind, Category, CATEGORIES } from '$lib/types';
+	// Using CSS transitions for row animations instead of Svelte transitions
+	// (Svelte transitions don't work well with table rows)
+	import { CATEGORIES, type BatchSummary, type RawRowEffective, type PreviewTab, type TransactionKind, type Category } from '$lib/types';
 	import { initTheme, getTheme } from '$lib/stores/theme';
 
 	let { data } = $props();
@@ -13,6 +15,8 @@
 	onMount(() => {
 		initTheme();
 		isDark = getTheme() === 'dark';
+		// Initial load on mount only
+		loadRows();
 	});
 
 	let tab = $state<PreviewTab>('included');
@@ -26,6 +30,9 @@
 	let selected = $state<Set<string>>(new Set());
 	let committing = $state(false);
 	let commitError = $state<string | null>(null);
+	
+	// Track rows that are animating out (for smooth departure)
+	let departingRows = $state<Set<string>>(new Set());
 
 	// Rule creation modal state
 	let showRuleModal = $state(false);
@@ -34,31 +41,6 @@
 	let ruleModalCategory = $state<string | null>(null);
 	let ruleModalExclude = $state(false);
 	let creatingRule = $state(false);
-
-	const categories = [
-		'Auto & Transport',
-		'Groceries',
-		'Dining & Restaurants',
-		'Coffee & Drinks',
-		'Food Delivery',
-		'Shopping',
-		'Home & Garden',
-		'Subscriptions',
-		'Travel & Vacation',
-		'Entertainment',
-		'Healthcare & Medical',
-		'Utilities',
-		'Housing & Rent',
-		'Personal Care',
-		'Fitness & Gym',
-		'Pets',
-		'Insurance',
-		'Education',
-		'Gifts & Donations',
-		'Kids & Family',
-		'Electronics',
-		'Uncategorized'
-	];
 
 	const kindOptions: { value: TransactionKind; label: string }[] = [
 		{ value: 'purchase', label: 'Purchase' },
@@ -71,9 +53,63 @@
 		{ value: 'unknown', label: 'Unknown' }
 	];
 
-	$effect(() => {
-		loadRows();
-	});
+	// No $effect here - loadRows() is called explicitly:
+	// - onMount (initial load)
+	// - Tab buttons (user clicks tab)
+	// - Pagination buttons (user clicks prev/next)
+	// - Search (user presses enter)
+	// Category/type changes do NOT call loadRows - they use optimistic updates
+
+	// Check if a row should be visible in the current tab
+	function shouldRowBeVisible(row: RawRowEffective): boolean {
+		switch (tab) {
+			case 'included':
+				return row.effectiveIncludedInSpend;
+			case 'excluded':
+				return !row.effectiveIncludedInSpend && !row.isDuplicate && row.effectiveKind !== 'unknown' && row.parseStatus !== 'error';
+			case 'needs_review':
+				return !row.effectiveIncludedInSpend && !row.isDuplicate && (row.parseStatus === 'error' || row.effectiveKind === 'unknown');
+			case 'duplicates':
+				return row.isDuplicate && !row.effectiveIncludedInSpend;
+			case 'uncategorized':
+				return row.effectiveKind === 'purchase' && 
+				       row.effectiveIncludedInSpend && 
+				       !row.isDuplicate &&
+				       (!row.effectiveCategory || row.effectiveCategory === 'Uncategorized');
+			default:
+				return true;
+		}
+	}
+
+	// Animate row out and then remove it
+	function animateRowOut(rowId: string) {
+		// Add to departing set (triggers CSS animation)
+		departingRows = new Set([...departingRows, rowId]);
+		
+		// After animation completes, remove from rows array
+		setTimeout(() => {
+			rows = rows.filter(r => r.id !== rowId);
+			departingRows = new Set([...departingRows].filter(id => id !== rowId));
+			// Update total count
+			totalRows = Math.max(0, totalRows - 1);
+		}, 300); // Match CSS transition duration
+	}
+
+	// Animate multiple rows out
+	function animateRowsOut(rowIds: string[]) {
+		if (rowIds.length === 0) return;
+		
+		// Add all to departing set
+		departingRows = new Set([...departingRows, ...rowIds]);
+		
+		// After animation, remove all
+		setTimeout(() => {
+			const idsSet = new Set(rowIds);
+			rows = rows.filter(r => !idsSet.has(r.id));
+			departingRows = new Set([...departingRows].filter(id => !idsSet.has(id)));
+			totalRows = Math.max(0, totalRows - rowIds.length);
+		}, 300);
+	}
 
 	async function loadRows() {
 		loading = true;
@@ -95,8 +131,20 @@
 		loading = false;
 	}
 
+	// Update just the summary from API response (no row refresh)
+	function updateSummaryFromResponse(json: { ok: boolean; data?: { summary: BatchSummary } }) {
+		if (json.ok && json.data?.summary) {
+			summary = json.data.summary;
+		}
+	}
+
 	async function updateOverride(rowId: string, patch: Record<string, unknown>) {
-		await fetch(`/api/imports/${batchId}/override`, {
+		// Optimistically update UI for include toggle
+		if (patch.includedInSpend !== undefined) {
+			rows = rows.map(r => r.id === rowId ? { ...r, effectiveIncludedInSpend: patch.includedInSpend as boolean } : r);
+		}
+
+		const res = await fetch(`/api/imports/${batchId}/override`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -105,59 +153,119 @@
 			})
 		});
 
-		// Refresh to get updated summary
-		loadRows();
+		// Just update summary from response, don't refresh rows
+		const json = await res.json();
+		updateSummaryFromResponse(json);
 	}
 
-	// Handle kind change - apply to ALL rows with same merchant
+	// Handle kind change
+	// For refunds or income on a single transaction (positive amount), only update that one row
+	// For other kinds, apply to all rows with same merchant
 	async function handleKindChange(row: RawRowEffective, newKind: TransactionKind) {
-		// Find all rows with the same merchant and update them all
 		const merchantNorm = row.merchantNorm;
-		const sameMerchantRows = merchantNorm 
-			? rows.filter(r => r.merchantNorm === merchantNorm).map(r => r.id)
-			: [row.id];
+		const isPositiveAmount = row.amountSigned !== null && row.amountSigned > 0;
+		const isRefundOrIncome = newKind === 'refund' || newKind === 'income';
 		
-		await fetch(`/api/imports/${batchId}/override`, {
+		// Only update this single row if:
+		// 1. It's a positive amount (likely already a refund/credit)
+		// 2. We're changing TO refund or income
+		// This allows refunds from the same merchant to be classified individually
+		const updateSingleRowOnly = isPositiveAmount || isRefundOrIncome;
+		
+		// Find rows that will be updated
+		const rowsToUpdate = updateSingleRowOnly
+			? [row]
+			: (merchantNorm ? rows.filter(r => r.merchantNorm === merchantNorm) : [row]);
+		
+		// Optimistically update UI - no full refresh needed
+		rows = rows.map(r => {
+			if (updateSingleRowOnly) {
+				if (r.id === row.id) {
+					return { ...r, effectiveKind: newKind, effectiveIncludedInSpend: newKind === 'purchase' };
+				}
+			} else {
+				if (merchantNorm && r.merchantNorm === merchantNorm) {
+					return { ...r, effectiveKind: newKind, effectiveIncludedInSpend: newKind === 'purchase' };
+				}
+			}
+			return r;
+		});
+		
+		// Check which updated rows no longer belong in current view and animate them out
+		const rowsToRemove = rowsToUpdate
+			.map(r => ({ ...r, effectiveKind: newKind, effectiveIncludedInSpend: newKind === 'purchase' }))
+			.filter(r => !shouldRowBeVisible(r))
+			.map(r => r.id);
+		
+		if (rowsToRemove.length > 0) {
+			animateRowsOut(rowsToRemove);
+		}
+		
+		const idsToUpdate = rowsToUpdate.map(r => r.id);
+		
+		// Fire API call and update summary only (no row refresh)
+		fetch(`/api/imports/${batchId}/override`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				rawTransactionIds: sameMerchantRows,
+				rawTransactionIds: idsToUpdate,
 				patch: { kind: newKind },
-				applyToAllWithMerchant: merchantNorm // Also update any rows not in current page
+				applyToAllWithMerchant: updateSingleRowOnly ? undefined : merchantNorm
 			})
-		});
+		}).then(res => res.json()).then(updateSummaryFromResponse);
 
-		// Prompt to create a rule if merchant exists and kind changed from system
-		if (row.merchantNorm && newKind !== row.systemKind) {
+		// Show rule modal immediately (don't wait for API)
+		// Only show for batch updates (not for single refunds)
+		if (row.merchantNorm && newKind !== row.systemKind && !updateSingleRowOnly) {
 			ruleModalMerchant = row.merchantNorm;
 			ruleModalKind = newKind;
 			ruleModalExclude = newKind !== 'purchase';
 			ruleModalCategory = null;
 			showRuleModal = true;
 		}
-		
-		loadRows();
 	}
 
-	// Handle category change - apply to ALL rows with same merchant
+	// Handle category change - apply to ALL rows with same merchant (for purchases)
 	async function handleCategoryChange(row: RawRowEffective, newCategory: string) {
-		// Find all rows with the same merchant and update them all
 		const merchantNorm = row.merchantNorm;
-		const sameMerchantRows = merchantNorm 
-			? rows.filter(r => r.merchantNorm === merchantNorm).map(r => r.id)
-			: [row.id];
 		
-		await fetch(`/api/imports/${batchId}/override`, {
+		// Find all rows with same merchant that will be updated
+		const rowsToUpdate = merchantNorm 
+			? rows.filter(r => r.merchantNorm === merchantNorm)
+			: [row];
+		
+		// Optimistically update UI - update all rows with same merchant
+		rows = rows.map(r => {
+			if (merchantNorm && r.merchantNorm === merchantNorm) {
+				return { ...r, effectiveCategory: newCategory };
+			}
+			return r;
+		});
+		
+		// Check which updated rows no longer belong in current view and animate them out
+		const rowsToRemove = rowsToUpdate
+			.map(r => ({ ...r, effectiveCategory: newCategory }))
+			.filter(r => !shouldRowBeVisible(r))
+			.map(r => r.id);
+		
+		if (rowsToRemove.length > 0) {
+			animateRowsOut(rowsToRemove);
+		}
+		
+		const sameMerchantIds = rowsToUpdate.map(r => r.id);
+		
+		// Fire API call and update summary only (no row refresh)
+		fetch(`/api/imports/${batchId}/override`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				rawTransactionIds: sameMerchantRows,
+				rawTransactionIds: sameMerchantIds,
 				patch: { category: newCategory },
-				applyToAllWithMerchant: merchantNorm // Also update any rows not in current page
+				applyToAllWithMerchant: merchantNorm
 			})
-		});
+		}).then(res => res.json()).then(updateSummaryFromResponse);
 
-		// Prompt to create a rule if merchant exists and category changed
+		// Show rule modal immediately (don't wait for API)
 		if (row.merchantNorm && newCategory !== row.systemCategory) {
 			ruleModalMerchant = row.merchantNorm;
 			ruleModalKind = 'purchase';
@@ -165,8 +273,6 @@
 			ruleModalExclude = false;
 			showRuleModal = true;
 		}
-		
-		loadRows();
 	}
 
 	async function createRule() {
@@ -188,9 +294,10 @@
 		creatingRule = false;
 		showRuleModal = false;
 
-		// Re-apply rules to current batch - update all matching rows
+		// Re-apply rules to current batch - but don't refresh the whole table
+		// The user already made their change optimistically, rule is just for future imports
 		await fetch(`/api/imports/${batchId}/apply-rules`, { method: 'POST' });
-		loadRows();
+		// Don't call loadRows() - the current view is already correct from optimistic updates
 	}
 
 	function closeRuleModal() {
@@ -200,17 +307,63 @@
 	async function bulkOverride(patch: Record<string, unknown>) {
 		if (selected.size === 0) return;
 
-		await fetch(`/api/imports/${batchId}/override`, {
+		const selectedIds = Array.from(selected);
+		
+		// Optimistically update UI
+		rows = rows.map(r => {
+			if (selected.has(r.id)) {
+				return { ...r, ...patch };
+			}
+			return r;
+		});
+
+		// Check which rows should animate out
+		if (patch.includedInSpend !== undefined) {
+			const rowsToRemove = selectedIds.filter(id => {
+				const row = rows.find(r => r.id === id);
+				if (!row) return false;
+				const updatedRow = { ...row, ...patch };
+				return !shouldRowBeVisible(updatedRow as RawRowEffective);
+			});
+			if (rowsToRemove.length > 0) {
+				animateRowsOut(rowsToRemove);
+			}
+		}
+
+		selected = new Set();
+
+		const res = await fetch(`/api/imports/${batchId}/override`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				rawTransactionIds: Array.from(selected),
+				rawTransactionIds: selectedIds,
 				patch
 			})
 		});
 
+		// Just update summary, don't refresh rows
+		const json = await res.json();
+		updateSummaryFromResponse(json);
+	}
+
+	async function bulkDelete() {
+		if (selected.size === 0) return;
+		if (!confirm(`Delete ${selected.size} row${selected.size > 1 ? 's' : ''}? This cannot be undone.`)) return;
+
+		const selectedIds = Array.from(selected);
+		
+		// Animate rows out
+		animateRowsOut(selectedIds);
 		selected = new Set();
-		loadRows();
+
+		const res = await fetch(`/api/imports/${batchId}/rows`, {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ rowIds: selectedIds })
+		});
+
+		const json = await res.json();
+		updateSummaryFromResponse(json);
 	}
 
 	async function handleCommit() {
@@ -389,6 +542,7 @@
 					<div class="flex-1"></div>
 					<button onclick={() => bulkOverride({ includedInSpend: true })} class="btn btn-secondary text-xs sm:text-sm px-2 sm:px-3">Include</button>
 					<button onclick={() => bulkOverride({ includedInSpend: false })} class="btn btn-secondary text-xs sm:text-sm px-2 sm:px-3">Exclude</button>
+					<button onclick={bulkDelete} class="btn text-xs sm:text-sm px-2 sm:px-3" style="background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3)">Delete</button>
 					<button onclick={() => selected = new Set()} class="text-xs sm:text-sm text-sw-text-dim hover:text-sw-text">Clear</button>
 				</div>
 			{/if}
@@ -444,8 +598,11 @@
 								</td>
 							</tr>
 						{:else}
-							{#each rows as row}
-								<tr style="background: {selected.has(row.id) ? 'rgba(13,148,136,0.05)' : 'transparent'}; border-bottom: 1px solid {isDark ? '#1f1f1f' : '#f0f0f0'}">
+							{#each rows as row (row.id)}
+								<tr 
+									class="transition-all duration-300 {departingRows.has(row.id) ? 'opacity-0 scale-95 -translate-x-4' : 'opacity-100'}"
+									style="background: {selected.has(row.id) ? 'rgba(13,148,136,0.05)' : 'transparent'}; border-bottom: 1px solid {isDark ? '#1f1f1f' : '#f0f0f0'}"
+								>
 									<td class="px-3 py-2.5">
 										<div class="flex justify-center">
 											<input
@@ -490,7 +647,7 @@
 													class="text-xs rounded px-2 py-1.5 cursor-pointer"
 													style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 												>
-													{#each categories as cat}
+													{#each CATEGORIES as cat}
 														<option value={cat}>{cat}</option>
 													{/each}
 												</select>
@@ -528,9 +685,9 @@
 						No transactions in this view
 					</div>
 				{:else}
-					{#each rows as row}
+					{#each rows as row (row.id)}
 						<div 
-							class="rounded-xl p-3"
+							class="rounded-xl p-3 transition-all duration-300 {departingRows.has(row.id) ? 'opacity-0 scale-95 -translate-x-4 h-0 p-0 mb-0 overflow-hidden' : 'opacity-100'}"
 							style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {selected.has(row.id) ? 'rgba(13,148,136,0.5)' : (isDark ? '#2a2a2a' : '#e5e5e5')}; {selected.has(row.id) ? 'background: rgba(13,148,136,0.03)' : ''}"
 						>
 							<!-- Top row: checkbox, merchant, amount -->
@@ -571,7 +728,7 @@
 										class="text-[11px] rounded px-2 py-1.5 cursor-pointer flex-1"
 										style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 									>
-										{#each categories as cat}
+										{#each CATEGORIES as cat}
 											<option value={cat}>{cat}</option>
 										{/each}
 									</select>

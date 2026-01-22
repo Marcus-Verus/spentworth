@@ -5,6 +5,88 @@ import type { RawRowEffective, TransactionKind, PreviewTab, SortOption } from '$
 
 // v2: Filter by effective values after overrides
 
+export const DELETE: RequestHandler = async ({ params, request, locals }) => {
+	const { session, user } = await locals.safeGetSession();
+
+	if (!session || !user) {
+		throw error(401, 'Unauthorized');
+	}
+
+	const { batchId } = params;
+	const body = await request.json();
+	const { rowIds } = body as { rowIds: string[] };
+
+	if (!rowIds || !Array.isArray(rowIds) || rowIds.length === 0) {
+		throw error(400, 'rowIds required');
+	}
+
+	// Verify batch belongs to user
+	const { data: batch } = await locals.supabase
+		.from('import_batches')
+		.select('id')
+		.eq('id', batchId)
+		.eq('user_id', user.id)
+		.single();
+
+	if (!batch) {
+		throw error(404, 'Batch not found');
+	}
+
+	// Delete the overrides first (if any)
+	await locals.supabase
+		.from('transaction_overrides')
+		.delete()
+		.in('raw_transaction_id', rowIds);
+
+	// Delete the raw transactions
+	const { error: deleteError } = await locals.supabase
+		.from('raw_transactions')
+		.delete()
+		.in('id', rowIds)
+		.eq('batch_id', batchId);
+
+	if (deleteError) {
+		throw error(500, 'Failed to delete rows');
+	}
+
+	// Recompute summary
+	const { data: remainingRows } = await locals.supabase
+		.from('raw_transactions')
+		.select(`
+			id, parse_status, amount_signed, date_chosen, kind, included_in_spend, category, is_duplicate
+		`)
+		.eq('batch_id', batchId);
+
+	const { data: overrides } = await locals.supabase
+		.from('transaction_overrides')
+		.select('raw_transaction_id, override_kind, override_included_in_spend, override_category')
+		.in('raw_transaction_id', (remainingRows || []).map(r => r.id));
+
+	const overrideMap = new Map((overrides || []).map(o => [o.raw_transaction_id, o]));
+
+	const summaryRows = (remainingRows || []).map(r => {
+		const override = overrideMap.get(r.id);
+		return {
+			parseStatus: r.parse_status as 'ok' | 'error',
+			amountSigned: r.amount_signed,
+			dateChosen: r.date_chosen,
+			systemKind: r.kind as TransactionKind,
+			systemIncludedInSpend: r.included_in_spend,
+			effectiveKind: (override?.override_kind ?? r.kind) as TransactionKind,
+			effectiveIncludedInSpend: override?.override_included_in_spend ?? r.included_in_spend,
+			effectiveCategory: override?.override_category ?? r.category,
+			isDuplicate: r.is_duplicate
+		};
+	});
+
+	const summary = computeBatchSummary(summaryRows);
+
+	return json({
+		ok: true,
+		data: { summary, deletedCount: rowIds.length }
+	});
+};
+
 export const GET: RequestHandler = async ({ params, url, locals }) => {
 	const { session, user } = await locals.safeGetSession();
 

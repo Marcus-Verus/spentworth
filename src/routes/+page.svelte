@@ -1061,33 +1061,6 @@
 				</div>
 			</div>
 
-			<!-- Security Badge -->
-			<div class="rounded-xl p-4 mb-8 flex flex-col sm:flex-row items-center gap-4" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-				<div class="flex items-center gap-3">
-					<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'}">
-						<i class="fa-solid fa-shield-halved text-green-500"></i>
-					</div>
-					<div>
-						<p class="font-display font-semibold text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Your data stays private</p>
-						<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">CSV imports are processed locally. We never access your bank credentials.</p>
-					</div>
-				</div>
-				<div class="flex items-center gap-3 sm:ml-auto">
-					<div class="text-center px-3">
-						<i class="fa-solid fa-lock text-sw-accent mb-1"></i>
-						<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">SSL Encrypted</p>
-					</div>
-					<div class="text-center px-3">
-						<i class="fa-solid fa-user-shield text-sw-accent mb-1"></i>
-						<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">No Bank Linking</p>
-					</div>
-					<div class="text-center px-3">
-						<i class="fa-solid fa-database text-sw-accent mb-1"></i>
-						<p class="text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">Your Data, Your Control</p>
-					</div>
-				</div>
-			</div>
-
 			<!-- Bottom Bar -->
 			<div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 				<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">

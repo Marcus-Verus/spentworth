@@ -540,26 +540,14 @@
 				</div>
 				
 				<!-- Quick Actions -->
-				{#if !loading && budgets.length > 0}
-					<div class="flex gap-2">
-						<button 
-							onclick={() => { showQuickAdd = true; quickAddCategory = budgets[0]?.category || allCategories[0]; }}
-							class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-[1.02]"
-							style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}"
-						>
-							<i class="fa-solid fa-receipt text-sw-accent"></i>
-							Log Spending
-						</button>
-						{#if availableCategories.length > 0 && (!tierUsage || tierUsage.budgets.limit === null || tierUsage.budgets.used < tierUsage.budgets.limit)}
-							<button 
-								onclick={() => { showAddModal = true; newCategory = availableCategories[0]; saveError = null; }}
-								class="btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
-							>
-								<i class="fa-solid fa-plus"></i>
-								Add Budget
-							</button>
-						{/if}
-					</div>
+				{#if !loading && availableCategories.length > 0 && (!tierUsage || tierUsage.budgets.limit === null || tierUsage.budgets.used < tierUsage.budgets.limit)}
+					<button 
+						onclick={() => { showAddModal = true; newCategory = availableCategories[0]; saveError = null; }}
+						class="btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+					>
+						<i class="fa-solid fa-plus"></i>
+						Add Budget
+					</button>
 				{/if}
 			</div>
 		</div>
@@ -652,14 +640,14 @@
 			</div>
 		{:else}
 			<!-- Budget Health Dashboard -->
-			<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
 				<!-- Health Score Card -->
 				<div class="rounded-2xl p-5 sm:p-6 relative overflow-hidden" style="background: {isDark ? 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f9f6f1 100%)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="absolute top-0 right-0 w-32 h-32 opacity-10" style="background: radial-gradient(circle, {healthGrade.color} 0%, transparent 70%);"></div>
 					<div class="flex items-center gap-5">
 						<!-- Animated Ring -->
 						<div class="relative">
-							<svg class="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
+							<svg class="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
 								<circle cx="50" cy="50" r="45" fill="none" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} stroke-width="8"/>
 								<circle 
 									cx="50" cy="50" r="45" fill="none" 
@@ -669,63 +657,23 @@
 								/>
 							</svg>
 							<div class="absolute inset-0 flex items-center justify-center">
-								<span class="font-display text-2xl font-bold" style="color: {healthGrade.color}">{healthGrade.grade}</span>
+								<span class="font-display text-xl font-bold" style="color: {healthGrade.color}">{healthGrade.grade}</span>
 							</div>
 						</div>
 						<div class="flex-1">
 							<p class="text-xs uppercase tracking-wider mb-1" style="color: {isDark ? '#737373' : '#9ca3af'}">Budget Health</p>
-							<p class="font-display text-xl font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">{healthGrade.message}</p>
+							<p class="font-display text-lg font-bold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">{healthGrade.message}</p>
 							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Score: {animatedHealthScore}/100</p>
 						</div>
 					</div>
 				</div>
 
-				<!-- Spending Velocity Card -->
-				<div class="rounded-2xl p-5 sm:p-6 relative overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<!-- Subtle background accent -->
-					<div class="absolute top-0 right-0 w-32 h-32 opacity-[0.03] pointer-events-none" style="background: radial-gradient(circle, {getVelocityColor(spendingVelocity.status)} 0%, transparent 70%)"></div>
-					
-					<div class="flex items-start justify-between gap-4 mb-5">
-						<div>
-							<p class="font-display text-sm font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Month Pace</p>
-							<p class="text-xs" style="color: {isDark ? '#525252' : '#a3a3a3'}">Day {new Date().getDate()} of {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}</p>
-						</div>
-						<div class="text-right">
-							<p class="font-display text-2xl font-bold tracking-tight" style="color: {getVelocityColor(spendingVelocity.status)}">
-								{Math.round(spendingVelocity.ratio * 100)}%
-							</p>
-							<p class="text-[10px] uppercase tracking-wide" style="color: {isDark ? '#525252' : '#a3a3a3'}">velocity</p>
-						</div>
-					</div>
-					
-				<!-- Progress visualization -->
-				<div class="relative mb-4">
-					<!-- Track background -->
-					<div class="h-2 rounded-full relative" style="background: {isDark ? '#262626' : '#e8e4dc'}">
-						<!-- Spend progress bar -->
-						<div 
-							class="h-full rounded-full transition-all duration-1000 ease-out"
-							style="width: {Math.min((summary?.totalSpent || 0) / (summary?.totalBudget || 1) * 100, 100)}%; background: {getVelocityColor(spendingVelocity.status)}"
-						></div>
-						<!-- Time marker (where you should be) -->
-						<div 
-							class="absolute top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full z-10"
-							style="left: {monthProgress}%; background: {isDark ? '#a3a3a3' : '#525252'}"
-							title="Day {new Date().getDate()} of month"
-						></div>
-					</div>
-				</div>
-					
-					<!-- Status message -->
-					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">{spendingVelocity.message}</p>
-				</div>
-
 				<!-- Summary Stats Card -->
 				<div class="rounded-2xl p-5 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<p class="text-xs uppercase tracking-wider mb-4" style="color: {isDark ? '#737373' : '#9ca3af'}">This Month</p>
-					<div class="space-y-3">
+					<p class="text-xs uppercase tracking-wider mb-3" style="color: {isDark ? '#737373' : '#9ca3af'}">This Month</p>
+					<div class="space-y-2">
 						<div class="flex items-center justify-between">
-							<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Total Budget</span>
+							<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Budget</span>
 							<span class="font-mono font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{formatCurrency(summary?.totalBudget || 0)}</span>
 						</div>
 						<div class="flex items-center justify-between">
@@ -738,24 +686,140 @@
 						</div>
 					</div>
 				</div>
+
+				<!-- Spending Velocity Card -->
+				<div class="rounded-2xl p-5 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<p class="text-xs uppercase tracking-wider mb-3" style="color: {isDark ? '#737373' : '#9ca3af'}">Spending Pace</p>
+					<div class="flex items-center gap-4">
+						<div class="relative w-14 h-14 flex-shrink-0">
+							<!-- Month progress background -->
+							<svg class="w-14 h-14 -rotate-90" viewBox="0 0 100 100">
+								<circle cx="50" cy="50" r="40" fill="none" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} stroke-width="8"/>
+								<!-- Expected progress (month %) -->
+								<circle 
+									cx="50" cy="50" r="40" fill="none" 
+									stroke={isDark ? '#404040' : '#d4cfc5'} stroke-width="8" stroke-linecap="round"
+									style="stroke-dasharray: {2 * Math.PI * 40}; stroke-dashoffset: {2 * Math.PI * 40 - (monthProgress / 100) * 2 * Math.PI * 40};"
+								/>
+								<!-- Actual spending progress -->
+								<circle 
+									cx="50" cy="50" r="40" fill="none" 
+									stroke={getVelocityColor(spendingVelocity.status)} stroke-width="8" stroke-linecap="round"
+									style="stroke-dasharray: {2 * Math.PI * 40}; stroke-dashoffset: {2 * Math.PI * 40 - (Math.min((summary?.totalSpent || 0) / (summary?.totalBudget || 1), 1)) * 2 * Math.PI * 40};"
+								/>
+							</svg>
+						</div>
+						<div class="flex-1 min-w-0">
+							<p class="font-display font-semibold text-sm mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+								{#if spendingVelocity.status === 'under'}
+									Ahead of pace
+								{:else if spendingVelocity.status === 'on-track'}
+									On track
+								{:else if spendingVelocity.status === 'watch'}
+									Slightly fast
+								{:else}
+									Overspending
+								{/if}
+							</p>
+							<p class="text-xs truncate" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								{spendingVelocity.message || `Day ${new Date().getDate()} of ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}`}
+							</p>
+						</div>
+					</div>
+				</div>
 			</div>
 
-			<!-- Smart Recommendations -->
+			<!-- Alerts -->
 			{#if recommendations.length > 0}
-				<div class="mb-6 sm:mb-8">
-					<h2 class="font-display font-semibold text-lg mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
-						Insights
+				<div class="rounded-xl p-4 mb-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+					<div class="space-y-3">
+						{#each recommendations as rec, i}
+							<div 
+								class="flex items-start gap-3 {i !== recommendations.length - 1 ? 'pb-3' : ''}"
+								style="{i !== recommendations.length - 1 ? `border-bottom: 1px solid ${isDark ? '#2a2a2a' : '#f0ebe3'}` : ''}"
+							>
+								<i class="fa-solid {rec.icon} text-sm mt-0.5 flex-shrink-0" style="color: {rec.type === 'danger' ? '#ef4444' : rec.type === 'warning' ? '#f59e0b' : rec.type === 'success' ? '#10b981' : '#0d9488'}"></i>
+								<div class="flex-1 min-w-0">
+									<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
+										<span class="font-medium">{rec.title}</span>
+										<span style="color: {isDark ? '#a3a3a3' : '#737373'}"> · {rec.description}</span>
+									</p>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Needs Attention Section -->
+			{@const needsAttention = budgets.filter(b => b.percentUsed >= 80)}
+			{@const onTrack = budgets.filter(b => b.percentUsed < 80)}
+			
+			{#if needsAttention.length > 0}
+				<div class="mb-6">
+					<h2 class="font-display text-lg font-semibold mb-3 flex items-center gap-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-triangle-exclamation text-amber-500 text-sm"></i>
+						Needs Attention
+						<span class="text-xs font-normal px-2 py-0.5 rounded-full" style="background: rgba(245,158,11,0.15); color: #f59e0b">{needsAttention.length}</span>
 					</h2>
-					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-						{#each recommendations as rec}
-							{@const iconColor = rec.type === 'success' ? '#10b981' : rec.type === 'warning' ? '#f59e0b' : rec.type === 'danger' ? '#ef4444' : '#0d9488'}
-							
-							<div class="rounded-xl p-4 transition-all hover:scale-[1.02]" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-								<div class="flex items-start gap-3">
-									<i class="fa-solid {rec.icon} text-sm mt-0.5" style="color: {iconColor}"></i>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+						{#each needsAttention as budget}
+							{@const ringColor = getProgressColor(budget.percentUsed)}
+							<div 
+								class="rounded-xl p-4 transition-all hover:scale-[1.005]" 
+								style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {budget.percentUsed >= 100 ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'};"
+							>
+								<div class="flex items-center gap-4">
+									<!-- Compact Progress Ring -->
+									<div class="relative flex-shrink-0">
+										<svg class="w-12 h-12 -rotate-90" viewBox="0 0 100 100">
+											<circle cx="50" cy="50" r="40" fill="none" stroke={isDark ? '#2a2a2a' : '#f0ebe3'} stroke-width="10"/>
+											<circle 
+												cx="50" cy="50" r="40" fill="none" 
+												stroke={ringColor} stroke-width="10" stroke-linecap="round"
+												style="stroke-dasharray: {2 * Math.PI * 40}; stroke-dashoffset: {2 * Math.PI * 40 - (Math.min(budget.percentUsed, 100) / 100) * 2 * Math.PI * 40};"
+											/>
+										</svg>
+										<div class="absolute inset-0 flex items-center justify-center">
+											<span class="font-mono text-xs font-bold" style="color: {ringColor}">{Math.min(budget.percentUsed, 100)}%</span>
+										</div>
+									</div>
+
+									<!-- Budget Info -->
 									<div class="flex-1 min-w-0">
-										<p class="font-medium text-sm mb-0.5" style="color: {isDark ? '#ffffff' : '#171717'}">{rec.title}</p>
-										<p class="text-xs leading-relaxed" style="color: {isDark ? '#a3a3a3' : '#737373'}">{rec.description}</p>
+										<div class="flex items-center justify-between mb-1">
+											<h3 class="font-display font-semibold text-sm truncate" style="color: {isDark ? '#ffffff' : '#171717'}">
+												{budget.category}
+											</h3>
+											<div class="flex items-center gap-1">
+												<button 
+													onclick={() => editingBudget = { ...budget }}
+													class="p-1.5 rounded-lg transition-colors hover:bg-sw-surface/50"
+													style="color: {isDark ? '#a3a3a3' : '#737373'}"
+												>
+													<i class="fa-solid fa-pen text-xs"></i>
+												</button>
+												<button 
+													onclick={() => deleteBudget(budget.id)}
+													class="p-1.5 rounded-lg transition-colors hover:bg-red-500/10"
+													style="color: {isDark ? '#a3a3a3' : '#737373'}"
+												>
+													<i class="fa-solid fa-trash text-xs"></i>
+												</button>
+											</div>
+										</div>
+										<div class="flex items-center justify-between">
+											<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+												{formatCurrency(budget.currentSpent)} / {formatCurrency(budget.monthlyLimit)}
+											</span>
+											<span class="text-xs font-medium" style="color: {ringColor}">
+												{#if budget.overUnder >= 0}
+													{formatCurrency(budget.remaining)} left
+												{:else}
+													{formatCurrency(Math.abs(budget.overUnder))} over
+												{/if}
+											</span>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -764,136 +828,92 @@
 				</div>
 			{/if}
 
-			<!-- Budget Streaks (if any) -->
-			{#if budgetStreaks.length > 0}
-				<div class="rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<div class="flex items-center gap-3 mb-3">
-						<i class="fa-solid fa-fire text-orange-500"></i>
-						<div>
-							<p class="font-display font-semibold text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Budget Streaks</p>
-							<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">Consecutive months under budget</p>
-						</div>
+			<!-- On Track Section - Compact List -->
+			{#if onTrack.length > 0}
+				<div class="mb-6">
+					<h2 class="font-display text-lg font-semibold mb-3 flex items-center gap-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-check-circle text-sw-accent text-sm"></i>
+						On Track
+						<span class="text-xs font-normal px-2 py-0.5 rounded-full" style="background: rgba(13,148,136,0.15); color: #0d9488">{onTrack.length}</span>
+					</h2>
+					<div class="rounded-xl overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+						{#each onTrack as budget, index}
+							{@const ringColor = getProgressColor(budget.percentUsed)}
+							<div 
+								class="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-sw-surface/30"
+								style="{index !== onTrack.length - 1 ? `border-bottom: 1px solid ${isDark ? '#2a2a2a' : '#f0ebe3'}` : ''}"
+							>
+								<!-- Mini Progress Bar -->
+								<div class="w-24 flex-shrink-0">
+									<div class="h-2 rounded-full overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
+										<div 
+											class="h-full rounded-full"
+											style="width: {budget.percentUsed}%; background: {ringColor}"
+										></div>
+									</div>
+								</div>
+								
+								<!-- Category -->
+								<div class="flex-1 min-w-0">
+									<span class="text-sm font-medium truncate" style="color: {isDark ? '#ffffff' : '#171717'}">{budget.category}</span>
+								</div>
+								
+								<!-- Spent / Limit -->
+								<div class="text-right flex-shrink-0">
+									<span class="text-sm font-mono" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										{formatCurrency(budget.currentSpent)}
+									</span>
+									<span class="text-xs" style="color: {isDark ? '#525252' : '#a3a3a3'}"> / {formatCurrency(budget.monthlyLimit)}</span>
+								</div>
+								
+								<!-- Percent -->
+								<div class="w-12 text-right flex-shrink-0">
+									<span class="text-sm font-mono font-medium" style="color: {ringColor}">{budget.percentUsed}%</span>
+								</div>
+								
+								<!-- Actions -->
+								<div class="flex items-center gap-1 flex-shrink-0">
+									<button 
+										onclick={() => editingBudget = { ...budget }}
+										class="p-1.5 rounded-lg transition-colors hover:bg-sw-surface/50"
+										style="color: {isDark ? '#525252' : '#a3a3a3'}"
+									>
+										<i class="fa-solid fa-pen text-xs"></i>
+									</button>
+									<button 
+										onclick={() => deleteBudget(budget.id)}
+										class="p-1.5 rounded-lg transition-colors hover:bg-red-500/10"
+										style="color: {isDark ? '#525252' : '#a3a3a3'}"
+									>
+										<i class="fa-solid fa-trash text-xs"></i>
+									</button>
+								</div>
+							</div>
+						{/each}
 					</div>
-				<div class="flex flex-wrap gap-2">
-					{#each budgetStreaks as streak}
-						<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							<span style="color: {isDark ? '#ffffff' : '#171717'}">{streak.category}</span>
-							<span class="inline-flex items-center justify-center w-6 h-6 rounded-full font-mono text-xs font-bold" style="background: {isDark ? '#262626' : '#ffffff'}; color: {isDark ? '#ffffff' : '#171717'}; border: 1px solid {isDark ? '#404040' : '#d4cfc5'}">
-								{streak.streak}
-							</span>
-						</div>
-					{/each}
-				</div>
 				</div>
 			{/if}
 
-			<!-- Budget Cards Grid -->
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-				{#each budgets as budget, index}
-					{@const ringColor = getProgressColor(budget.percentUsed)}
-					<div 
-						class="rounded-2xl overflow-hidden transition-all hover:scale-[1.01]" 
-						style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; animation: slideUp 0.4s ease-out; animation-delay: {index * 50}ms; animation-fill-mode: both;"
-					>
-						<div class="p-4 sm:p-5">
-							<div class="flex items-start gap-4">
-								<!-- Progress Ring -->
-								<div class="relative flex-shrink-0">
-									<svg class="w-16 h-16 -rotate-90" viewBox="0 0 100 100">
-										<circle cx="50" cy="50" r="40" fill="none" stroke={isDark ? '#2a2a2a' : '#f0ebe3'} stroke-width="10"/>
-										<circle 
-											cx="50" cy="50" r="40" fill="none" 
-											stroke={ringColor} stroke-width="10" stroke-linecap="round"
-											style="stroke-dasharray: {2 * Math.PI * 40}; stroke-dashoffset: {2 * Math.PI * 40 - (Math.min(budget.percentUsed, 100) / 100) * 2 * Math.PI * 40};"
-											class="transition-all duration-700 ease-out"
-										/>
-									</svg>
-									<div class="absolute inset-0 flex items-center justify-center">
-										<span class="font-mono text-sm font-bold" style="color: {ringColor}">{Math.min(budget.percentUsed, 100)}%</span>
-									</div>
-								</div>
-
-								<!-- Budget Info -->
-								<div class="flex-1 min-w-0">
-									<div class="flex items-start justify-between mb-2">
-										<div>
-											<h3 class="font-display font-semibold text-base truncate" style="color: {isDark ? '#ffffff' : '#171717'}">
-												{budget.category}
-											</h3>
-											<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-												{formatCurrency(budget.currentSpent)} / {formatCurrency(budget.monthlyLimit)}
-											</p>
-										</div>
-										<div class="flex items-center gap-1">
-											{#if budget.trend !== 'stable'}
-												<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs" style="background: {getTrendColor(budget.trend)}15; color: {getTrendColor(budget.trend)}">
-													<i class="fa-solid {getTrendIcon(budget.trend)} text-[10px]"></i>
-												</span>
-											{/if}
-											<button 
-												onclick={() => editingBudget = { ...budget }}
-												class="p-1.5 rounded-lg transition-colors hover:bg-sw-surface/50"
-												style="color: {isDark ? '#a3a3a3' : '#737373'}"
-											>
-												<i class="fa-solid fa-pen text-xs"></i>
-											</button>
-											<button 
-												onclick={() => deleteBudget(budget.id)}
-												class="p-1.5 rounded-lg transition-colors hover:bg-red-500/10"
-												style="color: {isDark ? '#a3a3a3' : '#737373'}"
-											>
-												<i class="fa-solid fa-trash text-xs"></i>
-											</button>
-										</div>
-									</div>
-
-									<!-- Progress Bar -->
-									<div class="h-2 rounded-full overflow-hidden mb-2" style="background: {isDark ? '#0a0a0a' : '#f0ebe3'}">
-										<div 
-											class="h-full rounded-full transition-all duration-700"
-											style="width: {Math.min(budget.percentUsed, 100)}%; background: {ringColor}"
-										></div>
-									</div>
-
-									<!-- Opportunity Message -->
-									<div class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-										{#if budget.overUnder >= 0}
-											<i class="fa-solid fa-seedling text-sw-accent mr-1"></i>
-											{formatCurrency(budget.remaining)} left → {formatCurrency(budget.opportunityCostGained)} in 10yr
-										{:else}
-											<i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i>
-											Over by {formatCurrency(Math.abs(budget.overUnder))}
-										{/if}
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
-
-			<!-- Opportunity Cost Summary -->
+			<!-- Opportunity Cost Teaser -->
 			{#if summary && summary.totalRemaining > 0}
-				<div class="rounded-2xl p-5 sm:p-6 mb-6" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.1) 0%, rgba(13,148,136,0.05) 100%)' : 'linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(13,148,136,0.02) 100%)'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
-					<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-						<div class="flex items-center gap-4">
-							<div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background: {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}">
-								<i class="fa-solid fa-chart-line text-2xl text-sw-accent"></i>
+				<a href="/insights" class="block rounded-xl p-4 transition-all hover:scale-[1.01]" style="background: {isDark ? 'linear-gradient(135deg, rgba(13,148,136,0.1) 0%, rgba(13,148,136,0.05) 100%)' : 'linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(13,148,136,0.02) 100%)'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.3)' : 'rgba(13,148,136,0.2)'}">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-3">
+							<div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(13,148,136,0.15)">
+								<i class="fa-solid fa-seedling text-sw-accent"></i>
 							</div>
 							<div>
-								<p class="text-sm mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">If you invest your remaining budget...</p>
-								<p class="font-display text-2xl sm:text-3xl font-bold text-sw-accent">
-									{formatCurrency(summary.totalOpportunityCostGained)}
+								<p class="text-sm font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">
+									{formatCurrency(summary.totalRemaining)} remaining this month
 								</p>
-								<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">in 10 years at 7% return</p>
+								<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									If invested, could grow to <span class="font-semibold text-sw-accent">{formatCurrency(summary.totalOpportunityCostGained)}</span> in 10 years
+								</p>
 							</div>
 						</div>
-						<a href="/insights" class="inline-flex items-center gap-2 text-sm font-medium text-sw-accent hover:underline">
-							See more insights
-							<i class="fa-solid fa-arrow-right text-xs"></i>
-						</a>
+						<i class="fa-solid fa-chevron-right text-xs" style="color: {isDark ? '#525252' : '#a3a3a3'}"></i>
 					</div>
-				</div>
+				</a>
 			{/if}
 
 			<!-- Add Budget Actions -->
@@ -1141,93 +1161,6 @@
 						Create {Object.values(quickSetupBudgets).filter(v => v > 0).length} Budgets
 					</button>
 				</div>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Quick Add Transaction Modal -->
-{#if showQuickAdd}
-	<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-		<div class="rounded-2xl max-w-md w-full p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
-			<h2 class="font-display text-xl font-semibold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
-				<i class="fa-solid fa-receipt text-sw-accent mr-2"></i>
-				Log Spending
-			</h2>
-			<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-				Quickly add a transaction without importing a CSV
-			</p>
-			
-			<div class="space-y-4">
-				<div>
-					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Amount</label>
-					<div class="flex items-center rounded-xl overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
-						<span class="px-4 text-lg" style="color: {isDark ? '#737373' : '#9ca3af'}">$</span>
-						<input 
-							type="number" 
-							bind:value={quickAddAmount}
-							min="0.01"
-							step="0.01"
-							placeholder="0.00"
-							class="flex-1 px-2 py-3 text-lg bg-transparent outline-none"
-							style="color: {isDark ? '#ffffff' : '#171717'}"
-						/>
-					</div>
-				</div>
-
-				<div>
-					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
-					<select 
-						bind:value={quickAddCategory}
-						class="w-full px-4 py-3 rounded-xl text-base"
-						style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-					>
-						{#each allCategories as category}
-							<option value={category}>{category}</option>
-						{/each}
-					</select>
-				</div>
-
-				<div>
-					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Merchant (optional)</label>
-					<input 
-						type="text" 
-						bind:value={quickAddMerchant}
-						placeholder="e.g., Kroger, Amazon..."
-						class="w-full px-4 py-3 rounded-xl text-base"
-						style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-					/>
-				</div>
-
-				<div>
-					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Date</label>
-					<input 
-						type="date" 
-						bind:value={quickAddDate}
-						class="w-full px-4 py-3 rounded-xl text-base"
-						style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-					/>
-				</div>
-			</div>
-
-			<div class="flex gap-3 mt-6">
-				<button 
-					onclick={() => showQuickAdd = false}
-					class="flex-1 px-4 py-3 rounded-xl font-display font-semibold transition-colors"
-					style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}"
-				>
-					Cancel
-				</button>
-				<button 
-					onclick={saveQuickAdd}
-					disabled={saving || !quickAddAmount || quickAddAmount <= 0 || !quickAddCategory}
-					class="flex-1 btn-primary py-3"
-				>
-					{#if saving}
-						<i class="fa-solid fa-spinner fa-spin mr-2"></i>
-					{/if}
-					Add Transaction
-				</button>
 			</div>
 		</div>
 	</div>

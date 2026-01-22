@@ -14,11 +14,28 @@
 
 	let mobileMenuOpen = $state(false);
 	let isDark = $state(false);
+	
+	// Initialize from localStorage to avoid flash, will verify with API
+	function getCachedPlan(): 'free' | 'pro' {
+		if (typeof window === 'undefined') return 'free';
+		try {
+			const cached = localStorage.getItem('sw_user_plan');
+			return cached === 'pro' ? 'pro' : 'free';
+		} catch {
+			return 'free';
+		}
+	}
+	
+	// Default to 'free' during SSR, will update in onMount
 	let plan = $state<'free' | 'pro'>('free');
 	
 	onMount(async () => {
 		initTheme();
 		isDark = getTheme() === 'dark';
+		
+		// Use cached value first to avoid flash
+		const cached = getCachedPlan();
+		if (cached !== plan) plan = cached;
 		
 		// Fetch subscription status if not provided
 		if (userPlan === 'free') {
@@ -27,12 +44,15 @@
 				if (res.ok) {
 					const data = await res.json();
 					plan = data.plan;
+					// Cache for next page load
+					localStorage.setItem('sw_user_plan', data.plan);
 				}
 			} catch {
-				// Ignore errors, default to free
+				// Ignore errors, keep cached value
 			}
 		} else {
 			plan = userPlan;
+			localStorage.setItem('sw_user_plan', userPlan);
 		}
 	});
 
@@ -44,9 +64,9 @@
 
 	const navItems: NavItem[] = [
 		{ href: '/dashboard', label: 'Dashboard' },
+		{ href: '/transactions', label: 'Transactions' },
 		{ href: '/budgets', label: 'Budgets' },
 		{ href: '/insights', label: 'Insights' },
-		{ href: '/imports', label: 'Imports' },
 		{ href: '/settings', label: 'Settings' }
 	];
 

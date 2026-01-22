@@ -45,11 +45,13 @@ export const GET: RequestHandler = async ({ locals }) => {
 		const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().slice(0, 10);
 
 		// Fetch all transactions for current and previous month in one query
+		// Only include purchases (kind = 'purchase') to exclude refunds/income from budget calculations
 		const { data: allTxs, error: txError } = await locals.supabase
 			.from('transactions')
 			.select('amount, category, date')
 			.eq('user_id', user.id)
 			.eq('included_in_spend', true)
+			.eq('kind', 'purchase')
 			.gte('date', prevMonthStart)
 			.lte('date', currentMonthEnd);
 
