@@ -1,6 +1,6 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { TURNSTILE_SECRET_KEY } from '$env/static/private';
-import { sendEmail } from '$lib/server/email/emailService';
+import { TURNSTILE_SECRET_KEY, RESEND_API_KEY } from '$env/static/private';
+import { Resend } from 'resend';
 
 interface TurnstileResponse {
 	success: boolean;
@@ -80,11 +80,13 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			</div>
 		`;
 
-		await sendEmail({
+		const resend = new Resend(RESEND_API_KEY);
+		await resend.emails.send({
+			from: 'SpentWorth <hello@updates.spentworth.com>',
 			to: 'hello@spentworth.com',
 			subject: `[SpentWorth Contact] Message from ${name}`,
 			html,
-			replyTo: email,
+			reply_to: email,
 			tags: [{ name: 'email_type', value: 'contact_form' }]
 		});
 

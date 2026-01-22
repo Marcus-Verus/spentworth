@@ -55,8 +55,8 @@ ALPHA_VANTAGE_API_KEY=your-api-key
 # Stripe (for payments)
 STRIPE_SECRET_KEY=your-stripe-secret-key
 STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
-STRIPE_PRICE_ID_MONTHLY=your-monthly-price-id
-STRIPE_PRICE_ID_YEARLY=your-yearly-price-id
+STRIPE_PRICE_PRO_MONTHLY=your-monthly-price-id
+STRIPE_PRICE_PRO_YEARLY=your-yearly-price-id
 
 # Resend (for emails)
 RESEND_API_KEY=your-resend-api-key
