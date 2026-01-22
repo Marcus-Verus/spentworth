@@ -170,7 +170,7 @@
 					</button>
 				{/if}
 				{#if isLoggedIn}
-					<a href="/dashboard" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2">Dashboard</a>
+					<a href="/dashboard" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-xl">Dashboard</a>
 				{:else}
 					<a href="/login" class="text-sm font-medium hidden sm:block" style="color: {isDark ? '#a3a3a3' : '#737373'}">Log in</a>
 					<a href="/signup" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2">Sign up</a>

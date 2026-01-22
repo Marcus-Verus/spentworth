@@ -46,11 +46,24 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` with your Supabase credentials:
+Edit `.env` with your credentials:
 ```
 PUBLIC_SUPABASE_URL=your-supabase-url
 PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 ALPHA_VANTAGE_API_KEY=your-api-key
+
+# Stripe (for payments)
+STRIPE_SECRET_KEY=your-stripe-secret-key
+STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
+STRIPE_PRICE_ID_MONTHLY=your-monthly-price-id
+STRIPE_PRICE_ID_YEARLY=your-yearly-price-id
+
+# Resend (for emails)
+RESEND_API_KEY=your-resend-api-key
+
+# Cloudflare Turnstile (for contact form)
+PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key
+TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 ```
 
 4. Set up the database:
