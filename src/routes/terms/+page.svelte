@@ -88,7 +88,7 @@
 
 				<section>
 					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">9. Contact</h2>
-					<p>Questions about these terms? Contact us at <a href="mailto:legal@spentworth.com" class="text-sw-accent hover:underline">legal@spentworth.com</a>.</p>
+					<p>Questions about these terms? Contact us at <a href="mailto:support@spentworth.com" class="text-sw-accent hover:underline">support@spentworth.com</a>.</p>
 				</section>
 			</div>
 		</div>

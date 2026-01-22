@@ -63,7 +63,7 @@ export async function sendEmail(options: SendEmailOptions) {
 			to: options.to,
 			subject: options.subject,
 			html: options.html,
-			reply_to: options.replyTo || 'support@updates.spentworth.com',
+			reply_to: options.replyTo || 'support@spentworth.com',
 			tags: options.tags
 		});
 

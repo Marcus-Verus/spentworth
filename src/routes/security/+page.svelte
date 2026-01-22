@@ -90,7 +90,7 @@
 
 				<section>
 					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Report a Vulnerability</h2>
-					<p>If you discover a security vulnerability, please report it to <a href="mailto:security@spentworth.com" class="text-sw-accent hover:underline">security@spentworth.com</a>. We take all reports seriously and will respond promptly.</p>
+					<p>If you discover a security vulnerability, please report it to <a href="mailto:support@spentworth.com" class="text-sw-accent hover:underline">support@spentworth.com</a>. We take all reports seriously and will respond promptly.</p>
 				</section>
 			</div>
 		</div>

@@ -83,7 +83,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		const resend = new Resend(RESEND_API_KEY);
 		await resend.emails.send({
 			from: 'SpentWorth <hello@updates.spentworth.com>',
-			to: 'hello@spentworth.com',
+			to: 'support@spentworth.com',
 			subject: `[SpentWorth Contact] Message from ${name}`,
 			html,
 			reply_to: email,

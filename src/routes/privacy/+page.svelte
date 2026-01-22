@@ -89,7 +89,7 @@
 
 				<section>
 					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">Contact Us</h2>
-					<p>If you have questions about this Privacy Policy, please contact us at <a href="mailto:privacy@spentworth.com" class="text-sw-accent hover:underline">privacy@spentworth.com</a>.</p>
+					<p>If you have questions about this Privacy Policy, please contact us at <a href="mailto:support@spentworth.com" class="text-sw-accent hover:underline">support@spentworth.com</a>.</p>
 				</section>
 			</div>
 		</div>
