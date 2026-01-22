@@ -361,7 +361,8 @@ export class PriceService {
 		amount: number,
 		purchaseDate: Date,
 		ticker: string,
-		delayTradingDays: number
+		delayTradingDays: number,
+		fallbackAnnualReturn: number = 0.07
 	): Promise<{
 		investDate: string;
 		investPrice: number | null;
@@ -369,8 +370,9 @@ export class PriceService {
 		currentDate: string | null;
 		futureValue: number;
 		growthDelta: number;
-		calcMethod: 'adj_close_ratio' | 'fallback_7pct';
+		calcMethod: 'adj_close_ratio' | 'fallback_rate';
 		calcError: string | null;
+		fallbackRateUsed?: number;
 	}> {
 		// Calculate invest date
 		let investDate = purchaseDate;
@@ -407,9 +409,10 @@ export class PriceService {
 			};
 		}
 
-		// Fallback to 7% annual
+		// Fallback to configured annual return rate
 		const years = (today.getTime() - investDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-		const futureValue = amount * Math.pow(1.07, Math.max(0, years));
+		const rate = 1 + fallbackAnnualReturn;
+		const futureValue = amount * Math.pow(rate, Math.max(0, years));
 		const growthDelta = futureValue - amount;
 
 		return {
@@ -419,10 +422,11 @@ export class PriceService {
 			currentDate: null,
 			futureValue: Math.round(futureValue * 100) / 100,
 			growthDelta: Math.round(growthDelta * 100) / 100,
-			calcMethod: 'fallback_7pct',
+			calcMethod: 'fallback_rate',
 			calcError: investPriceResult.price === null
 				? 'Price data unavailable for invest date'
-				: 'Current price unavailable'
+				: 'Current price unavailable',
+			fallbackRateUsed: fallbackAnnualReturn
 		};
 	}
 }

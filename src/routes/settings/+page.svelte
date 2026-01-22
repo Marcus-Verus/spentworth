@@ -7,8 +7,11 @@
 	let { data } = $props();
 
 	let defaultTicker = $state('SPY');
+	let customTicker = $state<string | null>(null);
+	let useCustomTicker = $state(false);
 	let investDelayTradingDays = $state(1);
 	let allowFallbackForAllTickers = $state(false);
+	let fallbackAnnualReturn = $state(0.07);
 	let monthlyIncome = $state<number | null>(null);
 	let loading = $state(true);
 	let saving = $state(false);
@@ -30,6 +33,9 @@
 		subscription?.plan === 'pro' && 
 		['active', 'trialing'].includes(subscription?.status || '')
 	);
+
+	// Display fallback as percentage (e.g., 7 for 7%)
+	let fallbackPercentage = $derived(Math.round(fallbackAnnualReturn * 100));
 
 	onMount(async () => {
 		initTheme();
@@ -56,12 +62,23 @@
 
 		if (json.ok) {
 			defaultTicker = json.data.defaultTicker;
+			customTicker = json.data.customTicker;
+			useCustomTicker = !!json.data.customTicker;
 			investDelayTradingDays = json.data.investDelayTradingDays;
 			allowFallbackForAllTickers = json.data.allowFallbackForAllTickers;
+			fallbackAnnualReturn = json.data.fallbackAnnualReturn ?? 0.07;
 			monthlyIncome = json.data.monthlyIncome;
 		}
 		loading = false;
 	});
+
+	function handleFallbackChange(e: Event) {
+		const target = e.target as HTMLInputElement;
+		const val = parseFloat(target.value);
+		if (!isNaN(val) && val >= 0 && val <= 50) {
+			fallbackAnnualReturn = val / 100;
+		}
+	}
 	
 	function handleThemeToggle() {
 		if (!isPro) return;
@@ -78,8 +95,10 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				defaultTicker,
+				customTicker: useCustomTicker ? customTicker : null,
 				investDelayTradingDays,
 				allowFallbackForAllTickers,
+				fallbackAnnualReturn,
 				monthlyIncome
 			})
 		});
@@ -105,11 +124,12 @@
 		loadingPortal = false;
 	}
 
-	// Calculate potential savings growth (7% annual return over 10 years)
+	// Calculate potential savings growth using configured annual return over 10 years
 	function calculateFutureValue(monthlySavings: number): number {
+		const rate = 1 + fallbackAnnualReturn;
 		let total = 0;
 		for (let month = 0; month < 120; month++) {
-			total = (total + monthlySavings) * Math.pow(1.07, 1/12);
+			total = (total + monthlySavings) * Math.pow(rate, 1/12);
 		}
 		return Math.round(total);
 	}
@@ -236,7 +256,7 @@
 					{:else}
 						<div class="space-y-4">
 							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-								You're on the free plan. Upgrade to Pro for unlimited imports, advanced insights, and more.
+								You're on the free plan. Upgrade to Pro for unlimited imports, deep analytics, and more.
 							</p>
 							<div class="flex items-center gap-3">
 								<a 
@@ -290,7 +310,7 @@
 							<div class="rounded-xl p-4" style="background: rgba(13,148,136,0.1); border: 1px solid rgba(13,148,136,0.2)">
 								<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
 									<i class="fa-solid fa-chart-line text-sw-accent mr-2"></i>
-									If you save <span class="font-semibold">20%</span> of your income (${Math.round(monthlyIncome * 0.2).toLocaleString()}/month), 
+									If you save <span class="font-semibold">20%</span> of your income (${Math.round(monthlyIncome * 0.2).toLocaleString()}/month) at <span class="font-semibold">{fallbackPercentage}%</span> annual return, 
 									that could grow to <span class="font-semibold text-sw-accent">${calculateFutureValue(monthlyIncome * 0.2).toLocaleString()}</span> in 10 years.
 								</p>
 							</div>
@@ -300,23 +320,68 @@
 
 				<!-- Investment Settings -->
 				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">Investment Settings</h2>
+					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-chart-line text-sw-accent mr-2"></i>Investment Settings
+					</h2>
 					
 					<div class="space-y-6">
+						<!-- Ticker Selection -->
 						<div>
-							<label for="ticker" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Default Ticker</label>
-							<select
-								id="ticker"
-								bind:value={defaultTicker}
-								class="max-w-xs px-3 py-2 rounded-lg text-sm w-full"
-								style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-							>
-								<option value="SPY">SPY (S&P 500)</option>
-								<option value="VTI">VTI (Total Market)</option>
-								<option value="VOO">VOO (S&P 500)</option>
-								<option value="QQQ">QQQ (Nasdaq 100)</option>
-							</select>
-							<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">The index fund used to calculate opportunity cost</p>
+							<label for="ticker" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Benchmark Ticker</label>
+							
+							<!-- Toggle between preset and custom -->
+							<div class="flex items-center gap-4 mb-3">
+								<label class="flex items-center gap-2 cursor-pointer">
+									<input
+										type="radio"
+										name="tickerMode"
+										checked={!useCustomTicker}
+										onchange={() => useCustomTicker = false}
+										class="w-4 h-4 accent-sw-accent"
+									/>
+									<span class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Preset</span>
+								</label>
+								<label class="flex items-center gap-2 cursor-pointer">
+									<input
+										type="radio"
+										name="tickerMode"
+										checked={useCustomTicker}
+										onchange={() => useCustomTicker = true}
+										class="w-4 h-4 accent-sw-accent"
+									/>
+									<span class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Custom Ticker</span>
+								</label>
+							</div>
+
+							{#if useCustomTicker}
+								<div class="max-w-xs">
+									<input
+										id="customTicker"
+										type="text"
+										bind:value={customTicker}
+										placeholder="e.g., AAPL, MSFT, VXUS"
+										maxlength="5"
+										class="w-full px-3 py-2 rounded-lg text-sm uppercase"
+										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+									/>
+									<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										Enter any stock or ETF ticker symbol (powered by Alpha Vantage Premium)
+									</p>
+								</div>
+							{:else}
+								<select
+									id="ticker"
+									bind:value={defaultTicker}
+									class="max-w-xs px-3 py-2 rounded-lg text-sm w-full"
+									style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+								>
+									<option value="SPY">SPY (S&P 500)</option>
+									<option value="VTI">VTI (Total Market)</option>
+									<option value="VOO">VOO (S&P 500)</option>
+									<option value="QQQ">QQQ (Nasdaq 100)</option>
+								</select>
+								<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Popular index funds for opportunity cost calculations</p>
+							{/if}
 						</div>
 
 						<div>
@@ -335,17 +400,45 @@
 							<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Simulates when you'd realistically invest after a purchase</p>
 						</div>
 
-						<div>
-							<label class="flex items-center gap-3 cursor-pointer">
-								<input
-									type="checkbox"
-									bind:checked={allowFallbackForAllTickers}
-									class="w-5 h-5 rounded focus:ring-sw-accent focus:ring-2 accent-sw-accent"
-									style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}"
-								/>
-								<span style="color: {isDark ? '#ffffff' : '#171717'}">Use fallback calculation when price data unavailable</span>
-							</label>
-							<p class="text-sm mt-1 ml-8" style="color: {isDark ? '#a3a3a3' : '#737373'}">If enabled, uses 7% annual return when historical prices aren't available</p>
+						<!-- Fallback Settings -->
+						<div class="space-y-4 pt-4" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							<h3 class="text-sm font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Fallback Calculation</h3>
+							
+							<div>
+								<label class="flex items-center gap-3 cursor-pointer">
+									<input
+										type="checkbox"
+										bind:checked={allowFallbackForAllTickers}
+										class="w-5 h-5 rounded focus:ring-sw-accent focus:ring-2 accent-sw-accent"
+										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}"
+									/>
+									<span style="color: {isDark ? '#ffffff' : '#171717'}">Use fallback when price data unavailable</span>
+								</label>
+								<p class="text-sm mt-1 ml-8" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									Some tickers may not have enough history. Enable this to still calculate opportunity cost.
+								</p>
+							</div>
+
+							<div>
+								<label for="fallbackRate" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Fallback Annual Return</label>
+								<div class="flex items-center gap-2 max-w-xs">
+									<input
+										id="fallbackRate"
+										type="number"
+										min="0"
+										max="50"
+										step="0.5"
+										value={fallbackPercentage}
+										onchange={handleFallbackChange}
+										class="w-20 px-3 py-2 rounded-lg text-sm text-center"
+										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+									/>
+									<span style="color: {isDark ? '#a3a3a3' : '#737373'}">%</span>
+								</div>
+								<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									Annual return rate used when historical prices aren't available (default: 7%)
+								</p>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -407,10 +500,15 @@
 
 				<!-- Method explanation -->
 				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">How We Calculate</h2>
+					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-calculator text-sw-accent mr-2"></i>How We Calculate
+					</h2>
 					<div class="space-y-4 text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 						<p>
-							<strong style="color: {isDark ? '#ffffff' : '#171717'}">Adjusted Close Prices:</strong> We use adjusted close prices which account for dividends and stock splits, giving you an accurate total return calculation.
+							<strong style="color: {isDark ? '#ffffff' : '#171717'}">Real-Time Price Data:</strong> We use Alpha Vantage Premium API to fetch adjusted close prices, which account for dividends and stock splits for accurate total return calculations.
+						</p>
+						<p>
+							<strong style="color: {isDark ? '#ffffff' : '#171717'}">Custom Tickers:</strong> You can use any stock or ETF ticker symbol. For newer tickers or IPOs with limited price history, we fall back to your configured annual return rate (default {fallbackPercentage}%) to estimate opportunity cost.
 						</p>
 						<p>
 							<strong style="color: {isDark ? '#ffffff' : '#171717'}">Investment Delay:</strong> To simulate realistic investing, we assume you'd invest on the next trading day after a purchase (configurable above).

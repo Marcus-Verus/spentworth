@@ -1,43 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { initTheme, getTheme, toggleTheme } from '$lib/stores/theme';
 	import Logo from '$lib/components/Logo.svelte';
 
-	let isDark = $state(false);
+	let { data } = $props();
+	
+	let mobileMenuOpen = $state(false);
 	let billingCycle = $state<'monthly' | 'yearly'>('yearly');
 	let isLoading = $state(false);
 	let checkoutError = $state<string | null>(null);
-	let isLoggedIn = $state(false);
-	let isPro = $state(false);
 
-	onMount(async () => {
-		initTheme();
-		isDark = getTheme() === 'dark';
-		
-		// Check if user is logged in
-		isLoggedIn = !!$page.data.session;
-		
-		// Check if user is Pro (only Pro users can use dark mode)
-		if (isLoggedIn) {
-			try {
-				const res = await fetch('/api/stripe/subscription');
-				if (res.ok) {
-					const data = await res.json();
-					// Must be pro plan AND active/trialing status
-					isPro = data.plan === 'pro' && ['active', 'trialing'].includes(data.status);
-				}
-			} catch {
-				// Ignore errors
-			}
-		}
-		
-		// If not Pro, force light mode on this page
-		if (!isPro && isDark) {
-			isDark = false;
-		}
-		
+	onMount(() => {
 		// Check for canceled checkout
 		const params = new URLSearchParams(window.location.search);
 		if (params.get('checkout') === 'canceled') {
@@ -47,24 +20,19 @@
 		}
 	});
 
-	function handleThemeToggle() {
-		if (!isPro) return; // Only Pro users can toggle theme
-		toggleTheme();
-		isDark = getTheme() === 'dark';
-	}
-
 	const plans = {
 		free: {
 			name: 'Free',
-			description: 'Get started with the basics',
+			description: 'For trying it out (and proving the numbers to yourself)',
 			monthlyPrice: 0,
 			yearlyPrice: 0,
 		features: [
 			'3 CSV imports per month',
 			'Basic spending dashboard',
-			'Opportunity cost calculator',
-			'10 budget categories',
-			'90-day transaction history'
+			'Opportunity cost calculator (SPY)',
+			'Up to 10 spending categories',
+			'90-day transaction history',
+			'Manual exclude/include items'
 		],
 			cta: 'Get Started',
 			ctaHref: '/signup',
@@ -72,19 +40,19 @@
 		},
 		pro: {
 			name: 'Pro',
-			description: 'For serious wealth builders',
-			monthlyPrice: 8,
-			yearlyPrice: 6,
+			description: 'For power users who want unlimited history and deeper analysis',
+			monthlyPrice: 4.99,
+			yearlyPrice: 4.17,
 			features: [
 				'Unlimited CSV imports',
-				'Full spending dashboard',
-				'Advanced insights & recommendations',
-				'Unlimited budget categories',
+				'Full dashboard + deep category breakdowns',
+				'Any ticker (SPY, QQQ, custom)',
+				'Unlimited categories + category rules (auto-categorise & auto-exclude)',
 				'Unlimited transaction history',
-				'Monthly trend analysis',
+				'Monthly trend analysis + time range filters',
 				'CSV & PDF export',
-				'Email digest (coming soon)',
-				'Priority support'
+				'Priority support',
+				'Email digest (coming soon)'
 			],
 			cta: 'Upgrade to Pro',
 			ctaHref: '/signup?plan=pro',
@@ -94,18 +62,19 @@
 
 	function getPrice(plan: typeof plans.free | typeof plans.pro) {
 		if (plan.monthlyPrice === 0) return 'Free';
-		const price = billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
-		return `$${price}`;
+		// Always show the monthly price for clarity
+		return `$${plan.monthlyPrice.toFixed(2).replace('.00', '')}`;
 	}
 
 	function getSavings() {
-		const monthly = plans.pro.monthlyPrice * 12;
-		const yearly = plans.pro.yearlyPrice * 12;
-		return Math.round(((monthly - yearly) / monthly) * 100);
+		const yearlyTotal = 49.99; // $49.99/year
+		const monthlyTotal = plans.pro.monthlyPrice * 12; // $59.88/year if paid monthly
+		const monthsSaved = Math.round((monthlyTotal - yearlyTotal) / plans.pro.monthlyPrice);
+		return monthsSaved;
 	}
 
 	async function handleProCheckout() {
-		if (!isLoggedIn) {
+		if (!data.session) {
 			// Redirect to signup with plan info
 			goto(`/signup?plan=pro&interval=${billingCycle}`);
 			return;
@@ -122,8 +91,8 @@
 			});
 
 			if (!response.ok) {
-				const data = await response.json();
-				throw new Error(data.message || 'Failed to start checkout');
+				const responseData = await response.json();
+				throw new Error(responseData.message || 'Failed to start checkout');
 			}
 
 			const { url } = await response.json();
@@ -144,49 +113,83 @@
 	<title>Pricing | SpentWorth</title>
 </svelte:head>
 
-<div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
-	<!-- Header -->
-	<header class="border-b backdrop-blur-md sticky top-0 z-50" style="border-color: {isDark ? 'rgba(42,42,42,0.3)' : 'rgba(0,0,0,0.1)'}; background: {isDark ? 'rgba(10,10,10,0.9)' : 'rgba(245,240,232,0.9)'}">
-		<div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-			<a href="/" class="flex items-center gap-2">
-				<div class="rounded-xl bg-sw-accent flex items-center justify-center text-white p-1.5">
-					<Logo size="sm" class="text-white" />
-				</div>
-				<span class="font-display text-lg font-semibold hidden sm:inline" style="color: {isDark ? '#ffffff' : '#171717'}">SpentWorth</span>
-			</a>
-			<div class="flex items-center gap-2 sm:gap-4">
-				{#if isPro}
-					<button
-						onclick={handleThemeToggle}
-						class="p-2 rounded-lg transition-colors"
-						style="color: {isDark ? '#a3a3a3' : '#737373'}"
-						aria-label="Toggle theme"
-					>
-						{#if isDark}
-							<i class="fa-solid fa-sun"></i>
+<div class="min-h-screen" style="background: #f5f0e8">
+	<!-- Navigation - Consistent with home page -->
+	<nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">
+		<div class="max-w-6xl mx-auto px-4 sm:px-6">
+			<div class="flex items-center justify-between h-16">
+				<!-- Logo -->
+				<a href="/" class="flex items-center gap-3 group">
+					<div class="rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white p-2 shadow-md shadow-teal-500/15 group-hover:shadow-lg group-hover:shadow-teal-500/20 transition-all group-hover:scale-[1.02]">
+						<Logo size="md" class="text-white" />
+					</div>
+					<span class="font-display text-xl font-bold text-stone-800 tracking-tight">SpentWorth</span>
+				</a>
+				
+				<!-- Desktop nav -->
+				<div class="hidden md:flex items-center">
+					<!-- Nav Links -->
+					<div class="flex items-center gap-1 mr-4">
+						<a href="/#features" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors rounded-lg hover:bg-stone-100/70">Features</a>
+						<a href="/#how-it-works" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors rounded-lg hover:bg-stone-100/70">How it Works</a>
+						<a href="/pricing" class="px-4 py-2 text-sm font-medium text-teal-600 transition-colors rounded-lg bg-stone-100/70">Pricing</a>
+					</div>
+					
+					<!-- Auth -->
+					<div class="flex items-center gap-2 pl-4 border-l border-stone-200">
+						{#if data.session}
+							<a href="/dashboard" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-500/25">Dashboard</a>
 						{:else}
-							<i class="fa-solid fa-moon"></i>
+							<a href="/login" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors">Log in</a>
+							<a href="/signup" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-500/25">Get Started</a>
 						{/if}
-					</button>
-				{/if}
-				{#if isLoggedIn}
-					<a href="/dashboard" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-xl">Dashboard</a>
-				{:else}
-					<a href="/login" class="text-sm font-medium hidden sm:block" style="color: {isDark ? '#a3a3a3' : '#737373'}">Log in</a>
-					<a href="/signup" class="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2">Sign up</a>
-				{/if}
+					</div>
+				</div>
+				
+				<!-- Mobile menu button -->
+				<button 
+					onclick={() => mobileMenuOpen = !mobileMenuOpen}
+					class="md:hidden p-2 -mr-2 text-stone-500 hover:text-stone-800 transition-colors"
+				>
+					{#if mobileMenuOpen}
+						<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					{:else}
+						<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+						</svg>
+					{/if}
+				</button>
 			</div>
 		</div>
-	</header>
+		
+		<!-- Mobile dropdown -->
+		{#if mobileMenuOpen}
+			<div class="md:hidden bg-white/95 backdrop-blur-xl border-t border-stone-200/60 px-4 py-4 space-y-1">
+				<a href="/#features" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Features</a>
+				<a href="/#how-it-works" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">How it Works</a>
+				<a href="/pricing" class="block px-3 py-2.5 text-teal-600 bg-stone-100/70 rounded-lg font-medium">Pricing</a>
+				<div class="pt-3 mt-3 border-t border-stone-200/60 space-y-2">
+					{#if data.session}
+						<a href="/dashboard" class="block px-4 py-2.5 text-center font-semibold text-white bg-teal-600 rounded-xl shadow-md">Dashboard</a>
+					{:else}
+						<a href="/login" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Log in</a>
+						<a href="/signup" class="block px-4 py-2.5 text-center font-semibold text-white bg-teal-600 rounded-xl shadow-md">Get Started</a>
+					{/if}
+				</div>
+			</div>
+		{/if}
+	</nav>
 
 	<main class="max-w-4xl mx-auto px-4 py-12 sm:py-16">
 		<!-- Header -->
 		<div class="text-center mb-10">
-			<h1 class="font-display text-3xl sm:text-4xl font-bold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
+			<h1 class="font-display text-3xl sm:text-4xl font-bold mb-3 text-stone-800">
 				Simple, transparent pricing
 			</h1>
-			<p class="text-base sm:text-lg" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-				Start free. Upgrade when you're ready.
+			<p class="text-base sm:text-lg text-stone-600">
+				Start free. Upgrade when you want deeper insights, unlimited history, and exports.
 			</p>
 		</div>
 
@@ -201,14 +204,16 @@
 		<div class="flex items-center justify-center gap-3 mb-10">
 			<span 
 				class="text-sm font-medium"
-				style="color: {billingCycle === 'monthly' ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#737373' : '#9ca3af')}"
+				class:text-stone-800={billingCycle === 'monthly'}
+				class:text-stone-400={billingCycle === 'yearly'}
 			>
 				Monthly
 			</span>
 		<button
 			onclick={() => billingCycle = billingCycle === 'monthly' ? 'yearly' : 'monthly'}
 			class="relative w-14 h-8 rounded-full transition-colors"
-			style="background: {billingCycle === 'yearly' ? '#0d9488' : (isDark ? '#2a2a2a' : '#d4d4d4')}"
+			class:bg-teal-600={billingCycle === 'yearly'}
+			class:bg-stone-300={billingCycle === 'monthly'}
 			aria-label="Toggle billing cycle between monthly and yearly"
 		>
 				<span 
@@ -218,13 +223,14 @@
 			</button>
 			<span 
 				class="text-sm font-medium"
-				style="color: {billingCycle === 'yearly' ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#737373' : '#9ca3af')}"
+				class:text-stone-800={billingCycle === 'yearly'}
+				class:text-stone-400={billingCycle === 'monthly'}
 			>
 				Yearly
 			</span>
 			{#if billingCycle === 'yearly'}
-				<span class="text-xs px-2 py-1 rounded-full bg-sw-accent text-white font-medium">
-					Save {getSavings()}%
+				<span class="text-xs px-2.5 py-1 rounded-full bg-teal-600 text-white font-semibold">
+					🎉 2 months free
 				</span>
 			{/if}
 		</div>
@@ -233,31 +239,29 @@
 		<div class="grid md:grid-cols-2 gap-6">
 			<!-- Free Plan -->
 			<div 
-				class="rounded-2xl p-6 sm:p-8 relative"
-				style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
+				class="rounded-2xl p-6 sm:p-8 relative bg-white border border-stone-200"
 			>
 				<div class="mb-6">
-					<h2 class="font-display text-xl font-semibold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+					<h2 class="font-display text-xl font-semibold mb-1 text-stone-800">
 						{plans.free.name}
 					</h2>
-					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+					<p class="text-sm text-stone-600">
 						{plans.free.description}
 					</p>
 				</div>
 
 				<div class="mb-6">
-					<span class="font-display text-4xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">
+					<span class="font-display text-4xl font-bold text-stone-800">
 						Free
 					</span>
-					<span class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
+					<span class="text-sm text-stone-500">
 						forever
 					</span>
 				</div>
 
 				<a 
 					href={plans.free.ctaHref}
-					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6"
-					style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6 bg-stone-100 text-stone-800 hover:bg-stone-200"
 				>
 					{plans.free.cta}
 				</a>
@@ -265,8 +269,8 @@
 				<ul class="space-y-3">
 					{#each plans.free.features as feature}
 						<li class="flex items-start gap-3 text-sm">
-							<i class="fa-solid fa-check text-sw-accent mt-0.5"></i>
-							<span style="color: {isDark ? '#a3a3a3' : '#525252'}">{feature}</span>
+							<i class="fa-solid fa-check text-teal-600 mt-0.5"></i>
+							<span class="text-stone-700">{feature}</span>
 						</li>
 					{/each}
 				</ul>
@@ -274,32 +278,38 @@
 
 			<!-- Pro Plan -->
 			<div 
-				class="rounded-2xl p-6 sm:p-8 relative"
-				style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 2px solid #0d9488"
+				class="rounded-2xl p-6 sm:p-8 relative bg-white border-2 border-teal-600"
 			>
-				<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-sw-accent text-white text-xs font-medium">
+				<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-teal-600 text-white text-xs font-medium">
 					Most Popular
 				</div>
 
 				<div class="mb-6">
-					<h2 class="font-display text-xl font-semibold mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+					<h2 class="font-display text-xl font-semibold mb-1 text-stone-800">
 						{plans.pro.name}
 					</h2>
-					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+					<p class="text-sm text-stone-600">
 						{plans.pro.description}
 					</p>
 				</div>
 
 				<div class="mb-6">
-					<span class="font-display text-4xl font-bold" style="color: {isDark ? '#ffffff' : '#171717'}">
+					<span class="font-display text-4xl font-bold text-stone-800">
 						{getPrice(plans.pro)}
 					</span>
-					<span class="text-sm" style="color: {isDark ? '#737373' : '#9ca3af'}">
+					<span class="text-sm text-stone-500">
 						/month
 					</span>
 					{#if billingCycle === 'yearly'}
-						<p class="text-xs mt-1" style="color: {isDark ? '#737373' : '#9ca3af'}">
-							Billed annually (${plans.pro.yearlyPrice * 12}/year)
+						<div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-50 border border-teal-200">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+							</svg>
+							<span class="text-xs font-semibold text-teal-700">2 months free • $49.99/year</span>
+						</div>
+					{:else}
+						<p class="text-xs mt-2 text-stone-500">
+							Billed monthly
 						</p>
 					{/if}
 				</div>
@@ -307,8 +317,7 @@
 				<button 
 					onclick={handleProCheckout}
 					disabled={isLoading}
-					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
-					style="background: #0d9488; color: #ffffff"
+					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed bg-teal-600 text-white hover:bg-teal-500"
 				>
 					{#if isLoading}
 						<i class="fa-solid fa-spinner fa-spin mr-2"></i>
@@ -318,7 +327,7 @@
 					{/if}
 				</button>
 
-				<p class="text-xs text-center mb-4" style="color: {isDark ? '#737373' : '#9ca3af'}">
+				<p class="text-xs text-center mb-4 text-stone-500">
 					<i class="fa-solid fa-lock mr-1"></i>
 					Secure checkout powered by Stripe
 				</p>
@@ -326,8 +335,8 @@
 				<ul class="space-y-3">
 					{#each plans.pro.features as feature}
 						<li class="flex items-start gap-3 text-sm">
-							<i class="fa-solid fa-check text-sw-accent mt-0.5"></i>
-							<span style="color: {isDark ? '#a3a3a3' : '#525252'}">{feature}</span>
+							<i class="fa-solid fa-check text-teal-600 mt-0.5"></i>
+							<span class="text-stone-700">{feature}</span>
 						</li>
 					{/each}
 				</ul>
@@ -336,29 +345,29 @@
 
 		<!-- FAQ Section -->
 		<div class="mt-16">
-			<h2 class="font-display text-2xl font-semibold text-center mb-8" style="color: {isDark ? '#ffffff' : '#171717'}">
-				Questions?
+			<h2 class="font-display text-2xl font-semibold text-center mb-8 text-stone-800">
+				Frequently Asked Questions
 			</h2>
 			<div class="space-y-4 max-w-2xl mx-auto">
 				{#each [
 					{
 						q: 'Can I cancel anytime?',
-						a: 'Yes, you can cancel your Pro subscription at any time. You\'ll continue to have access until the end of your billing period.'
+						a: 'Yes. Cancel anytime from your billing settings. You\'ll keep Pro access until the end of your current billing period.'
 					},
 					{
 						q: 'Is my financial data secure?',
-						a: 'Your data never leaves your browser during CSV import. We don\'t have access to your bank credentials or account numbers.'
+						a: 'Imports are transmitted over HTTPS (TLS). We never ask for or store your bank login credentials. Your account data is protected with encrypted storage and strict access controls (including row-level security), and you can delete imports or your account data at any time.'
 					},
 					{
-						q: 'What happens when I hit the free tier limits?',
-						a: 'You can still view your existing data, but you won\'t be able to import new transactions until you upgrade or the next month.'
+						q: 'What happens when I hit the Free tier limits?',
+						a: 'You\'ll still be able to view your existing dashboard and reports, but you won\'t be able to import new transactions until the next month (or until you upgrade).'
 					}
 				] as faq}
-					<div class="rounded-xl p-5" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-						<h3 class="font-display font-semibold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+					<div class="rounded-xl p-5 bg-white border border-stone-200">
+						<h3 class="font-display font-semibold mb-2 text-stone-800">
 							{faq.q}
 						</h3>
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						<p class="text-sm text-stone-600">
 							{faq.a}
 						</p>
 					</div>
