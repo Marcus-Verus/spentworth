@@ -1046,7 +1046,7 @@
 					<ul class="space-y-2.5">
 						<li><a href="/about" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">About</a></li>
 						<li><a href="/blog" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Blog</a></li>
-						<li><a href="mailto:support@spentworth.com" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Contact</a></li>
+						<li><a href="/contact" class="text-sm transition-colors hover:text-sw-accent" style="color: {isDark ? '#a3a3a3' : '#737373'}">Contact</a></li>
 					</ul>
 				</div>
 
