@@ -532,6 +532,44 @@
 					{/if}
 				</div>
 
+				<!-- Data Export -->
+				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-download text-sw-accent mr-2"></i>Export Your Data
+					</h2>
+					
+					<div class="space-y-4">
+						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							Download a copy of all your SpentWorth data including transactions, budgets, goals, rules, and settings.
+						</p>
+						
+						<div class="flex flex-wrap items-center gap-3">
+							<a 
+								href="/api/account/export?format=json" 
+								download
+								class="px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
+								style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+							>
+								<i class="fa-solid fa-file-code"></i>
+								Export All Data (JSON)
+							</a>
+							<a 
+								href="/api/account/export?format=csv" 
+								download
+								class="px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
+								style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+							>
+								<i class="fa-solid fa-file-csv"></i>
+								Export Transactions (CSV)
+							</a>
+						</div>
+						
+						<p class="text-xs" style="color: {isDark ? '#737373' : '#a3a3a3'}">
+							JSON includes all data (transactions, budgets, goals, rules, settings). CSV includes transactions only.
+						</p>
+					</div>
+				</div>
+
 				<!-- Danger Zone -->
 				<div class="rounded-2xl p-6 mt-8" style="background: {isDark ? 'rgba(239,68,68,0.05)' : 'rgba(239,68,68,0.03)'}; border: 1px solid rgba(239,68,68,0.2)">
 					<h2 class="font-display text-lg font-semibold mb-4 text-red-600">

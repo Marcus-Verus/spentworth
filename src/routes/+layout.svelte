@@ -2,6 +2,7 @@
 	import '../app.css';
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import CookieConsent from '$lib/components/CookieConsent.svelte';
 
 	let { data, children } = $props();
 
@@ -22,3 +23,5 @@
 </svelte:head>
 
 {@render children()}
+
+<CookieConsent />

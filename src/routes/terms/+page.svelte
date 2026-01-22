@@ -7,6 +7,7 @@
 
 <svelte:head>
 	<title>Terms of Service | SpentWorth</title>
+	<meta name="description" content="SpentWorth Terms of Service - Rules and guidelines for using our service." />
 </svelte:head>
 
 <div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
@@ -25,13 +26,13 @@
 
 	<main class="max-w-3xl mx-auto px-4 py-12">
 		<h1 class="font-display text-3xl font-bold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Terms of Service</h1>
-		<p class="text-sm mb-8" style="color: {isDark ? '#a3a3a3' : '#737373'}">Last updated: January 21, 2026</p>
+		<p class="text-sm mb-8" style="color: {isDark ? '#a3a3a3' : '#737373'}">Last updated: January 22, 2026</p>
 
 		<div class="prose prose-sm max-w-none" style="color: {isDark ? '#a3a3a3' : '#525252'}">
 			<div class="space-y-8">
 				<section>
 					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">1. Acceptance of Terms</h2>
-					<p>By accessing or using SpentWorth, you agree to be bound by these Terms of Service. If you don't agree to these terms, please don't use our service.</p>
+					<p>By creating an account or using SpentWorth ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you don't agree to these Terms, please don't use our Service.</p>
 				</section>
 
 				<section>
@@ -39,56 +40,110 @@
 					<p class="mb-3">SpentWorth is a personal finance tool that helps you:</p>
 					<ul class="space-y-2">
 						<li>• Upload and categorize bank transaction data from CSV files</li>
-						<li>• Track spending patterns and identify opportunities</li>
+						<li>• Track spending patterns and set budgets</li>
 						<li>• Calculate the opportunity cost of spending decisions</li>
 						<li>• Set and track financial goals</li>
 					</ul>
+					<p class="mt-3">SpentWorth is designed as an informational tool. We do not provide financial, investment, tax, or legal advice.</p>
 				</section>
 
 				<section>
 					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">3. User Accounts</h2>
-					<p class="mb-3">You are responsible for:</p>
+					<p class="mb-3">To use SpentWorth, you must create an account with a valid email address. You are responsible for:</p>
 					<ul class="space-y-2">
-						<li>• Maintaining the confidentiality of your account</li>
+						<li>• Providing accurate account information</li>
+						<li>• Maintaining the confidentiality of your password</li>
 						<li>• All activities that occur under your account</li>
 						<li>• Notifying us immediately of any unauthorized use</li>
 					</ul>
+					<p class="mt-3">You must be at least 18 years old to use the Service.</p>
 				</section>
 
 				<section>
-					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">4. User Data</h2>
-					<p>You retain ownership of all data you upload to SpentWorth. We don't claim any rights to your personal financial data. You can export or delete your data at any time.</p>
-				</section>
-
-				<section>
-					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">5. Prohibited Uses</h2>
-					<p class="mb-3">You agree not to:</p>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">4. User Data & Privacy</h2>
+					<p class="mb-3">You retain ownership of all data you upload to SpentWorth. We do not claim any intellectual property rights to your personal financial data.</p>
 					<ul class="space-y-2">
-						<li>• Use the service for any illegal purpose</li>
-						<li>• Upload malicious files or code</li>
-						<li>• Attempt to gain unauthorized access to our systems</li>
-						<li>• Resell or redistribute the service</li>
+						<li>• You can export your data at any time</li>
+						<li>• You can delete your account and all associated data</li>
+						<li>• Our use of your data is governed by our <a href="/privacy" class="text-sw-accent hover:underline">Privacy Policy</a></li>
 					</ul>
 				</section>
 
 				<section>
-					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">6. Disclaimer</h2>
-					<p>SpentWorth is provided "as is" without warranties of any kind. The calculations and insights provided are for informational purposes only and should not be considered financial advice. Past performance does not guarantee future results.</p>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">5. Subscription & Payments</h2>
+					<p class="mb-3">SpentWorth offers both free and paid subscription plans ("SpentWorth Pro").</p>
+					<ul class="space-y-2">
+						<li>• Paid subscriptions are billed in advance on a monthly or annual basis</li>
+						<li>• You may cancel your subscription at any time through your account settings</li>
+						<li>• Cancellation takes effect at the end of the current billing period</li>
+						<li>• We do not provide refunds for partial billing periods, except as required by law</li>
+						<li>• Prices may change with reasonable notice; existing subscribers will be notified before renewal</li>
+					</ul>
 				</section>
 
 				<section>
-					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">7. Limitation of Liability</h2>
-					<p>SpentWorth shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the service.</p>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">6. Acceptable Use</h2>
+					<p class="mb-3">You agree not to:</p>
+					<ul class="space-y-2">
+						<li>• Use the Service for any illegal purpose</li>
+						<li>• Upload malicious files, viruses, or harmful code</li>
+						<li>• Attempt to gain unauthorized access to our systems or other users' accounts</li>
+						<li>• Interfere with or disrupt the Service</li>
+						<li>• Resell, redistribute, or sublicense the Service</li>
+						<li>• Scrape, data mine, or extract data from the Service except for your own data export</li>
+						<li>• Use the Service on behalf of a third party without authorization</li>
+					</ul>
 				</section>
 
 				<section>
-					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">8. Changes to Terms</h2>
-					<p>We may update these terms from time to time. We'll notify you of significant changes via email or through the service.</p>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">7. Termination</h2>
+					<p class="mb-3">We may suspend or terminate your account if you violate these Terms. You may delete your account at any time through Settings.</p>
+					<p>Upon termination, your right to use the Service ceases immediately. Data deletion follows our <a href="/privacy" class="text-sw-accent hover:underline">Privacy Policy</a>.</p>
 				</section>
 
 				<section>
-					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">9. Contact</h2>
-					<p>Questions about these terms? Contact us at <a href="mailto:support@spentworth.com" class="text-sw-accent hover:underline">support@spentworth.com</a>.</p>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">8. Disclaimer of Warranties</h2>
+					<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#fff7ed'}; border: 1px solid {isDark ? '#2a2a2a' : '#fed7aa'}">
+						<p class="font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Important Notice</p>
+						<p class="text-sm">SpentWorth is provided "as is" and "as available" without warranties of any kind, either express or implied.</p>
+					</div>
+					<ul class="space-y-2 mt-3">
+						<li>• <strong>Not financial advice:</strong> The calculations, projections, and insights provided are for informational purposes only and should not be considered financial, investment, tax, or legal advice.</li>
+						<li>• <strong>No guarantees:</strong> Past performance data and opportunity cost calculations do not guarantee future results. Investment returns are hypothetical.</li>
+						<li>• <strong>Data accuracy:</strong> We rely on the data you provide and third-party price data. We do not guarantee accuracy.</li>
+						<li>• <strong>Service availability:</strong> We do not guarantee uninterrupted access to the Service.</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">9. Limitation of Liability</h2>
+					<p>To the maximum extent permitted by law, SpentWorth and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits, data, or goodwill, resulting from:</p>
+					<ul class="space-y-2 mt-3">
+						<li>• Your use or inability to use the Service</li>
+						<li>• Any decisions you make based on information from the Service</li>
+						<li>• Unauthorized access to your account</li>
+						<li>• Any third-party conduct on the Service</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">10. Indemnification</h2>
+					<p>You agree to indemnify and hold harmless SpentWorth from any claims, damages, or expenses arising from your use of the Service or violation of these Terms.</p>
+				</section>
+
+				<section>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">11. Changes to Terms</h2>
+					<p>We may update these Terms from time to time. If we make material changes, we will notify you by email or through a prominent notice on the Service before the changes take effect. Your continued use of the Service after changes take effect constitutes acceptance of the new Terms.</p>
+				</section>
+
+				<section>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">12. Governing Law</h2>
+					<p>These Terms shall be governed by and construed in accordance with applicable law, without regard to conflict of law principles.</p>
+				</section>
+
+				<section>
+					<h2 class="font-display text-xl font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">13. Contact</h2>
+					<p>Questions about these Terms? Contact us at <a href="mailto:support@spentworth.com" class="text-sw-accent hover:underline">support@spentworth.com</a>.</p>
 				</section>
 			</div>
 		</div>

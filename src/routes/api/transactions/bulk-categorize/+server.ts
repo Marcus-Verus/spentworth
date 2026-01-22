@@ -1,11 +1,10 @@
-import { json } from '@sveltejs/kit';
+import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createClient } from '$lib/server/supabase';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-	const session = await locals.getSession?.();
-	if (!session?.user) {
-		return json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+	const { session, user } = await locals.safeGetSession();
+	if (!session || !user) {
+		throw error(401, 'Unauthorized');
 	}
 
 	try {
@@ -21,7 +20,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ ok: false, error: 'Merchant or transactionIds required' }, { status: 400 });
 		}
 
-		const supabase = createClient();
 		let updatedCount = 0;
 		let merchantForRule = merchant;
 
@@ -33,10 +31,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		if (transactionIds && Array.isArray(transactionIds) && transactionIds.length > 0) {
 			// Bulk update by transaction IDs (multi-select mode)
-			const { data: updated, error: updateError } = await supabase
+			const { data: updated, error: updateError } = await locals.supabase
 				.from('transactions')
 				.update(updateData)
-				.eq('user_id', session.user.id)
+				.eq('user_id', user.id)
 				.in('id', transactionIds)
 				.select('id, merchant');
 
@@ -59,10 +57,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			}
 		} else if (merchant) {
 			// Original mode: Update all transactions with this merchant
-			const { data: updated, error: updateError } = await supabase
+			const { data: updated, error: updateError } = await locals.supabase
 				.from('transactions')
 				.update(updateData)
-				.eq('user_id', session.user.id)
+				.eq('user_id', user.id)
 				.ilike('merchant', merchant)
 				.select('id');
 
@@ -78,19 +76,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		let ruleCreated = false;
 		if (createRule && merchantForRule) {
 			// Check if rule already exists
-			const { data: existingRule } = await supabase
+			const { data: existingRule } = await locals.supabase
 				.from('merchant_rules')
 				.select('id')
-				.eq('user_id', session.user.id)
+				.eq('user_id', user.id)
 				.ilike('match_value', merchantForRule)
 				.eq('match_field', 'merchant_norm')
 				.single();
 
 			if (!existingRule) {
-				const { error: ruleError } = await supabase
+				const { error: ruleError } = await locals.supabase
 					.from('merchant_rules')
 					.insert({
-						user_id: session.user.id,
+						user_id: user.id,
 						match_field: 'merchant_norm',
 						match_type: 'contains',
 						match_value: merchantForRule,
@@ -108,7 +106,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				}
 			} else {
 				// Update existing rule
-				await supabase
+				await locals.supabase
 					.from('merchant_rules')
 					.update({ set_category: category, set_subcategory: subcategory || null })
 					.eq('id', existingRule.id);
@@ -131,9 +129,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 // GET: Check how many transactions would be affected
 export const GET: RequestHandler = async ({ url, locals }) => {
-	const session = await locals.getSession?.();
-	if (!session?.user) {
-		return json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+	const { session, user } = await locals.safeGetSession();
+	if (!session || !user) {
+		throw error(401, 'Unauthorized');
 	}
 
 	const merchant = url.searchParams.get('merchant');
@@ -143,23 +141,21 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		return json({ ok: false, error: 'Merchant is required' }, { status: 400 });
 	}
 
-	const supabase = createClient();
-
 	// Count transactions with this merchant that have a different category
-	let query = supabase
+	let query = locals.supabase
 		.from('transactions')
 		.select('id, category', { count: 'exact' })
-		.eq('user_id', session.user.id)
+		.eq('user_id', user.id)
 		.ilike('merchant', merchant);
 
 	if (excludeCategory) {
 		query = query.neq('category', excludeCategory);
 	}
 
-	const { count, error } = await query;
+	const { count, error: queryError } = await query;
 
-	if (error) {
-		console.error('Failed to count:', error);
+	if (queryError) {
+		console.error('Failed to count:', queryError);
 		return json({ ok: false, error: 'Failed to count transactions' }, { status: 500 });
 	}
 

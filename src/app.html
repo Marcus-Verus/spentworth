@@ -4,10 +4,51 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		
+		<!-- Search Engine Verification -->
+		<meta name="google-site-verification" content="RlSV4RFoeNQY5a6hThB__YAHLPXOhsI3tzweO6a37Uo" />
+		<meta name="msvalidate.01" content="11BCAC8FB59F1CF5EF37D1C327D7310F" />
+		
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+		
+		<!-- Google Analytics - Consent Mode v2 -->
+		<script>
+			// Define dataLayer and gtag function FIRST
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			
+			// Set default consent to 'denied' (GDPR compliant default)
+			// Will be updated when user interacts with cookie banner
+			gtag('consent', 'default', {
+				'ad_storage': 'denied',
+				'ad_user_data': 'denied',
+				'ad_personalization': 'denied',
+				'analytics_storage': 'denied'
+			});
+			
+			// Check if user has already consented (from previous visit)
+			(function() {
+				var consent = localStorage.getItem('cookie_consent');
+				if (consent === 'granted') {
+					gtag('consent', 'update', {
+						'ad_storage': 'granted',
+						'ad_user_data': 'granted',
+						'ad_personalization': 'granted',
+						'analytics_storage': 'granted'
+					});
+				}
+			})();
+		</script>
+		<!-- Google tag (gtag.js) -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-9VS2EKQQJX"></script>
+		<script>
+			gtag('js', new Date());
+			gtag('config', 'G-9VS2EKQQJX');
+		</script>
+		
 		<script>
 			// Prevent FOUC - set theme before page renders (light is default)
 			(function() {
