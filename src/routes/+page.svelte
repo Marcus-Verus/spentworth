@@ -274,21 +274,17 @@
 						{/if}
 					</div>
 					
-					<!-- Trust signals -->
-					<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8 text-xs animate-slide-up" style="color: {isDark ? '#a3a3a3' : '#737373'}; animation-delay: 300ms">
-						<span class="flex items-center gap-1.5">
-							<i class="fa-solid fa-lock text-[10px]"></i>
-							Your data stays private
-						</span>
-						<span class="flex items-center gap-1.5">
-							<i class="fa-solid fa-clock text-[10px]"></i>
-							2 minute setup
-						</span>
-						<span class="flex items-center gap-1.5">
-							<i class="fa-solid fa-credit-card text-[10px]"></i>
-							No credit card needed
-						</span>
-					</div>
+				<!-- Trust signals -->
+				<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8 text-xs animate-slide-up" style="color: {isDark ? '#a3a3a3' : '#737373'}; animation-delay: 300ms">
+					<span class="flex items-center gap-1.5">
+						<i class="fa-solid fa-bolt text-[10px]"></i>
+						Quick setup
+					</span>
+					<span class="flex items-center gap-1.5">
+						<i class="fa-solid fa-credit-card text-[10px]"></i>
+						No credit card needed
+					</span>
+				</div>
 				</div>
 			</div>
 		</section>
@@ -751,10 +747,10 @@
 					</div>
 				</div>
 				
-				<p class="text-center text-xs mt-8" style="color: {isDark ? '#737373' : '#9ca3af'}">
-					<i class="fa-solid fa-info-circle mr-1"></i>
-					Examples assume 7% annual return. Your actual results will vary based on your spending.
-				</p>
+			<p class="text-center text-xs mt-8" style="color: {isDark ? '#737373' : '#9ca3af'}">
+				<i class="fa-solid fa-info-circle mr-1"></i>
+				Examples assume 7% annual return. Your actual results will vary based on your spending and market returns.
+			</p>
 			</div>
 		</section>
 
@@ -871,7 +867,7 @@
 				<!-- Visual demo of dashboard -->
 				<div class="rounded-2xl p-6 lg:p-8 shadow-2xl" style="background: {isDark ? 'rgba(26,26,26,0.95)' : 'rgba(255,255,255,0.95)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; backdrop-filter: blur(12px)">
 					<div class="text-center mb-6">
-						<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Your dashboard in 2 minutes</h3>
+						<h3 class="font-display font-semibold text-lg mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Your dashboard, instantly</h3>
 						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">See spending breakdowns, opportunity costs, and insights at a glance</p>
 					</div>
 					
@@ -985,13 +981,13 @@
 					Ready to understand your spending?
 				</h2>
 				<p class="text-base sm:text-lg mb-8 max-w-lg mx-auto" style="color: {isDark ? '#a3a3a3' : '#525252'}">
-					Start seeing where your money really goes. Private, simple, and takes just 2 minutes.
+					Start seeing where your money really goes. Quick setup, powerful insights.
 				</p>
 				{#if !data.session}
 					<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-display font-semibold">
 						Get Started — It's Free
 					</button>
-					<p class="text-xs mt-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">No credit card required • Your data stays on your device</p>
+					<p class="text-xs mt-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">No credit card required</p>
 				{:else}
 					<button onclick={() => goto('/dashboard')} class="btn btn-primary text-base px-8 py-3.5 font-display font-semibold">
 						Go to Dashboard
@@ -1024,7 +1020,7 @@
 					<a href="https://instagram.com/spentworth" target="_blank" rel="noopener" aria-label="Follow us on Instagram" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:text-sw-accent" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
 						<i class="fa-brands fa-instagram"></i>
 					</a>
-					<a href="https://reddit.com/u/SpentWorthOfficial" target="_blank" rel="noopener" aria-label="Follow us on Reddit" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:text-sw-accent" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
+					<a href="https://reddit.com/r/SpentWorth" target="_blank" rel="noopener" aria-label="Join us on Reddit" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:text-sw-accent" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
 						<i class="fa-brands fa-reddit"></i>
 					</a>
 					<a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="Follow us on LinkedIn" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors hover:text-sw-accent" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#a3a3a3' : '#737373'}">
