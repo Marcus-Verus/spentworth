@@ -420,27 +420,27 @@
 							</select>
 						</div>
 						
-						<!-- Date Range -->
-						<div class="grid grid-cols-2 gap-2">
-							<div>
-								<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">From</label>
-								<input 
-									type="date" 
-									bind:value={dateFrom}
-									class="w-full px-2 py-2 rounded-lg text-xs"
-									style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-								/>
-							</div>
-							<div>
-								<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">To</label>
-								<input 
-									type="date" 
-									bind:value={dateTo}
-									class="w-full px-2 py-2 rounded-lg text-xs"
-									style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-								/>
-							</div>
+					<!-- Date Range -->
+					<div class="grid grid-cols-2 gap-1 sm:gap-2">
+						<div>
+							<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">From</label>
+							<input 
+								type="date" 
+								bind:value={dateFrom}
+								class="w-full px-1 sm:px-2 py-2 rounded-lg text-xs"
+								style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+							/>
 						</div>
+						<div>
+							<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">To</label>
+							<input 
+								type="date" 
+								bind:value={dateTo}
+								class="w-full px-1 sm:px-2 py-2 rounded-lg text-xs"
+								style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+							/>
+						</div>
+					</div>
 						
 						<!-- Filter Actions -->
 						<div class="flex gap-2 pt-2">
