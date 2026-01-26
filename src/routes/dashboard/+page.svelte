@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import type { DashboardSummary, HiddenDataInfo } from '$lib/types';
+	import type { DashboardSummary, HiddenDataInfo, UploadNudgeData } from '$lib/types';
 	import Header from '$lib/components/Header.svelte';
 	import Onboarding from '$lib/components/Onboarding.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -15,6 +15,10 @@
 	let summary = $state<DashboardSummary | null>(null);
 	let loading = $state(true);
 	let updating = $state(false); // For date range changes (keeps content visible)
+	
+	// Upload nudge
+	let uploadNudge = $state<UploadNudgeData | null>(null);
+	let nudgeDismissed = $state(false);
 	
 	// Monthly trends
 	interface TrendData {
@@ -146,14 +150,32 @@
 			isDark = false;
 		}
 		
-		// Check onboarding
-		const onboardingCompleted = localStorage.getItem('sw_onboarding_completed');
-		if (!onboardingCompleted) {
-			showOnboarding = true;
-		}
+		// Check onboarding from database
+		try {
+			const settingsRes = await fetch('/api/settings');
+			if (settingsRes.ok) {
+				const settingsData = await settingsRes.json();
+				const onboardingCompleted = settingsData.data?.onboardingCompleted ?? false;
+				if (!onboardingCompleted) {
+					showOnboarding = true;
+				}
+			}
+		} catch { /* ignore */ }
 		
-		await Promise.all([loadSummary(), loadTrends()]);
+		await Promise.all([loadSummary(), loadTrends(), loadUploadNudge()]);
 	});
+
+	async function loadUploadNudge() {
+		try {
+			const res = await fetch('/api/upload-nudge');
+			const json = await res.json();
+			if (json.ok) {
+				uploadNudge = json.data;
+			}
+		} catch (e) {
+			console.error('Failed to load upload nudge:', e);
+		}
+	}
 
 	async function loadSummary() {
 		loading = true;
@@ -320,6 +342,46 @@
 		{:else if !summary || summary.totalSpent === 0}
 			<EmptyState type="no-data" />
 		{:else}
+			<!-- Upload Nudge Banner -->
+			{#if uploadNudge?.show && !nudgeDismissed}
+				<div 
+					class="mb-6 rounded-xl p-4 flex items-center gap-4 animate-fade-in"
+					style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.08)); border: 1px solid rgba(245,158,11,0.2)"
+				>
+					<div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+						<i class="fa-solid fa-upload text-amber-500"></i>
+					</div>
+					<div class="flex-1 min-w-0">
+						<p class="font-medium text-sm" style="color: {isDark ? '#fbbf24' : '#d97706'}">
+							{uploadNudge.message}
+						</p>
+						{#if uploadNudge.sourcesNeedingUpload.length > 0}
+							<p class="text-xs mt-0.5" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								{uploadNudge.sourcesNeedingUpload.map(s => s.name).slice(0, 3).join(', ')}
+								{#if uploadNudge.sourcesNeedingUpload.length > 3}
+									+{uploadNudge.sourcesNeedingUpload.length - 3} more
+								{/if}
+							</p>
+						{/if}
+					</div>
+					<div class="flex items-center gap-2 flex-shrink-0">
+						<a
+							href="/imports"
+							class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-amber-500 text-white hover:bg-amber-600"
+						>
+							Upload Now
+						</a>
+						<button
+							onclick={() => nudgeDismissed = true}
+							class="p-2 rounded-lg transition-colors hover:bg-amber-500/10"
+							title="Dismiss"
+						>
+							<i class="fa-solid fa-xmark" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+						</button>
+					</div>
+				</div>
+			{/if}
+
 			<!-- Page Header -->
 			<div class="mb-6 sm:mb-8">
 				<h1 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">

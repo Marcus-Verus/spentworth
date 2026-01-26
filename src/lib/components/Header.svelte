@@ -66,7 +66,8 @@
 		{ href: '/dashboard', label: 'Dashboard' },
 		{ href: '/transactions', label: 'Transactions' },
 		{ href: '/budgets', label: 'Budgets' },
-		{ href: '/insights', label: 'Insights' },
+		{ href: '/review', label: 'Review' },
+		{ href: '/sources', label: 'Sources' },
 		{ href: '/settings', label: 'Settings' }
 	];
 

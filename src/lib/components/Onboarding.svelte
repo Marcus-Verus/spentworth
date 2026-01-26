@@ -51,7 +51,19 @@
 		complete();
 	}
 	
-	function complete() {
+	async function complete() {
+		// Save to database
+		try {
+			await fetch('/api/settings', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ onboardingCompleted: true })
+			});
+		} catch (e) {
+			console.error('Failed to save onboarding status:', e);
+		}
+		
+		// Also save to localStorage as backup
 		localStorage.setItem('sw_onboarding_completed', 'true');
 		onComplete();
 	}

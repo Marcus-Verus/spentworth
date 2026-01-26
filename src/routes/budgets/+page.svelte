@@ -640,7 +640,7 @@
 			</div>
 		{:else}
 			<!-- Budget Health Dashboard -->
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+			<div class="grid grid-cols-1 md:grid-cols-2 {summary && summary.totalBudget > 0 && new Date().getDate() >= 3 ? 'lg:grid-cols-3' : ''} gap-4 sm:gap-6 mb-6 sm:mb-8">
 				<!-- Health Score Card -->
 				<div class="rounded-2xl p-5 sm:p-6 relative overflow-hidden" style="background: {isDark ? 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f9f6f1 100%)'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 					<div class="absolute top-0 right-0 w-32 h-32 opacity-10" style="background: radial-gradient(circle, {healthGrade.color} 0%, transparent 70%);"></div>
@@ -687,46 +687,59 @@
 					</div>
 				</div>
 
-				<!-- Spending Velocity Card -->
-				<div class="rounded-2xl p-5 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-					<p class="text-xs uppercase tracking-wider mb-3" style="color: {isDark ? '#737373' : '#9ca3af'}">Spending Pace</p>
-					<div class="flex items-center gap-4">
-						<div class="relative w-14 h-14 flex-shrink-0">
-							<!-- Month progress background -->
-							<svg class="w-14 h-14 -rotate-90" viewBox="0 0 100 100">
-								<circle cx="50" cy="50" r="40" fill="none" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} stroke-width="8"/>
-								<!-- Expected progress (month %) -->
-								<circle 
-									cx="50" cy="50" r="40" fill="none" 
-									stroke={isDark ? '#404040' : '#d4cfc5'} stroke-width="8" stroke-linecap="round"
-									style="stroke-dasharray: {2 * Math.PI * 40}; stroke-dashoffset: {2 * Math.PI * 40 - (monthProgress / 100) * 2 * Math.PI * 40};"
-								/>
-								<!-- Actual spending progress -->
-								<circle 
-									cx="50" cy="50" r="40" fill="none" 
-									stroke={getVelocityColor(spendingVelocity.status)} stroke-width="8" stroke-linecap="round"
-									style="stroke-dasharray: {2 * Math.PI * 40}; stroke-dashoffset: {2 * Math.PI * 40 - (Math.min((summary?.totalSpent || 0) / (summary?.totalBudget || 1), 1)) * 2 * Math.PI * 40};"
-								/>
-							</svg>
-						</div>
-						<div class="flex-1 min-w-0">
-							<p class="font-display font-semibold text-sm mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
-								{#if spendingVelocity.status === 'under'}
-									Ahead of pace
-								{:else if spendingVelocity.status === 'on-track'}
-									On track
-								{:else if spendingVelocity.status === 'watch'}
-									Slightly fast
-								{:else}
-									Overspending
-								{/if}
-							</p>
-							<p class="text-xs truncate" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-								{spendingVelocity.message || `Day ${new Date().getDate()} of ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}`}
-							</p>
+				<!-- Spending Velocity Card - Only show if we have budgets, spending, and enough data -->
+				{#if summary && summary.totalBudget > 0 && summary.totalSpent > 0 && new Date().getDate() >= 3}
+					<div class="rounded-2xl p-5 sm:p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+						<p class="text-xs uppercase tracking-wider mb-3" style="color: {isDark ? '#737373' : '#9ca3af'}">Spending Pace</p>
+						<div class="flex items-center gap-4">
+							<div class="relative w-14 h-14 flex-shrink-0">
+								<!-- Month progress background -->
+								<svg class="w-14 h-14 -rotate-90" viewBox="0 0 100 100">
+									<circle cx="50" cy="50" r="40" fill="none" stroke={isDark ? '#2a2a2a' : '#e5e5e5'} stroke-width="8"/>
+									<!-- Expected progress (month %) -->
+									<circle 
+										cx="50" cy="50" r="40" fill="none" 
+										stroke={isDark ? '#404040' : '#d4cfc5'} stroke-width="8" stroke-linecap="round"
+										style="stroke-dasharray: {2 * Math.PI * 40}; stroke-dashoffset: {2 * Math.PI * 40 - (monthProgress / 100) * 2 * Math.PI * 40};"
+									/>
+									<!-- Actual spending progress -->
+									<circle 
+										cx="50" cy="50" r="40" fill="none" 
+										stroke={getVelocityColor(spendingVelocity.status)} stroke-width="8" stroke-linecap="round"
+										style="stroke-dasharray: {2 * Math.PI * 40}; stroke-dashoffset: {2 * Math.PI * 40 - (Math.min((summary?.totalSpent || 0) / (summary?.totalBudget || 1), 1)) * 2 * Math.PI * 40};"
+									/>
+								</svg>
+							</div>
+							<div class="flex-1 min-w-0">
+								<p class="font-display font-semibold text-sm mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">
+									{#if spendingVelocity.status === 'under'}
+										Ahead of pace
+									{:else if spendingVelocity.status === 'on-track'}
+										On track
+									{:else if spendingVelocity.status === 'watch'}
+										Slightly fast
+									{:else}
+										Overspending
+									{/if}
+								</p>
+								<p class="text-xs truncate" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									{spendingVelocity.message || `Day ${new Date().getDate()} of ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}`}
+								</p>
+								<!-- Explanatory labels for the circles -->
+								<div class="flex items-center gap-3 mt-2 text-[10px]" style="color: {isDark ? '#737373' : '#9ca3af'}">
+									<div class="flex items-center gap-1">
+										<div class="w-2 h-2 rounded-full" style="background: {isDark ? '#404040' : '#d4cfc5'}"></div>
+										<span>{monthProgress}% month</span>
+									</div>
+									<div class="flex items-center gap-1">
+										<div class="w-2 h-2 rounded-full" style="background: {getVelocityColor(spendingVelocity.status)}"></div>
+										<span>{Math.round((summary.totalSpent / summary.totalBudget) * 100)}% spent</span>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
-				</div>
+				{/if}
 			</div>
 
 			<!-- Alerts -->

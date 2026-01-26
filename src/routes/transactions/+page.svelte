@@ -391,8 +391,9 @@
 					<div class="space-y-3">
 						<!-- Search -->
 						<div>
-							<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Search</label>
+							<label for="filter-search" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Search</label>
 							<input 
+								id="filter-search"
 								type="text" 
 								bind:value={search}
 								onkeydown={(e) => e.key === 'Enter' && applyFilters()}
@@ -404,8 +405,9 @@
 						
 						<!-- Category -->
 						<div>
-							<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
+							<label for="filter-category" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
 							<select 
+								id="filter-category"
 								bind:value={categoryFilter}
 								class="w-full px-3 py-2 rounded-lg text-sm"
 								style="background: {isDark ? '#0a0a0a' : '#f9f6f1'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
@@ -423,8 +425,9 @@
 					<!-- Date Range -->
 					<div class="grid grid-cols-2 gap-1 sm:gap-2">
 						<div>
-							<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">From</label>
+							<label for="filter-date-from" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">From</label>
 							<input 
+								id="filter-date-from"
 								type="date" 
 								bind:value={dateFrom}
 								class="w-full px-1 sm:px-2 py-2 rounded-lg text-xs"
@@ -432,8 +435,9 @@
 							/>
 						</div>
 						<div>
-							<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">To</label>
+							<label for="filter-date-to" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">To</label>
 							<input 
+								id="filter-date-to"
 								type="date" 
 								bind:value={dateTo}
 								class="w-full px-1 sm:px-2 py-2 rounded-lg text-xs"
@@ -735,8 +739,9 @@
 			
 			<div class="space-y-4">
 				<div>
-					<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Merchant</label>
+					<label for="edit-merchant" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Merchant</label>
 					<input 
+						id="edit-merchant"
 						type="text" 
 						bind:value={editForm.merchant}
 						class="w-full px-3 py-2 rounded-lg text-sm"
@@ -746,8 +751,9 @@
 				
 				<div class="grid grid-cols-2 gap-3">
 					<div>
-						<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
+						<label for="edit-category" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
 						<select 
+							id="edit-category"
 							bind:value={editForm.category}
 							onchange={() => editForm.subcategory = ''}
 							class="w-full px-3 py-2 rounded-lg text-sm"
@@ -760,8 +766,9 @@
 						</select>
 					</div>
 					<div>
-						<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subcategory</label>
+						<label for="edit-subcategory" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subcategory</label>
 						<select 
+							id="edit-subcategory"
 							bind:value={editForm.subcategory}
 							disabled={!editForm.category || editSubcategories.length === 0}
 							class="w-full px-3 py-2 rounded-lg text-sm disabled:opacity-50"
@@ -777,8 +784,9 @@
 				
 				<div class="grid grid-cols-2 gap-3">
 					<div>
-						<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Amount ($)</label>
+						<label for="edit-amount" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Amount ($)</label>
 						<input 
+							id="edit-amount"
 							type="number" 
 							step="0.01"
 							min="0"
@@ -788,8 +796,9 @@
 						/>
 					</div>
 					<div>
-						<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Date</label>
+						<label for="edit-date" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Date</label>
 						<input 
+							id="edit-date"
 							type="date" 
 							bind:value={editForm.date}
 							class="w-full px-3 py-2 rounded-lg text-sm"
@@ -799,8 +808,9 @@
 				</div>
 				
 				<div>
-					<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Description</label>
+					<label for="edit-description" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Description</label>
 					<input 
+						id="edit-description"
 						type="text" 
 						bind:value={editForm.description}
 						class="w-full px-3 py-2 rounded-lg text-sm"
@@ -913,8 +923,9 @@
 			<div class="space-y-4">
 				<div class="grid grid-cols-2 gap-3">
 					<div>
-						<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
+						<label for="bulk-category" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
 						<select 
+							id="bulk-category"
 							bind:value={bulkCategory}
 							onchange={() => bulkSubcategory = ''}
 							class="w-full px-3 py-2 rounded-lg text-sm"
@@ -927,8 +938,9 @@
 						</select>
 					</div>
 					<div>
-						<label class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subcategory</label>
+						<label for="bulk-subcategory" class="block text-xs mb-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Subcategory</label>
 						<select 
+							id="bulk-subcategory"
 							bind:value={bulkSubcategory}
 							disabled={!bulkCategory || bulkSubcategories.length === 0}
 							class="w-full px-3 py-2 rounded-lg text-sm disabled:opacity-50"

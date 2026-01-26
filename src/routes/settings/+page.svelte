@@ -28,6 +28,70 @@
 	let deleting = $state(false);
 	let deleteError = $state<string | null>(null);
 	
+	// MFA state
+	let mfaEnabled = $state(false);
+	let mfaFactors = $state<Array<{ id: string; friendlyName: string; createdAt: string }>>([]);
+	let mfaLoading = $state(true);
+	let mfaEnrolling = $state(false);
+	let mfaQrCode = $state<string | null>(null);
+	let mfaSecret = $state<string | null>(null);
+	let mfaFactorId = $state<string | null>(null);
+	let mfaVerifyCode = $state('');
+	let mfaVerifying = $state(false);
+	let mfaError = $state<string | null>(null);
+	let mfaSuccess = $state<string | null>(null);
+	let showDisableMfaModal = $state(false);
+	let disablingMfa = $state(false);
+	
+	// Notification preferences
+	let notifPrefs = $state<{
+		dailyBriefEnabled: boolean;
+		dailyBriefTime: string;
+		dailyBriefTimezone: string;
+		uploadReminderEnabled: boolean;
+		uploadReminderEmail: boolean;
+		reviewInboxEnabled: boolean;
+		reviewInboxDailyGoal: number;
+		weeklyPulseEnabled: boolean;
+		weeklyPulseDay: number;
+		showUploadNudges: boolean;
+		showAchievementBadges: boolean;
+	}>({
+		dailyBriefEnabled: false,
+		dailyBriefTime: '09:00',
+		dailyBriefTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
+		uploadReminderEnabled: true,
+		uploadReminderEmail: false,
+		reviewInboxEnabled: true,
+		reviewInboxDailyGoal: 5,
+		weeklyPulseEnabled: true,
+		weeklyPulseDay: 1,
+		showUploadNudges: true,
+		showAchievementBadges: true
+	});
+	let notifSaving = $state(false);
+	let notifSaved = $state(false);
+	
+	// Common timezones for selection
+	const timezones = [
+		{ value: 'America/New_York', label: 'Eastern Time (ET)' },
+		{ value: 'America/Chicago', label: 'Central Time (CT)' },
+		{ value: 'America/Denver', label: 'Mountain Time (MT)' },
+		{ value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+		{ value: 'America/Anchorage', label: 'Alaska Time (AKT)' },
+		{ value: 'Pacific/Honolulu', label: 'Hawaii Time (HT)' },
+		{ value: 'Europe/London', label: 'London (GMT/BST)' },
+		{ value: 'Europe/Paris', label: 'Paris (CET)' },
+		{ value: 'Europe/Berlin', label: 'Berlin (CET)' },
+		{ value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+		{ value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
+		{ value: 'Asia/Singapore', label: 'Singapore (SGT)' },
+		{ value: 'Asia/Dubai', label: 'Dubai (GST)' },
+		{ value: 'Australia/Sydney', label: 'Sydney (AEST)' },
+		{ value: 'Australia/Melbourne', label: 'Melbourne (AEST)' },
+		{ value: 'Pacific/Auckland', label: 'Auckland (NZST)' }
+	];
+	
 	// Pro tier check based on subscription
 	let isPro = $derived(
 		subscription?.plan === 'pro' && 
@@ -70,7 +134,65 @@
 			monthlyIncome = json.data.monthlyIncome;
 		}
 		loading = false;
+		
+		// Load MFA status and notification prefs
+		await Promise.all([loadMfaStatus(), loadNotificationPrefs()]);
 	});
+
+	async function loadNotificationPrefs() {
+		try {
+			const res = await fetch('/api/notifications/prefs');
+			const json = await res.json();
+			if (json.ok && json.data) {
+				notifPrefs = {
+					dailyBriefEnabled: json.data.dailyBriefEnabled,
+					dailyBriefTime: json.data.dailyBriefTime?.slice(0, 5) || '09:30',
+					dailyBriefTimezone: json.data.dailyBriefTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
+					uploadReminderEnabled: json.data.uploadReminderEnabled,
+					uploadReminderEmail: json.data.uploadReminderEmail,
+					reviewInboxEnabled: json.data.reviewInboxEnabled,
+					reviewInboxDailyGoal: json.data.reviewInboxDailyGoal,
+					weeklyPulseEnabled: json.data.weeklyPulseEnabled,
+					weeklyPulseDay: json.data.weeklyPulseDay,
+					showUploadNudges: json.data.showUploadNudges,
+					showAchievementBadges: json.data.showAchievementBadges
+				};
+			}
+		} catch (e) {
+			console.error('Failed to load notification prefs:', e);
+		}
+	}
+
+	async function saveNotificationPrefs() {
+		notifSaving = true;
+		notifSaved = false;
+		
+		try {
+			await fetch('/api/notifications/prefs', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					dailyBriefEnabled: notifPrefs.dailyBriefEnabled,
+					dailyBriefTime: notifPrefs.dailyBriefTime + ':00',
+					dailyBriefTimezone: notifPrefs.dailyBriefTimezone,
+					uploadReminderEnabled: notifPrefs.uploadReminderEnabled,
+					uploadReminderEmail: notifPrefs.uploadReminderEmail,
+					reviewInboxEnabled: notifPrefs.reviewInboxEnabled,
+					reviewInboxDailyGoal: notifPrefs.reviewInboxDailyGoal,
+					weeklyPulseEnabled: notifPrefs.weeklyPulseEnabled,
+					weeklyPulseDay: notifPrefs.weeklyPulseDay,
+					showUploadNudges: notifPrefs.showUploadNudges,
+					showAchievementBadges: notifPrefs.showAchievementBadges
+				})
+			});
+			notifSaved = true;
+			setTimeout(() => notifSaved = false, 2000);
+		} catch (e) {
+			console.error('Failed to save notification prefs:', e);
+		}
+		
+		notifSaving = false;
+	}
 
 	function handleFallbackChange(e: Event) {
 		const target = e.target as HTMLInputElement;
@@ -180,6 +302,115 @@
 			deleting = false;
 		}
 	}
+
+	// MFA Functions
+	async function loadMfaStatus() {
+		try {
+			const res = await fetch('/api/mfa/status');
+			if (res.ok) {
+				const data = await res.json();
+				mfaEnabled = data.enabled;
+				mfaFactors = data.factors || [];
+			}
+		} catch (err) {
+			console.error('Failed to load MFA status:', err);
+		}
+		mfaLoading = false;
+	}
+
+	async function startMfaEnrollment() {
+		mfaEnrolling = true;
+		mfaError = null;
+		mfaSuccess = null;
+
+		try {
+			const res = await fetch('/api/mfa/enroll', { method: 'POST' });
+			const data = await res.json();
+
+			if (!res.ok) {
+				throw new Error(data.error || 'Failed to start enrollment');
+			}
+
+			mfaQrCode = data.qrCode;
+			mfaSecret = data.secret;
+			mfaFactorId = data.factorId;
+		} catch (err) {
+			mfaError = err instanceof Error ? err.message : 'Failed to start MFA enrollment';
+		}
+		mfaEnrolling = false;
+	}
+
+	async function verifyMfaCode() {
+		if (mfaVerifyCode.length !== 6) {
+			mfaError = 'Please enter a 6-digit code';
+			return;
+		}
+
+		mfaVerifying = true;
+		mfaError = null;
+
+		try {
+			const res = await fetch('/api/mfa/verify', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					factorId: mfaFactorId,
+					code: mfaVerifyCode
+				})
+			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				throw new Error(data.error || 'Verification failed');
+			}
+
+			// Success - reset enrollment state and refresh status
+			mfaSuccess = 'Two-factor authentication enabled successfully!';
+			mfaQrCode = null;
+			mfaSecret = null;
+			mfaFactorId = null;
+			mfaVerifyCode = '';
+			await loadMfaStatus();
+		} catch (err) {
+			mfaError = err instanceof Error ? err.message : 'Verification failed';
+		}
+		mfaVerifying = false;
+	}
+
+	function cancelMfaEnrollment() {
+		mfaQrCode = null;
+		mfaSecret = null;
+		mfaFactorId = null;
+		mfaVerifyCode = '';
+		mfaError = null;
+	}
+
+	async function disableMfa(factorId: string) {
+		disablingMfa = true;
+		mfaError = null;
+
+		try {
+			const res = await fetch('/api/mfa/unenroll', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ factorId })
+			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				throw new Error(data.error || 'Failed to disable MFA');
+			}
+
+			mfaSuccess = 'Two-factor authentication disabled.';
+			showDisableMfaModal = false;
+			await loadMfaStatus();
+		} catch (err) {
+			mfaError = err instanceof Error ? err.message : 'Failed to disable MFA';
+		}
+		disablingMfa = false;
+	}
 </script>
 
 <div class="min-h-screen">
@@ -279,6 +510,375 @@
 							</div>
 						</div>
 					{/if}
+				</div>
+
+				<!-- Security / MFA Settings -->
+				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<div class="flex items-center justify-between mb-4">
+						<h2 class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+							<i class="fa-solid fa-shield-halved text-sw-accent mr-2"></i>Security
+						</h2>
+						{#if mfaEnabled}
+							<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 border border-green-500/30">
+								<i class="fa-solid fa-check mr-1"></i>MFA Enabled
+							</span>
+						{/if}
+					</div>
+
+					{#if mfaLoading}
+						<div class="flex items-center gap-2 py-4">
+							<div class="w-5 h-5 rounded-full border-2 border-sw-accent border-t-transparent animate-spin"></div>
+							<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Loading security settings...</span>
+						</div>
+					{:else}
+						<div class="space-y-4">
+							{#if mfaSuccess}
+								<div class="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-600 text-sm">
+									<i class="fa-solid fa-check-circle mr-2"></i>{mfaSuccess}
+								</div>
+							{/if}
+
+							{#if mfaError}
+								<div class="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+									<i class="fa-solid fa-exclamation-circle mr-2"></i>{mfaError}
+								</div>
+							{/if}
+
+							<!-- MFA Status and Actions -->
+							{#if mfaEnabled}
+								<!-- MFA is enabled - show status -->
+								<div class="space-y-3">
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										Your account is protected with two-factor authentication using an authenticator app.
+									</p>
+									
+									{#each mfaFactors as factor}
+										<div class="flex items-center justify-between p-3 rounded-lg" style="background: {isDark ? '#0a0a0a' : '#f9f9f9'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+											<div class="flex items-center gap-3">
+												<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
+													<i class="fa-solid fa-mobile-screen text-sw-accent"></i>
+												</div>
+												<div>
+													<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">{factor.friendlyName || 'Authenticator App'}</p>
+													<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+														Added {new Date(factor.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+													</p>
+												</div>
+											</div>
+											<button
+												onclick={() => showDisableMfaModal = true}
+												class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-red-500 hover:bg-red-500/10"
+											>
+												Remove
+											</button>
+										</div>
+									{/each}
+								</div>
+							{:else if mfaQrCode}
+								<!-- Enrollment in progress - show QR code -->
+								<div class="space-y-4">
+									<div class="rounded-xl p-4" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
+										<h3 class="font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
+											<i class="fa-solid fa-qrcode mr-2 text-sw-accent"></i>Step 1: Scan QR Code
+										</h3>
+										<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+											Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan this QR code:
+										</p>
+										<div class="flex justify-center p-4 rounded-lg" style="background: white">
+											<img src={mfaQrCode} alt="MFA QR Code" class="w-48 h-48" />
+										</div>
+										
+										<details class="mt-4">
+											<summary class="text-sm cursor-pointer" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+												Can't scan? Enter code manually
+											</summary>
+											<div class="mt-2 p-3 rounded-lg font-mono text-sm break-all" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#ffffff' : '#171717'}">
+												{mfaSecret}
+											</div>
+										</details>
+									</div>
+
+									<div class="rounded-xl p-4" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
+										<h3 class="font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
+											<i class="fa-solid fa-keyboard mr-2 text-sw-accent"></i>Step 2: Enter Verification Code
+										</h3>
+										<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+											Enter the 6-digit code from your authenticator app to complete setup:
+										</p>
+										<div class="flex items-center gap-3">
+											<input
+												type="text"
+												bind:value={mfaVerifyCode}
+												placeholder="000000"
+												maxlength="6"
+												pattern="[0-9]*"
+												inputmode="numeric"
+												class="w-32 px-4 py-2 rounded-lg text-center font-mono text-lg tracking-widest"
+												style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+											/>
+											<button
+												onclick={verifyMfaCode}
+												disabled={mfaVerifying || mfaVerifyCode.length !== 6}
+												class="btn btn-primary disabled:opacity-50"
+											>
+												{#if mfaVerifying}
+													<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+												{/if}
+												Verify
+											</button>
+										</div>
+									</div>
+
+									<button
+										onclick={cancelMfaEnrollment}
+										class="text-sm font-medium transition-colors"
+										style="color: {isDark ? '#a3a3a3' : '#737373'}"
+									>
+										<i class="fa-solid fa-arrow-left mr-1"></i>Cancel setup
+									</button>
+								</div>
+							{:else}
+								<!-- MFA not enabled - show enable button -->
+								<div class="space-y-4">
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										Add an extra layer of security to your account by enabling two-factor authentication with an authenticator app like Google Authenticator, Authy, or 1Password.
+									</p>
+									
+									<div class="rounded-xl p-4" style="background: rgba(56,142,60,0.08); border: 1px solid rgba(56,142,60,0.2)">
+										<div class="flex items-start gap-3">
+											<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+												<i class="fa-solid fa-lock text-sw-accent text-sm"></i>
+											</div>
+											<div>
+												<p class="font-medium text-sm mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Why enable MFA?</p>
+												<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+													Even if someone gets your password, they can't access your account without your phone.
+												</p>
+											</div>
+										</div>
+									</div>
+
+									<button
+										onclick={startMfaEnrollment}
+										disabled={mfaEnrolling}
+										class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-sw-accent text-white hover:bg-sw-accent/90 disabled:opacity-50"
+									>
+										{#if mfaEnrolling}
+											<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>
+											Setting up...
+										{:else}
+											<i class="fa-solid fa-shield-halved mr-1.5"></i>
+											Enable Two-Factor Authentication
+										{/if}
+									</button>
+								</div>
+							{/if}
+						</div>
+					{/if}
+				</div>
+
+				<!-- Notification Settings -->
+				<div id="notifications" class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+						<i class="fa-solid fa-bell text-sw-accent mr-2"></i>Notifications & Engagement
+					</h2>
+					
+					<div class="space-y-6">
+						<!-- Daily Brief -->
+						<div class="space-y-3">
+							<div class="flex items-center justify-between">
+								<div>
+									<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Daily Brief Email</p>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										Get a morning summary of your spending pace and insights
+									</p>
+								</div>
+								<button
+									onclick={() => notifPrefs.dailyBriefEnabled = !notifPrefs.dailyBriefEnabled}
+									class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
+									style="background: {notifPrefs.dailyBriefEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+								>
+									<span 
+										class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
+										style="left: {notifPrefs.dailyBriefEnabled ? '1.375rem' : '0.125rem'}"
+									></span>
+								</button>
+							</div>
+							{#if notifPrefs.dailyBriefEnabled}
+								<div class="flex flex-wrap items-center gap-3 pl-4">
+									<div class="flex items-center gap-2">
+										<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Send at:</label>
+										<select
+											bind:value={notifPrefs.dailyBriefTime}
+											class="px-3 py-1.5 rounded-lg text-sm"
+											style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+										>
+											<option value="06:00">6:00 AM</option>
+											<option value="07:00">7:00 AM</option>
+											<option value="08:00">8:00 AM</option>
+											<option value="09:00">9:00 AM</option>
+											<option value="10:00">10:00 AM</option>
+											<option value="11:00">11:00 AM</option>
+											<option value="12:00">12:00 PM</option>
+											<option value="18:00">6:00 PM</option>
+											<option value="19:00">7:00 PM</option>
+											<option value="20:00">8:00 PM</option>
+											<option value="21:00">9:00 PM</option>
+										</select>
+									</div>
+									<div class="flex items-center gap-2">
+										<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">in</label>
+										<select
+											bind:value={notifPrefs.dailyBriefTimezone}
+											class="px-3 py-1.5 rounded-lg text-sm"
+											style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+										>
+											{#each timezones as tz}
+												<option value={tz.value}>{tz.label}</option>
+											{/each}
+										</select>
+									</div>
+								</div>
+							{/if}
+						</div>
+
+						<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"></div>
+
+						<!-- Weekly Pulse -->
+						<div class="space-y-3">
+							<div class="flex items-center justify-between">
+								<div>
+									<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Weekly Pulse Email</p>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										Weekly summary with trends and opportunity cost insights
+									</p>
+								</div>
+								<button
+									onclick={() => notifPrefs.weeklyPulseEnabled = !notifPrefs.weeklyPulseEnabled}
+									class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
+									style="background: {notifPrefs.weeklyPulseEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+								>
+									<span 
+										class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
+										style="left: {notifPrefs.weeklyPulseEnabled ? '1.375rem' : '0.125rem'}"
+									></span>
+								</button>
+							</div>
+							{#if notifPrefs.weeklyPulseEnabled}
+								<div class="flex items-center gap-3 pl-4">
+									<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Send on:</label>
+									<select
+										bind:value={notifPrefs.weeklyPulseDay}
+										class="px-3 py-1.5 rounded-lg text-sm"
+										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+									>
+										<option value={0}>Sunday</option>
+										<option value={1}>Monday</option>
+										<option value={2}>Tuesday</option>
+										<option value={3}>Wednesday</option>
+										<option value={4}>Thursday</option>
+										<option value={5}>Friday</option>
+										<option value={6}>Saturday</option>
+									</select>
+								</div>
+							{/if}
+						</div>
+
+						<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"></div>
+
+						<!-- Upload Reminders -->
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Upload Reminders</p>
+								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									Show nudges when it's time to upload fresh data
+								</p>
+							</div>
+							<button
+								onclick={() => notifPrefs.showUploadNudges = !notifPrefs.showUploadNudges}
+								class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
+								style="background: {notifPrefs.showUploadNudges ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+							>
+								<span 
+									class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
+									style="left: {notifPrefs.showUploadNudges ? '1.375rem' : '0.125rem'}"
+								></span>
+							</button>
+						</div>
+
+						<!-- Review Inbox -->
+						<div class="space-y-3">
+							<div class="flex items-center justify-between">
+								<div>
+									<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Review Inbox</p>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										Daily items to categorize and improve your data
+									</p>
+								</div>
+								<button
+									onclick={() => notifPrefs.reviewInboxEnabled = !notifPrefs.reviewInboxEnabled}
+									class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
+									style="background: {notifPrefs.reviewInboxEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+								>
+									<span 
+										class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
+										style="left: {notifPrefs.reviewInboxEnabled ? '1.375rem' : '0.125rem'}"
+									></span>
+								</button>
+							</div>
+							{#if notifPrefs.reviewInboxEnabled}
+								<div class="flex items-center gap-3 pl-4">
+									<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Daily goal:</label>
+									<select
+										bind:value={notifPrefs.reviewInboxDailyGoal}
+										class="px-3 py-1.5 rounded-lg text-sm"
+										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+									>
+										<option value={3}>3 items</option>
+										<option value={5}>5 items</option>
+										<option value={10}>10 items</option>
+										<option value={15}>15 items</option>
+									</select>
+								</div>
+							{/if}
+						</div>
+
+						<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"></div>
+
+						<!-- Achievement Badges -->
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Achievement Badges</p>
+								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									Show streaks and progress celebrations
+								</p>
+							</div>
+							<button
+								onclick={() => notifPrefs.showAchievementBadges = !notifPrefs.showAchievementBadges}
+								class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
+								style="background: {notifPrefs.showAchievementBadges ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+							>
+								<span 
+									class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
+									style="left: {notifPrefs.showAchievementBadges ? '1.375rem' : '0.125rem'}"
+								></span>
+							</button>
+						</div>
+
+						<!-- Save Button -->
+						<div class="flex items-center gap-4 pt-2">
+							<button
+								onclick={saveNotificationPrefs}
+								disabled={notifSaving}
+								class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-sw-accent text-white hover:bg-sw-accent/90 disabled:opacity-50"
+							>
+								{notifSaving ? 'Saving...' : 'Save Notification Settings'}
+							</button>
+							{#if notifSaved}
+								<span class="text-sw-accent text-sm animate-fade-in">Saved!</span>
+							{/if}
+						</div>
+					</div>
 				</div>
 
 				<!-- Income Settings -->
@@ -598,6 +1198,61 @@
 			</div>
 		{/if}
 	</main>
+
+	<!-- Disable MFA Modal -->
+	{#if showDisableMfaModal}
+		<div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5)">
+			<div 
+				class="w-full max-w-md rounded-2xl p-6"
+				style="background: {isDark ? '#1a1a1a' : '#ffffff'}"
+			>
+				<div class="flex items-center gap-3 mb-4">
+					<div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+						<i class="fa-solid fa-shield-halved text-amber-600"></i>
+					</div>
+					<h3 class="font-display text-xl font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+						Disable Two-Factor Authentication
+					</h3>
+				</div>
+
+				<div class="space-y-4">
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Are you sure you want to disable two-factor authentication? Your account will be less secure.
+					</p>
+
+					<div class="rounded-xl p-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2)">
+						<p class="text-sm font-medium" style="color: {isDark ? '#fbbf24' : '#d97706'}">
+							<i class="fa-solid fa-exclamation-triangle mr-2"></i>
+							This will remove the extra security layer from your account.
+						</p>
+					</div>
+
+					<div class="flex gap-3 pt-2">
+						<button
+							onclick={() => showDisableMfaModal = false}
+							disabled={disablingMfa}
+							class="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+							style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+						>
+							Keep MFA Enabled
+						</button>
+						<button
+							onclick={() => mfaFactors[0] && disableMfa(mfaFactors[0].id)}
+							disabled={disablingMfa}
+							class="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+						>
+							{#if disablingMfa}
+								<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+								Disabling...
+							{:else}
+								Disable MFA
+							{/if}
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Delete Account Modal -->
 	{#if showDeleteModal}

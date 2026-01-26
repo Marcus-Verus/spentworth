@@ -156,7 +156,8 @@ create table if not exists user_prefs (
   user_id uuid primary key references auth.users(id) on delete cascade,
   default_ticker text not null default 'SPY',
   invest_delay_trading_days int not null default 1,
-  allow_fallback_for_all_tickers boolean not null default false
+  allow_fallback_for_all_tickers boolean not null default false,
+  onboarding_completed boolean not null default false
 );
 
 -- 8. Spending Goals

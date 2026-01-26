@@ -221,3 +221,125 @@ export async function sendProUpgradeEmail({
 	});
 }
 
+// Daily Brief Email
+export interface DailyBriefEmailData {
+	to: string;
+	name: string;
+	currentSpent: number;
+	projectedSpend: number;
+	budgetTotal: number;
+	paceStatus: 'on_track' | 'ahead' | 'behind';
+	daysRemaining: number;
+	topCategory?: { name: string; amount: number };
+	unusualSpending?: { merchant: string; amount: number; reason: string };
+	subscriptionAlert?: { merchant: string; amount: number; date: string };
+	opportunityCost?: { description: string; amount: number; futureValue: number };
+	pendingItems: number;
+	daysSinceUpload?: number;
+}
+
+export async function sendDailyBriefEmail({
+	to,
+	name,
+	currentSpent,
+	projectedSpend,
+	budgetTotal,
+	paceStatus,
+	daysRemaining,
+	topCategory,
+	unusualSpending,
+	subscriptionAlert,
+	opportunityCost,
+	pendingItems,
+	daysSinceUpload
+}: DailyBriefEmailData) {
+	const template = loadTemplate('daily-brief');
+	
+	const now = new Date();
+	const hour = now.getHours();
+	const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+	
+	const dateDisplay = now.toLocaleDateString('en-US', {
+		weekday: 'long',
+		month: 'long',
+		day: 'numeric'
+	});
+
+	// Pace colors and messages
+	const paceConfig = {
+		on_track: {
+			bgColor: '#f0fdf4',
+			textColor: '#15803d',
+			message: `You're on track! ${daysRemaining} days left this month.`
+		},
+		ahead: {
+			bgColor: '#f0fdfa',
+			textColor: '#0d9488',
+			message: `Great job! You're under budget with ${daysRemaining} days to go.`
+		},
+		behind: {
+			bgColor: '#fef3c7',
+			textColor: '#92400e',
+			message: `Heads up: You're trending over budget. ${daysRemaining} days left to adjust.`
+		}
+	};
+
+	const pace = paceConfig[paceStatus];
+	
+	// Format currency helper
+	const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
+
+	// Build preview text
+	let previewText = `${fmt(currentSpent)} spent this month`;
+	if (paceStatus === 'behind') {
+		previewText += ' — trending over budget';
+	} else if (paceStatus === 'ahead') {
+		previewText += ' — under budget!';
+	}
+
+	const html = interpolate(template, {
+		preview_text: previewText,
+		date_display: dateDisplay,
+		time_of_day: timeOfDay,
+		name: name || 'there',
+		current_spent: fmt(currentSpent),
+		projected_spend: fmt(projectedSpend),
+		budget_total: budgetTotal > 0 ? fmt(budgetTotal) : '—',
+		pace_status: paceStatus.replace('_', '-'),
+		pace_bg_color: pace.bgColor,
+		pace_text_color: pace.textColor,
+		pace_message: pace.message,
+		has_insights: String(!!(topCategory || unusualSpending || subscriptionAlert || opportunityCost)),
+		top_category: String(!!topCategory),
+		top_category_name: topCategory?.name || '',
+		top_category_amount: topCategory ? fmt(topCategory.amount) : '',
+		unusual_spending: String(!!unusualSpending),
+		unusual_merchant: unusualSpending?.merchant || '',
+		unusual_amount: unusualSpending ? fmt(unusualSpending.amount) : '',
+		unusual_reason: unusualSpending?.reason || '',
+		subscription_alert: String(!!subscriptionAlert),
+		subscription_merchant: subscriptionAlert?.merchant || '',
+		subscription_amount: subscriptionAlert ? fmt(subscriptionAlert.amount) : '',
+		subscription_date: subscriptionAlert?.date || '',
+		opportunity_cost: String(!!opportunityCost),
+		opportunity_description: opportunityCost?.description || '',
+		opportunity_amount: opportunityCost ? fmt(opportunityCost.amount) : '',
+		opportunity_future: opportunityCost ? fmt(opportunityCost.futureValue) : '',
+		pending_items: pendingItems > 0 ? String(pendingItems) : '',
+		review_url: 'https://spentworth.com/review',
+		needs_upload: String(daysSinceUpload !== undefined && daysSinceUpload >= 7),
+		days_since_upload: String(daysSinceUpload || 0),
+		upload_url: 'https://spentworth.com/imports',
+		dashboard_url: 'https://spentworth.com/dashboard',
+		settings_url: 'https://spentworth.com/settings',
+		unsubscribe_url: 'https://spentworth.com/settings#notifications'
+	});
+
+	return sendEmail({
+		to,
+		subject: `📊 Daily Brief: ${fmt(currentSpent)} spent this month`,
+		html,
+		tags: [{ name: 'email_type', value: 'daily_brief' }]
+	});
+}
+

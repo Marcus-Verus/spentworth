@@ -24,7 +24,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 				investDelayTradingDays: 1,
 				allowFallbackForAllTickers: false,
 				fallbackAnnualReturn: 0.07,
-				monthlyIncome: null
+				monthlyIncome: null,
+				onboardingCompleted: false
 			}
 		});
 	}
@@ -37,7 +38,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 			investDelayTradingDays: prefs.invest_delay_trading_days,
 			allowFallbackForAllTickers: prefs.allow_fallback_for_all_tickers,
 			fallbackAnnualReturn: prefs.fallback_annual_return ?? 0.07,
-			monthlyIncome: prefs.monthly_income
+			monthlyIncome: prefs.monthly_income,
+			onboardingCompleted: prefs.onboarding_completed ?? false
 		}
 	});
 };
@@ -56,7 +58,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		investDelayTradingDays, 
 		allowFallbackForAllTickers, 
 		fallbackAnnualReturn,
-		monthlyIncome 
+		monthlyIncome,
+		onboardingCompleted 
 	} = body;
 
 	// Validate custom ticker format (1-5 uppercase letters)
@@ -71,7 +74,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	// Upsert user prefs
-	const { error: upsertError } = await locals.supabase.from('user_prefs').upsert({
+	const updateData: any = {
 		user_id: user.id,
 		default_ticker: defaultTicker ?? 'SPY',
 		custom_ticker: customTicker ? customTicker.toUpperCase() : null,
@@ -79,7 +82,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		allow_fallback_for_all_tickers: allowFallbackForAllTickers ?? false,
 		fallback_annual_return: fallbackRate,
 		monthly_income: monthlyIncome || null
-	});
+	};
+	
+	// Only include onboardingCompleted if explicitly provided
+	if (onboardingCompleted !== undefined) {
+		updateData.onboarding_completed = onboardingCompleted;
+	}
+	
+	const { error: upsertError } = await locals.supabase.from('user_prefs').upsert(updateData);
 
 	if (upsertError) {
 		throw error(500, 'Failed to update settings');

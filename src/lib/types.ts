@@ -510,3 +510,142 @@ export interface BudgetWithProgress extends Budget {
 	trend: 'improving' | 'worsening' | 'stable'; // vs last month
 	trendAmount: number; // how much better/worse vs last month
 }
+
+// ============================================
+// Engagement Features Types
+// ============================================
+
+// User Source (bank account/card tracking)
+export interface UserSource {
+	id: string;
+	userId: string;
+	name: string;
+	sourceType: 'bank' | 'credit_card' | 'investment' | 'other';
+	institution: string | null;
+	lastUploadedAt: string | null;
+	uploadReminderDays: number;
+	csvMapping: Record<string, unknown> | null;
+	enabled: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+// Notification Preferences
+export interface NotificationPrefs {
+	userId: string;
+	// Daily Brief
+	dailyBriefEnabled: boolean;
+	dailyBriefTime: string; // HH:MM:SS
+	dailyBriefTimezone: string;
+	dailyBriefLastSent: string | null;
+	// Upload Reminders
+	uploadReminderEnabled: boolean;
+	uploadReminderEmail: boolean;
+	// Review Inbox
+	reviewInboxEnabled: boolean;
+	reviewInboxDailyGoal: number;
+	// Weekly Pulse
+	weeklyPulseEnabled: boolean;
+	weeklyPulseDay: number; // 0-6
+	weeklyPulseLastSent: string | null;
+	// In-app
+	showUploadNudges: boolean;
+	showAchievementBadges: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+// Review Inbox Item Types
+export type ReviewItemType = 
+	| 'uncategorized' 
+	| 'rule_suggestion' 
+	| 'duplicate_candidate' 
+	| 'subscription_candidate' 
+	| 'transfer_confirm';
+
+export type ReviewItemStatus = 'pending' | 'completed' | 'dismissed' | 'expired';
+
+// Review Inbox Item
+export interface ReviewInboxItem {
+	id: string;
+	userId: string;
+	itemType: ReviewItemType;
+	transactionId: string | null;
+	rawTransactionId: string | null;
+	data: {
+		// For uncategorized
+		suggestedCategory?: string;
+		merchant?: string;
+		amount?: number;
+		date?: string;
+		// For rule_suggestion
+		suggestedRule?: {
+			matchType: MatchType;
+			matchValue: string;
+			setCategory?: string;
+			setKind?: TransactionKind;
+		};
+		similarCount?: number;
+		// For subscription_candidate
+		frequency?: string;
+		avgAmount?: number;
+		// For transfer_confirm
+		possibleTransferTo?: string;
+	};
+	status: ReviewItemStatus;
+	priority: number;
+	createdAt: string;
+	completedAt: string | null;
+	expiresAt: string | null;
+}
+
+// User Streaks
+export interface UserStreaks {
+	userId: string;
+	reviewStreakCurrent: number;
+	reviewStreakBest: number;
+	reviewLastCompletedAt: string | null;
+	uploadStreakCurrent: number;
+	uploadStreakBest: number;
+	uploadLastAt: string | null;
+	totalItemsCleared: number;
+	updatedAt: string;
+}
+
+// Daily Brief Data (for email/dashboard)
+export interface DailyBriefData {
+	// Spending pace
+	currentMonthSpent: number;
+	projectedMonthSpend: number;
+	budgetTotal: number;
+	paceStatus: 'on_track' | 'ahead' | 'behind';
+	daysRemaining: number;
+	// Insights
+	topCategoryThisWeek: { category: string; spent: number } | null;
+	unusualSpending: { merchant: string; amount: number; reason: string } | null;
+	subscriptionAlert: { merchant: string; amount: number; dueDate: string } | null;
+	// Opportunity cost highlight
+	opportunityCostHighlight: {
+		description: string;
+		amount: number;
+		futureValue: number;
+	} | null;
+	// Review inbox
+	pendingReviewItems: number;
+	// Upload status
+	daysSinceLastUpload: number | null;
+	sourcesNeedingUpload: string[];
+}
+
+// Upload Nudge Data
+export interface UploadNudgeData {
+	show: boolean;
+	daysSinceLastUpload: number | null;
+	sourcesNeedingUpload: Array<{
+		id: string;
+		name: string;
+		daysSinceUpload: number;
+		uploadReminderDays: number;
+	}>;
+	message: string;
+}

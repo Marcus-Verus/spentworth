@@ -7,11 +7,13 @@ export {
 	sendPasswordResetEmail,
 	sendPasswordChangedEmail,
 	sendProUpgradeEmail,
+	sendDailyBriefEmail,
 	type SendEmailOptions,
 	type WelcomeEmailData,
 	type VerificationEmailData,
 	type PasswordResetEmailData,
 	type PasswordChangedEmailData,
-	type ProUpgradeEmailData
+	type ProUpgradeEmailData,
+	type DailyBriefEmailData
 } from './emailService';
 

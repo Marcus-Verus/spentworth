@@ -152,6 +152,16 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.update({ status: 'committed' })
 		.eq('id', batchId);
 
+	// Generate review inbox items in the background (don't block response)
+	generateReviewInboxItems(locals.supabase, user.id).catch((e) => {
+		console.error('Failed to generate review inbox items:', e);
+	});
+
+	// Update any matching source's last_uploaded_at
+	updateSourceLastUpload(locals.supabase, user.id).catch((e) => {
+		console.error('Failed to update source last upload:', e);
+	});
+
 	return json({
 		ok: true,
 		data: {
@@ -161,3 +171,141 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		}
 	});
 };
+
+// Generate review inbox items from committed transactions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function generateReviewInboxItems(supabase: any, userId: string) {
+	const itemsToCreate: Array<{
+		user_id: string;
+		item_type: string;
+		transaction_id: string | null;
+		data: Record<string, unknown>;
+		priority: number;
+	}> = [];
+
+	// 1. Find uncategorized transactions
+	const { data: uncategorized } = await supabase
+		.from('transactions')
+		.select('id, merchant, amount, date, category')
+		.eq('user_id', userId)
+		.eq('included_in_spend', true)
+		.or('category.is.null,category.eq.Uncategorized')
+		.order('date', { ascending: false })
+		.limit(20);
+
+	// Check which ones already have inbox items
+	const uncategorizedIds = (uncategorized || []).map((t) => t.id);
+	if (uncategorizedIds.length > 0) {
+		const { data: existingUncategorized } = await supabase
+			.from('review_inbox')
+			.select('transaction_id')
+			.eq('user_id', userId)
+			.eq('item_type', 'uncategorized')
+			.eq('status', 'pending')
+			.in('transaction_id', uncategorizedIds);
+
+		const existingSet = new Set((existingUncategorized || []).map((e) => e.transaction_id));
+
+		for (const tx of uncategorized || []) {
+			if (!existingSet.has(tx.id)) {
+				itemsToCreate.push({
+					user_id: userId,
+					item_type: 'uncategorized',
+					transaction_id: tx.id,
+					data: {
+						merchant: tx.merchant,
+						amount: Math.abs(tx.amount),
+						date: tx.date
+					},
+					priority: 60
+				});
+			}
+		}
+	}
+
+	// 2. Find potential rule suggestions (merchants appearing 3+ times)
+	const { data: merchantCounts } = await supabase
+		.from('transactions')
+		.select('merchant_norm, merchant, category')
+		.eq('user_id', userId)
+		.eq('included_in_spend', true)
+		.not('merchant_norm', 'is', null);
+
+	const merchantGroups = new Map<string, { merchant: string; category: string | null; count: number }>();
+	for (const tx of merchantCounts || []) {
+		if (!tx.merchant_norm) continue;
+		const existing = merchantGroups.get(tx.merchant_norm);
+		if (existing) {
+			existing.count++;
+		} else {
+			merchantGroups.set(tx.merchant_norm, {
+				merchant: tx.merchant || tx.merchant_norm,
+				category: tx.category,
+				count: 1
+			});
+		}
+	}
+
+	// Get existing rules
+	const { data: existingRules } = await supabase
+		.from('merchant_rules')
+		.select('match_value')
+		.eq('user_id', userId)
+		.eq('match_field', 'merchant_norm');
+
+	const existingRuleValues = new Set((existingRules || []).map((r) => r.match_value.toUpperCase()));
+
+	for (const [merchantNorm, data] of merchantGroups) {
+		if (
+			data.count >= 3 &&
+			!existingRuleValues.has(merchantNorm.toUpperCase()) &&
+			data.category &&
+			data.category !== 'Uncategorized'
+		) {
+			// Check if we already have this suggestion
+			const { data: existingSuggestion } = await supabase
+				.from('review_inbox')
+				.select('id')
+				.eq('user_id', userId)
+				.eq('item_type', 'rule_suggestion')
+				.eq('status', 'pending')
+				.limit(1);
+
+			// Only add a few rule suggestions at a time
+			if ((existingSuggestion || []).length < 5) {
+				itemsToCreate.push({
+					user_id: userId,
+					item_type: 'rule_suggestion',
+					transaction_id: null,
+					data: {
+						merchant: data.merchant,
+						suggestedRule: {
+							matchType: 'contains',
+							matchValue: merchantNorm,
+							setCategory: data.category
+						},
+						similarCount: data.count
+					},
+					priority: 40
+				});
+			}
+		}
+	}
+
+	// Insert items if any
+	if (itemsToCreate.length > 0) {
+		await supabase.from('review_inbox').insert(itemsToCreate.slice(0, 20)); // Limit to 20
+	}
+}
+
+// Update the source's last_uploaded_at timestamp
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function updateSourceLastUpload(supabase: any, userId: string) {
+	// Simply update all enabled sources to current time
+	// In a more sophisticated version, you'd match by source name
+	await supabase
+		.from('user_sources')
+		.update({ last_uploaded_at: new Date().toISOString() })
+		.eq('user_id', userId)
+		.eq('enabled', true);
+}
