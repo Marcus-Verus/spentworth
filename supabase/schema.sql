@@ -228,99 +228,122 @@ alter table custom_tags enable row level security;
 alter table transaction_tags enable row level security;
 
 -- Import batches policies
+drop policy if exists "Users can view own import batches" on import_batches;
 create policy "Users can view own import batches"
   on import_batches for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own import batches" on import_batches;
 create policy "Users can insert own import batches"
   on import_batches for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own import batches" on import_batches;
 create policy "Users can update own import batches"
   on import_batches for update
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own import batches" on import_batches;
 create policy "Users can delete own import batches"
   on import_batches for delete
   using (auth.uid() = user_id);
 
 -- Raw transactions policies
+drop policy if exists "Users can view own raw transactions" on raw_transactions;
 create policy "Users can view own raw transactions"
   on raw_transactions for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own raw transactions" on raw_transactions;
 create policy "Users can insert own raw transactions"
   on raw_transactions for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own raw transactions" on raw_transactions;
 create policy "Users can update own raw transactions"
   on raw_transactions for update
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own raw transactions" on raw_transactions;
 create policy "Users can delete own raw transactions"
   on raw_transactions for delete
   using (auth.uid() = user_id);
 
 -- Transactions policies
+drop policy if exists "Users can view own transactions" on transactions;
 create policy "Users can view own transactions"
   on transactions for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own transactions" on transactions;
 create policy "Users can insert own transactions"
   on transactions for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own transactions" on transactions;
 create policy "Users can update own transactions"
   on transactions for update
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own transactions" on transactions;
 create policy "Users can delete own transactions"
   on transactions for delete
   using (auth.uid() = user_id);
 
 -- Transaction overrides policies
+drop policy if exists "Users can view own overrides" on transaction_overrides;
 create policy "Users can view own overrides"
   on transaction_overrides for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own overrides" on transaction_overrides;
 create policy "Users can insert own overrides"
   on transaction_overrides for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own overrides" on transaction_overrides;
 create policy "Users can update own overrides"
   on transaction_overrides for update
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own overrides" on transaction_overrides;
 create policy "Users can delete own overrides"
   on transaction_overrides for delete
   using (auth.uid() = user_id);
 
 -- Merchant rules policies
+drop policy if exists "Users can view own rules" on merchant_rules;
 create policy "Users can view own rules"
   on merchant_rules for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own rules" on merchant_rules;
 create policy "Users can insert own rules"
   on merchant_rules for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own rules" on merchant_rules;
 create policy "Users can update own rules"
   on merchant_rules for update
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own rules" on merchant_rules;
 create policy "Users can delete own rules"
   on merchant_rules for delete
   using (auth.uid() = user_id);
 
 -- User prefs policies
+drop policy if exists "Users can view own prefs" on user_prefs;
 create policy "Users can view own prefs"
   on user_prefs for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own prefs" on user_prefs;
 create policy "Users can insert own prefs"
   on user_prefs for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own prefs" on user_prefs;
 create policy "Users can update own prefs"
   on user_prefs for update
   using (auth.uid() = user_id);
@@ -328,10 +351,12 @@ create policy "Users can update own prefs"
 -- Price cache is public read (no user-specific data)
 alter table price_cache enable row level security;
 
+drop policy if exists "Anyone can read price cache" on price_cache;
 create policy "Anyone can read price cache"
   on price_cache for select
   using (true);
 
+drop policy if exists "Authenticated users can insert price cache" on price_cache;
 create policy "Authenticated users can insert price cache"
   on price_cache for insert
   with check (auth.role() = 'authenticated');
@@ -353,48 +378,59 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- Spending goals policies
+drop policy if exists "Users can view own goals" on spending_goals;
 create policy "Users can view own goals"
   on spending_goals for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own goals" on spending_goals;
 create policy "Users can insert own goals"
   on spending_goals for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own goals" on spending_goals;
 create policy "Users can update own goals"
   on spending_goals for update
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own goals" on spending_goals;
 create policy "Users can delete own goals"
   on spending_goals for delete
   using (auth.uid() = user_id);
 
 -- Custom tags policies
+drop policy if exists "Users can view own tags" on custom_tags;
 create policy "Users can view own tags"
   on custom_tags for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own tags" on custom_tags;
 create policy "Users can insert own tags"
   on custom_tags for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own tags" on custom_tags;
 create policy "Users can update own tags"
   on custom_tags for update
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own tags" on custom_tags;
 create policy "Users can delete own tags"
   on custom_tags for delete
   using (auth.uid() = user_id);
 
 -- Transaction tags policies
+drop policy if exists "Users can view own transaction tags" on transaction_tags;
 create policy "Users can view own transaction tags"
   on transaction_tags for select
   using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert own transaction tags" on transaction_tags;
 create policy "Users can insert own transaction tags"
   on transaction_tags for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own transaction tags" on transaction_tags;
 create policy "Users can delete own transaction tags"
   on transaction_tags for delete
   using (auth.uid() = user_id);

@@ -2,11 +2,75 @@ import { ALPHA_VANTAGE_API_KEY } from '$env/static/private';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { addDays, subDays, isWeekend, format, parseISO, isBefore, isAfter, startOfDay } from 'date-fns';
 
+// ============================================
+// Price Data Resilience Configuration
+// ============================================
+
+// How many days old cache data can be before considered stale (triggers refresh)
+const CACHE_FRESH_DAYS = 7;
+
+// How many days old cache data can be and still be used as fallback
+// (stale-while-revalidate: serve stale if API fails)
+const CACHE_MAX_STALE_DAYS = 90;
+
+// Retry configuration for API calls
+const MAX_RETRIES = 2;
+const RETRY_BASE_DELAY_MS = 1000;
+
 // In-memory cache for full ticker data (survives during single request)
 const tickerDataCache = new Map<string, Record<string, number>>();
 
+// Track API failures for circuit breaker pattern
+let lastApiFailure: Date | null = null;
+let consecutiveFailures = 0;
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+const CIRCUIT_BREAKER_RESET_MS = 5 * 60 * 1000; // 5 minutes
+
+// ============================================
+// Utility: Sleep for retry delays
+// ============================================
+function sleep(ms: number): Promise<void> {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ============================================
+// Utility: Check if circuit breaker is open
+// ============================================
+function isCircuitOpen(): boolean {
+	if (consecutiveFailures < CIRCUIT_BREAKER_THRESHOLD) return false;
+	if (!lastApiFailure) return false;
+	
+	const timeSinceFailure = Date.now() - lastApiFailure.getTime();
+	if (timeSinceFailure > CIRCUIT_BREAKER_RESET_MS) {
+		// Reset circuit breaker after timeout
+		consecutiveFailures = 0;
+		lastApiFailure = null;
+		console.log('Alpha Vantage circuit breaker reset');
+		return false;
+	}
+	
+	return true;
+}
+
+// ============================================
+// Utility: Record API success/failure for circuit breaker
+// ============================================
+function recordApiSuccess(): void {
+	consecutiveFailures = 0;
+	lastApiFailure = null;
+}
+
+function recordApiFailure(): void {
+	consecutiveFailures++;
+	lastApiFailure = new Date();
+	console.warn(`Alpha Vantage API failure #${consecutiveFailures}`);
+}
+
+// ============================================
 // Fetch full price history for a ticker from Alpha Vantage
 // Returns ALL historical data in ONE API call
+// Includes retry logic with exponential backoff
+// ============================================
 async function fetchFullPriceHistory(ticker: string): Promise<Record<string, number> | null> {
 	// Check in-memory cache first
 	if (tickerDataCache.has(ticker)) {
@@ -18,63 +82,98 @@ async function fetchFullPriceHistory(ticker: string): Promise<Record<string, num
 		return null;
 	}
 
-	try {
-		// Use TIME_SERIES_DAILY_ADJUSTED with full outputsize (premium)
-		// Adjusted prices account for splits and dividends for accurate calculations
-		const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
-		console.log(`Fetching Alpha Vantage premium data for ${ticker} (full history)...`);
-		const response = await fetch(url);
-		const json = await response.json();
-
-		// Log the response keys for debugging
-		console.log('Alpha Vantage response keys:', Object.keys(json));
-
-		// Check for API errors
-		if (json['Error Message']) {
-			console.error('Alpha Vantage error:', json['Error Message']);
-			return null;
-		}
-
-		if (json['Note']) {
-			// Rate limit hit
-			console.error('Alpha Vantage rate limit:', json['Note']);
-			return null;
-		}
-
-		if (json['Information']) {
-			// API limit or other info message
-			console.error('Alpha Vantage info:', json['Information']);
-			return null;
-		}
-
-		// Premium endpoint uses 'Time Series (Daily)' key
-		const timeSeries = json['Time Series (Daily)'] || json['Time Series (Daily Adjusted)'];
-		if (!timeSeries) {
-			console.error('Alpha Vantage: No time series data. Full response:', JSON.stringify(json).slice(0, 500));
-			return null;
-		}
-
-		const data: Record<string, number> = {};
-
-		for (const [dateKey, values] of Object.entries(timeSeries)) {
-			// Use adjusted close price (field 5) for accurate calculations
-			// Falls back to regular close (field 4) if adjusted not available
-			const adjClose = parseFloat((values as Record<string, string>)['5. adjusted close']);
-			const close = parseFloat((values as Record<string, string>)['4. close']);
-			const price = !isNaN(adjClose) ? adjClose : (!isNaN(close) ? close : null);
-			if (price !== null) {
-				data[dateKey] = price;
-			}
-		}
-
-		// Cache in memory
-		tickerDataCache.set(ticker, data);
-
-		return data;
-	} catch (error) {
-		console.error('Alpha Vantage fetch error:', error);
+	// Check circuit breaker
+	if (isCircuitOpen()) {
+		console.warn(`Alpha Vantage circuit breaker open for ${ticker}, skipping API call`);
 		return null;
 	}
+
+	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+		try {
+			if (attempt > 0) {
+				// Exponential backoff: 1s, 2s, 4s...
+				const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+				console.log(`Alpha Vantage retry ${attempt}/${MAX_RETRIES} for ${ticker} in ${delay}ms...`);
+				await sleep(delay);
+			}
+
+			// Use TIME_SERIES_DAILY_ADJUSTED with full outputsize (premium)
+			// Adjusted prices account for splits and dividends for accurate calculations
+			const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${ticker}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
+			console.log(`Fetching Alpha Vantage premium data for ${ticker} (full history)${attempt > 0 ? ` [attempt ${attempt + 1}]` : ''}...`);
+			
+			const response = await fetch(url);
+			
+			if (!response.ok) {
+				console.error(`Alpha Vantage HTTP error: ${response.status} ${response.statusText}`);
+				continue; // Retry on HTTP errors
+			}
+			
+			const json = await response.json();
+
+			// Log the response keys for debugging
+			console.log('Alpha Vantage response keys:', Object.keys(json));
+
+			// Check for API errors
+			if (json['Error Message']) {
+				console.error('Alpha Vantage error:', json['Error Message']);
+				// Don't retry on invalid ticker errors
+				if (json['Error Message'].includes('Invalid API call')) {
+					recordApiSuccess(); // Not a transient failure
+					return null;
+				}
+				continue;
+			}
+
+			if (json['Note']) {
+				// Rate limit hit - this is a transient error, retry
+				console.error('Alpha Vantage rate limit:', json['Note']);
+				continue;
+			}
+
+			if (json['Information']) {
+				// API limit or other info message - usually means daily limit
+				console.error('Alpha Vantage info:', json['Information']);
+				// Don't retry, but mark as transient failure
+				continue;
+			}
+
+			// Premium endpoint uses 'Time Series (Daily)' key
+			const timeSeries = json['Time Series (Daily)'] || json['Time Series (Daily Adjusted)'];
+			if (!timeSeries) {
+				console.error('Alpha Vantage: No time series data. Full response:', JSON.stringify(json).slice(0, 500));
+				continue;
+			}
+
+			const data: Record<string, number> = {};
+
+			for (const [dateKey, values] of Object.entries(timeSeries)) {
+				// Use adjusted close price (field 5) for accurate calculations
+				// Falls back to regular close (field 4) if adjusted not available
+				const adjClose = parseFloat((values as Record<string, string>)['5. adjusted close']);
+				const close = parseFloat((values as Record<string, string>)['4. close']);
+				const price = !isNaN(adjClose) ? adjClose : (!isNaN(close) ? close : null);
+				if (price !== null) {
+					data[dateKey] = price;
+				}
+			}
+
+			// Cache in memory
+			tickerDataCache.set(ticker, data);
+			
+			// Record success for circuit breaker
+			recordApiSuccess();
+
+			return data;
+		} catch (error) {
+			console.error(`Alpha Vantage fetch error (attempt ${attempt + 1}):`, error);
+			// Continue to retry on network errors
+		}
+	}
+
+	// All retries exhausted
+	recordApiFailure();
+	return null;
 }
 
 // Fetch real-time quote for a ticker (premium feature)
@@ -224,26 +323,42 @@ export class PriceService {
 	}
 
 	// Fetch and cache price history for a ticker (full 20+ years with premium API)
-	async ensurePricesLoaded(ticker: string): Promise<boolean> {
+	// Uses stale-while-revalidate: returns stale cached data if API fails
+	async ensurePricesLoaded(ticker: string): Promise<{ loaded: boolean; isStale: boolean; staleDays?: number }> {
 		// Load DB cache
 		await this.loadCacheForTicker(ticker);
 
-		// If we have recent cache data (within last week), we're good
+		// Check cache freshness
 		const cached = this.dbCache.get(ticker);
+		let cacheAge = Infinity;
+		let mostRecentDate: string | null = null;
+		
 		if (cached && cached.size > 0) {
 			const dates = Array.from(cached.keys()).sort().reverse();
-			const mostRecent = dates[0];
-			const daysSinceCache = (Date.now() - new Date(mostRecent).getTime()) / (1000 * 60 * 60 * 24);
-			if (daysSinceCache < 7) {
-				console.log(`Using cached prices for ${ticker} (${cached.size} dates, most recent: ${mostRecent})`);
-				return true;
+			mostRecentDate = dates[0];
+			cacheAge = (Date.now() - new Date(mostRecentDate).getTime()) / (1000 * 60 * 60 * 24);
+			
+			// Cache is fresh - no API call needed
+			if (cacheAge < CACHE_FRESH_DAYS) {
+				console.log(`Using fresh cached prices for ${ticker} (${cached.size} dates, most recent: ${mostRecentDate})`);
+				return { loaded: true, isStale: false };
 			}
 		}
 
-		// Fetch from API
+		// Cache is stale or doesn't exist - try to refresh from API
 		const priceData = await fetchFullPriceHistory(ticker);
+		
 		if (!priceData) {
-			return false;
+			// API failed - use stale-while-revalidate pattern
+			// Serve stale cached data if available and not too old
+			if (cached && cached.size > 0 && cacheAge < CACHE_MAX_STALE_DAYS) {
+				console.warn(`Alpha Vantage API failed for ${ticker}, serving stale cache (${Math.round(cacheAge)} days old)`);
+				return { loaded: true, isStale: true, staleDays: Math.round(cacheAge) };
+			}
+			
+			// No usable cache data
+			console.error(`Alpha Vantage API failed for ${ticker} and no usable cache available`);
+			return { loaded: false, isStale: false };
 		}
 
 		// Bulk insert into database cache
@@ -270,7 +385,8 @@ export class PriceService {
 		}
 		this.dbCache.set(ticker, tickerCache);
 
-		return true;
+		console.log(`Refreshed prices for ${ticker} from API (${Object.keys(priceData).length} dates)`);
+		return { loaded: true, isStale: false };
 	}
 
 	// Get price for a specific date

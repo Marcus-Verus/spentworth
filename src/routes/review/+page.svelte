@@ -41,6 +41,7 @@
 				items = json.data.items;
 				total = json.data.total;
 				streaks = json.data.streaks;
+				completedToday = json.data.completedToday || 0;
 			}
 		} catch (e) {
 			console.error('Failed to load inbox:', e);
@@ -368,12 +369,28 @@
 		{#if items.length === 0 && !loading}
 			<div class="text-center py-12">
 				<div class="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
-					<i class="fa-solid fa-inbox text-3xl" style="color: {isDark ? '#404040' : '#d4d4d4'}"></i>
+					{#if completedToday >= dailyGoal}
+						<i class="fa-solid fa-circle-check text-3xl text-sw-accent"></i>
+					{:else}
+						<i class="fa-solid fa-inbox text-3xl" style="color: {isDark ? '#404040' : '#d4d4d4'}"></i>
+					{/if}
 				</div>
-				<h2 class="text-lg font-semibold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Inbox is empty!</h2>
-				<p class="text-sm mb-6" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-					Scan your transactions for items that need attention
-				</p>
+				{#if completedToday >= dailyGoal}
+					<h2 class="text-lg font-semibold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">🎉 All caught up!</h2>
+					<p class="text-sm mb-6" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						You've cleared {completedToday} items today. Great work!
+					</p>
+				{:else if completedToday > 0}
+					<h2 class="text-lg font-semibold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">No pending items</h2>
+					<p class="text-sm mb-6" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						You've cleared {completedToday}/{dailyGoal} today. Scan for more to hit your goal!
+					</p>
+				{:else}
+					<h2 class="text-lg font-semibold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Inbox is empty!</h2>
+					<p class="text-sm mb-6" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Scan your transactions for items that need attention
+					</p>
+				{/if}
 				<button
 					onclick={generateItems}
 					disabled={generating}

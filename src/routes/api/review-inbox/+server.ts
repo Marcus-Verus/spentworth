@@ -50,11 +50,22 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		.eq('user_id', user.id)
 		.single();
 
+	// Count items completed today
+	const today = new Date().toISOString().slice(0, 10);
+	const { count: completedTodayCount } = await locals.supabase
+		.from('review_inbox')
+		.select('*', { count: 'exact', head: true })
+		.eq('user_id', user.id)
+		.eq('status', 'completed')
+		.gte('completed_at', `${today}T00:00:00.000Z`)
+		.lt('completed_at', `${today}T23:59:59.999Z`);
+
 	return json({
 		ok: true,
 		data: {
 			items: transformedItems,
 			total: count || 0,
+			completedToday: completedTodayCount || 0,
 			streaks: streaks ? {
 				reviewStreakCurrent: streaks.review_streak_current,
 				reviewStreakBest: streaks.review_streak_best,

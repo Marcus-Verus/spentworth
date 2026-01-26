@@ -25,7 +25,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 				allowFallbackForAllTickers: false,
 				fallbackAnnualReturn: 0.07,
 				monthlyIncome: null,
-				onboardingCompleted: false
+				onboardingCompleted: false,
+				philosophyPreset: 'comfortable_saver'
 			}
 		});
 	}
@@ -39,7 +40,8 @@ export const GET: RequestHandler = async ({ locals }) => {
 			allowFallbackForAllTickers: prefs.allow_fallback_for_all_tickers,
 			fallbackAnnualReturn: prefs.fallback_annual_return ?? 0.07,
 			monthlyIncome: prefs.monthly_income,
-			onboardingCompleted: prefs.onboarding_completed ?? false
+			onboardingCompleted: prefs.onboarding_completed ?? false,
+			philosophyPreset: prefs.philosophy_preset ?? 'comfortable_saver'
 		}
 	});
 };
@@ -59,39 +61,60 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		allowFallbackForAllTickers, 
 		fallbackAnnualReturn,
 		monthlyIncome,
-		onboardingCompleted 
+		onboardingCompleted,
+		philosophyPreset
 	} = body;
 
 	// Validate custom ticker format (1-5 uppercase letters)
-	if (customTicker && !/^[A-Z]{1,5}$/.test(customTicker.toUpperCase())) {
+	if (customTicker !== undefined && customTicker && !/^[A-Z]{1,5}$/.test(customTicker.toUpperCase())) {
 		throw error(400, 'Invalid ticker symbol. Use 1-5 letters (e.g., AAPL, MSFT).');
 	}
 
 	// Validate fallback rate (between 0% and 50%)
-	const fallbackRate = fallbackAnnualReturn ?? 0.07;
-	if (fallbackRate < 0 || fallbackRate > 0.5) {
+	if (fallbackAnnualReturn !== undefined && (fallbackAnnualReturn < 0 || fallbackAnnualReturn > 0.5)) {
 		throw error(400, 'Fallback rate must be between 0% and 50%.');
 	}
 
-	// Upsert user prefs
-	const updateData: any = {
-		user_id: user.id,
-		default_ticker: defaultTicker ?? 'SPY',
-		custom_ticker: customTicker ? customTicker.toUpperCase() : null,
-		invest_delay_trading_days: investDelayTradingDays ?? 1,
-		allow_fallback_for_all_tickers: allowFallbackForAllTickers ?? false,
-		fallback_annual_return: fallbackRate,
-		monthly_income: monthlyIncome || null
+	// Build update data - only include fields that were explicitly provided
+	// This prevents overwriting existing settings when only updating one field (like onboardingCompleted)
+	const updateData: Record<string, unknown> = {
+		user_id: user.id
 	};
 	
-	// Only include onboardingCompleted if explicitly provided
+	if (defaultTicker !== undefined) {
+		updateData.default_ticker = defaultTicker;
+	}
+	if (customTicker !== undefined) {
+		updateData.custom_ticker = customTicker ? customTicker.toUpperCase() : null;
+	}
+	if (investDelayTradingDays !== undefined) {
+		updateData.invest_delay_trading_days = investDelayTradingDays;
+	}
+	if (allowFallbackForAllTickers !== undefined) {
+		updateData.allow_fallback_for_all_tickers = allowFallbackForAllTickers;
+	}
+	if (fallbackAnnualReturn !== undefined) {
+		updateData.fallback_annual_return = fallbackAnnualReturn;
+	}
+	if (monthlyIncome !== undefined) {
+		updateData.monthly_income = monthlyIncome || null;
+	}
 	if (onboardingCompleted !== undefined) {
 		updateData.onboarding_completed = onboardingCompleted;
 	}
+	if (philosophyPreset !== undefined) {
+		// Validate philosophy preset
+		const validPresets = ['comfortable_saver', 'aggressive_builder', 'debt_first', 'family_budget'];
+		if (!validPresets.includes(philosophyPreset)) {
+			throw error(400, 'Invalid philosophy preset');
+		}
+		updateData.philosophy_preset = philosophyPreset;
+	}
 	
-	const { error: upsertError } = await locals.supabase.from('user_prefs').upsert(updateData);
+	const { error: upsertError } = await locals.supabase.from('user_prefs').upsert(updateData)
 
 	if (upsertError) {
+		console.error('Settings upsert error:', upsertError);
 		throw error(500, 'Failed to update settings');
 	}
 

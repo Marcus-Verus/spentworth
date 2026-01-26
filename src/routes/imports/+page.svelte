@@ -27,18 +27,14 @@
 		initTheme();
 		isDark = getTheme() === 'dark';
 		
-		// Check Pro status for dark mode
-		await loadTierUsage();
+		// Parallelize API calls for faster loading
+		await Promise.all([loadTierUsage(), loadBatches()]);
 		
 		// If not Pro and dark mode is on, reset to light
 		if (tierUsage && !tierUsage.isProActive && isDark) {
 			setTheme('light');
 			isDark = false;
 		}
-	});
-
-	$effect(() => {
-		loadBatches();
 	});
 
 	async function loadTierUsage() {

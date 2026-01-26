@@ -3,6 +3,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import { initTheme, getTheme, setTheme, toggleTheme } from '$lib/stores/theme';
 	import type { SubscriptionInfo } from '../api/stripe/subscription/+server';
+	import { PHILOSOPHY_PRESETS, type PhilosophyPreset } from '$lib/types';
 
 	let { data } = $props();
 
@@ -13,10 +14,14 @@
 	let allowFallbackForAllTickers = $state(false);
 	let fallbackAnnualReturn = $state(0.07);
 	let monthlyIncome = $state<number | null>(null);
+	let philosophyPreset = $state<PhilosophyPreset>('comfortable_saver');
 	let loading = $state(true);
 	let saving = $state(false);
 	let saved = $state(false);
 	let isDark = $state(false);
+	
+	// Navigation state
+	let activeSection = $state('subscription');
 	
 	// Subscription state
 	let subscription = $state<SubscriptionInfo | null>(null);
@@ -92,6 +97,19 @@
 		{ value: 'Pacific/Auckland', label: 'Auckland (NZST)' }
 	];
 	
+	// Navigation sections
+	const sections = [
+		{ id: 'subscription', label: 'Subscription', icon: 'fa-credit-card' },
+		{ id: 'security', label: 'Security', icon: 'fa-shield-halved' },
+		{ id: 'philosophy', label: 'Philosophy', icon: 'fa-compass' },
+		{ id: 'notifications', label: 'Notifications', icon: 'fa-bell' },
+		{ id: 'income', label: 'Income', icon: 'fa-wallet' },
+		{ id: 'investments', label: 'Investments', icon: 'fa-chart-line' },
+		{ id: 'appearance', label: 'Appearance', icon: 'fa-palette' },
+		{ id: 'data', label: 'Data & Export', icon: 'fa-download' },
+		{ id: 'danger', label: 'Delete Account', icon: 'fa-trash' }
+	];
+	
 	// Pro tier check based on subscription
 	let isPro = $derived(
 		subscription?.plan === 'pro' && 
@@ -101,14 +119,34 @@
 	// Display fallback as percentage (e.g., 7 for 7%)
 	let fallbackPercentage = $derived(Math.round(fallbackAnnualReturn * 100));
 
+	function scrollToSection(sectionId: string) {
+		activeSection = sectionId;
+		const element = document.getElementById(sectionId);
+		if (element) {
+			element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}
+
 	onMount(async () => {
 		initTheme();
 		isDark = getTheme() === 'dark';
 		
-		// Fetch subscription status
+		// Handle hash navigation
+		if (window.location.hash) {
+			activeSection = window.location.hash.slice(1);
+		}
+		
+		// Parallelize ALL initial API calls for faster loading
+		const [subRes, settingsRes] = await Promise.all([
+			fetch('/api/stripe/subscription').catch(() => null),
+			fetch('/api/settings').catch(() => null),
+			loadMfaStatus(),
+			loadNotificationPrefs()
+		]);
+		
+		// Process subscription status
 		try {
-			const subRes = await fetch('/api/stripe/subscription');
-			if (subRes.ok) {
+			if (subRes?.ok) {
 				subscription = await subRes.json();
 			}
 		} catch (err) {
@@ -121,22 +159,30 @@
 			isDark = false;
 		}
 
-		const res = await fetch('/api/settings');
-		const json = await res.json();
-
-		if (json.ok) {
-			defaultTicker = json.data.defaultTicker;
-			customTicker = json.data.customTicker;
-			useCustomTicker = !!json.data.customTicker;
-			investDelayTradingDays = json.data.investDelayTradingDays;
-			allowFallbackForAllTickers = json.data.allowFallbackForAllTickers;
-			fallbackAnnualReturn = json.data.fallbackAnnualReturn ?? 0.07;
-			monthlyIncome = json.data.monthlyIncome;
+		// Process settings
+		try {
+			if (settingsRes?.ok) {
+				const json = await settingsRes.json();
+				if (json.ok) {
+					defaultTicker = json.data.defaultTicker;
+					customTicker = json.data.customTicker;
+					useCustomTicker = !!json.data.customTicker;
+					investDelayTradingDays = json.data.investDelayTradingDays;
+					allowFallbackForAllTickers = json.data.allowFallbackForAllTickers;
+					fallbackAnnualReturn = json.data.fallbackAnnualReturn ?? 0.07;
+					monthlyIncome = json.data.monthlyIncome;
+					philosophyPreset = json.data.philosophyPreset ?? 'comfortable_saver';
+				}
+			}
+		} catch (err) {
+			console.error('Failed to fetch settings:', err);
 		}
 		loading = false;
 		
-		// Load MFA status and notification prefs
-		await Promise.all([loadMfaStatus(), loadNotificationPrefs()]);
+		// Scroll to section if hash present
+		if (window.location.hash) {
+			setTimeout(() => scrollToSection(window.location.hash.slice(1)), 100);
+		}
 	});
 
 	async function loadNotificationPrefs() {
@@ -221,7 +267,8 @@
 				investDelayTradingDays,
 				allowFallbackForAllTickers,
 				fallbackAnnualReturn,
-				monthlyIncome
+				monthlyIncome,
+				philosophyPreset
 			})
 		});
 
@@ -413,301 +460,389 @@
 	}
 </script>
 
-<div class="min-h-screen">
+<svelte:head>
+	<title>Settings | SpentWorth</title>
+</svelte:head>
+
+<div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
 	<Header />
 
-	<main class="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-		<h1 class="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8" style="color: {isDark ? '#ffffff' : '#171717'}">Settings</h1>
+	<main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+		<h1 class="font-display text-2xl sm:text-3xl font-bold mb-6" style="color: {isDark ? '#ffffff' : '#171717'}">Settings</h1>
 
 		{#if loading}
 			<div class="flex items-center justify-center py-16">
 				<div class="w-8 h-8 rounded-full border-2 border-sw-accent border-t-transparent animate-spin"></div>
 			</div>
 		{:else}
-			<div class="space-y-8">
-				<!-- Subscription Status -->
-				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<div class="flex items-center justify-between mb-4">
-						<h2 class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
-							<i class="fa-solid fa-credit-card text-sw-accent mr-2"></i>Subscription
-						</h2>
-						{#if subscription}
-							{@const badge = getStatusBadge(subscription.status)}
-							<span class="px-2.5 py-1 text-xs font-semibold rounded-full border {badge.class}">
-								{badge.text}
-							</span>
-						{/if}
+			<div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+				<!-- Sidebar Navigation -->
+				<nav class="lg:w-56 flex-shrink-0">
+					<!-- Mobile: Horizontal scrolling tabs -->
+					<div class="lg:hidden overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
+						<div class="flex gap-2">
+							{#each sections as section}
+								<button
+									onclick={() => scrollToSection(section.id)}
+									class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+									style="background: {activeSection === section.id ? (isDark ? '#2a2a2a' : '#ffffff') : 'transparent'}; 
+										   color: {activeSection === section.id ? 'var(--sw-accent)' : (isDark ? '#a3a3a3' : '#737373')};
+										   {activeSection === section.id ? `border: 1px solid ${isDark ? '#3a3a3a' : '#e5e5e5'}; box-shadow: 0 1px 3px rgba(0,0,0,0.05);` : ''}"
+								>
+									<i class="fa-solid {section.icon} text-xs"></i>
+									{section.label}
+								</button>
+							{/each}
+						</div>
 					</div>
 					
-					{#if subscription && isPro}
-						<div class="space-y-4">
-							<div class="flex items-center justify-between">
-								<div>
-									<p class="font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
-										SpentWorth Pro
-										{#if subscription.interval}
-											<span class="text-sm font-normal" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-												({subscription.interval === 'yearly' ? 'Annual' : 'Monthly'})
-											</span>
-										{/if}
-									</p>
-									{#if subscription.status === 'trialing' && subscription.trialEnd}
-										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-											Trial ends {formatDate(subscription.trialEnd)}
-										</p>
-									{:else if subscription.currentPeriodEnd}
-										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-											{subscription.cancelAtPeriodEnd ? 'Cancels' : 'Renews'} {formatDate(subscription.currentPeriodEnd)}
-										</p>
-									{/if}
-								</div>
+					<!-- Desktop: Sticky sidebar -->
+					<div class="hidden lg:block sticky top-24">
+						<div class="rounded-2xl p-2" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+							{#each sections as section}
 								<button
-									onclick={openBillingPortal}
-									disabled={loadingPortal}
-									class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-									style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+									onclick={() => scrollToSection(section.id)}
+									class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left"
+									style="background: {activeSection === section.id ? (isDark ? 'rgba(56,142,60,0.15)' : 'rgba(56,142,60,0.08)') : 'transparent'}; 
+										   color: {activeSection === section.id ? 'var(--sw-accent)' : (isDark ? '#a3a3a3' : '#525252')}"
 								>
-									{#if loadingPortal}
-										<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+									<i class="fa-solid {section.icon} w-4 text-center {activeSection === section.id ? '' : 'opacity-60'}"></i>
+									{section.label}
+									{#if section.id === 'danger'}
+										<span class="ml-auto text-red-500 opacity-60"><i class="fa-solid fa-triangle-exclamation text-xs"></i></span>
 									{/if}
-									Manage Billing
 								</button>
-							</div>
-							
-							{#if subscription.cancelAtPeriodEnd}
-								<div class="rounded-xl p-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2)">
-									<p class="text-sm" style="color: {isDark ? '#fca5a5' : '#dc2626'}">
-										<i class="fa-solid fa-exclamation-triangle mr-2"></i>
-										Your subscription will end on {formatDate(subscription.currentPeriodEnd)}. 
-										<button onclick={openBillingPortal} class="underline font-medium">Reactivate</button>
-									</p>
-								</div>
+							{/each}
+						</div>
+					</div>
+				</nav>
+
+				<!-- Main Content -->
+				<div class="flex-1 space-y-6 lg:space-y-8">
+					<!-- Subscription Section -->
+					<section id="subscription" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<div class="flex items-center justify-between mb-4">
+							<h2 class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+								<i class="fa-solid fa-credit-card text-sw-accent mr-2"></i>Subscription
+							</h2>
+							{#if subscription}
+								{@const badge = getStatusBadge(subscription.status)}
+								<span class="px-2.5 py-1 text-xs font-semibold rounded-full border {badge.class}">
+									{badge.text}
+								</span>
 							{/if}
 						</div>
-					{:else}
-						<div class="space-y-4">
-							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-								You're on the free plan. Upgrade to Pro for unlimited imports, deep analytics, and more.
-							</p>
-							<div class="flex items-center gap-3">
-								<a 
-									href="/pricing" 
-									class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-sw-accent text-white hover:bg-sw-accent/90"
-								>
-									<i class="fa-solid fa-crown mr-1.5"></i>
-									Upgrade to Pro
-								</a>
-								{#if subscription?.hasStripeCustomer}
+						
+						{#if subscription && isPro}
+							<div class="space-y-4">
+								<div class="flex items-center justify-between">
+									<div>
+										<p class="font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+											SpentWorth Pro
+											{#if subscription.interval}
+												<span class="text-sm font-normal" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+													({subscription.interval === 'yearly' ? 'Annual' : 'Monthly'})
+												</span>
+											{/if}
+										</p>
+										{#if subscription.status === 'trialing' && subscription.trialEnd}
+											<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+												Trial ends {formatDate(subscription.trialEnd)}
+											</p>
+										{:else if subscription.currentPeriodEnd}
+											<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+												{subscription.cancelAtPeriodEnd ? 'Cancels' : 'Renews'} {formatDate(subscription.currentPeriodEnd)}
+											</p>
+										{/if}
+									</div>
 									<button
 										onclick={openBillingPortal}
 										disabled={loadingPortal}
 										class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
 										style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
 									>
-										View Billing History
+										{#if loadingPortal}
+											<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+										{/if}
+										Manage Billing
 									</button>
+								</div>
+								
+								{#if subscription.cancelAtPeriodEnd}
+									<div class="rounded-xl p-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2)">
+										<p class="text-sm" style="color: {isDark ? '#fca5a5' : '#dc2626'}">
+											<i class="fa-solid fa-exclamation-triangle mr-2"></i>
+											Your subscription will end on {formatDate(subscription.currentPeriodEnd)}. 
+											<button onclick={openBillingPortal} class="underline font-medium">Reactivate</button>
+										</p>
+									</div>
 								{/if}
 							</div>
-						</div>
-					{/if}
-				</div>
-
-				<!-- Security / MFA Settings -->
-				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<div class="flex items-center justify-between mb-4">
-						<h2 class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
-							<i class="fa-solid fa-shield-halved text-sw-accent mr-2"></i>Security
-						</h2>
-						{#if mfaEnabled}
-							<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 border border-green-500/30">
-								<i class="fa-solid fa-check mr-1"></i>MFA Enabled
-							</span>
+						{:else}
+							<div class="space-y-4">
+								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									You're on the free plan. Upgrade to Pro for unlimited imports, deep analytics, and more.
+								</p>
+								<div class="flex items-center gap-3">
+									<a 
+										href="/pricing" 
+										class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-sw-accent text-white hover:bg-sw-accent/90"
+									>
+										<i class="fa-solid fa-crown mr-1.5"></i>
+										Upgrade to Pro
+									</a>
+									{#if subscription?.hasStripeCustomer}
+										<button
+											onclick={openBillingPortal}
+											disabled={loadingPortal}
+											class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+											style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+										>
+											View Billing History
+										</button>
+									{/if}
+								</div>
+							</div>
 						{/if}
-					</div>
+					</section>
 
-					{#if mfaLoading}
-						<div class="flex items-center gap-2 py-4">
-							<div class="w-5 h-5 rounded-full border-2 border-sw-accent border-t-transparent animate-spin"></div>
-							<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Loading security settings...</span>
-						</div>
-					{:else}
-						<div class="space-y-4">
-							{#if mfaSuccess}
-								<div class="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-600 text-sm">
-									<i class="fa-solid fa-check-circle mr-2"></i>{mfaSuccess}
-								</div>
-							{/if}
-
-							{#if mfaError}
-								<div class="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
-									<i class="fa-solid fa-exclamation-circle mr-2"></i>{mfaError}
-								</div>
-							{/if}
-
-							<!-- MFA Status and Actions -->
+					<!-- Security Section -->
+					<section id="security" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<div class="flex items-center justify-between mb-4">
+							<h2 class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+								<i class="fa-solid fa-shield-halved text-sw-accent mr-2"></i>Security
+							</h2>
 							{#if mfaEnabled}
-								<!-- MFA is enabled - show status -->
-								<div class="space-y-3">
-									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-										Your account is protected with two-factor authentication using an authenticator app.
-									</p>
-									
-									{#each mfaFactors as factor}
-										<div class="flex items-center justify-between p-3 rounded-lg" style="background: {isDark ? '#0a0a0a' : '#f9f9f9'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+								<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-500/20 text-green-600 border border-green-500/30">
+									<i class="fa-solid fa-check mr-1"></i>MFA Enabled
+								</span>
+							{/if}
+						</div>
+
+						{#if mfaLoading}
+							<div class="flex items-center gap-2 py-4">
+								<div class="w-5 h-5 rounded-full border-2 border-sw-accent border-t-transparent animate-spin"></div>
+								<span class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Loading security settings...</span>
+							</div>
+						{:else}
+							<div class="space-y-4">
+								{#if mfaSuccess}
+									<div class="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-600 text-sm">
+										<i class="fa-solid fa-check-circle mr-2"></i>{mfaSuccess}
+									</div>
+								{/if}
+
+								{#if mfaError}
+									<div class="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+										<i class="fa-solid fa-exclamation-circle mr-2"></i>{mfaError}
+									</div>
+								{/if}
+
+								{#if mfaEnabled}
+									<div class="space-y-3">
+										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+											Your account is protected with two-factor authentication using an authenticator app.
+										</p>
+										
+										{#each mfaFactors as factor}
+											<div class="flex items-center justify-between p-3 rounded-lg" style="background: {isDark ? '#0a0a0a' : '#f9f9f9'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+												<div class="flex items-center gap-3">
+													<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
+														<i class="fa-solid fa-mobile-screen text-sw-accent"></i>
+													</div>
+													<div>
+														<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">{factor.friendlyName || 'Authenticator App'}</p>
+														<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+															Added {new Date(factor.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+														</p>
+													</div>
+												</div>
+												<button
+													onclick={() => showDisableMfaModal = true}
+													class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-red-500 hover:bg-red-500/10"
+												>
+													Remove
+												</button>
+											</div>
+										{/each}
+									</div>
+								{:else if mfaQrCode}
+									<div class="space-y-4">
+										<div class="rounded-xl p-4" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
+											<h3 class="font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
+												<i class="fa-solid fa-qrcode mr-2 text-sw-accent"></i>Step 1: Scan QR Code
+											</h3>
+											<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+												Open your authenticator app and scan this QR code:
+											</p>
+											<div class="flex justify-center p-4 rounded-lg" style="background: white">
+												<img src={mfaQrCode} alt="MFA QR Code" class="w-48 h-48" />
+											</div>
+											
+											<details class="mt-4">
+												<summary class="text-sm cursor-pointer" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+													Can't scan? Enter code manually
+												</summary>
+												<div class="mt-2 p-3 rounded-lg font-mono text-sm break-all" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#ffffff' : '#171717'}">
+													{mfaSecret}
+												</div>
+											</details>
+										</div>
+
+										<div class="rounded-xl p-4" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
+											<h3 class="font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
+												<i class="fa-solid fa-keyboard mr-2 text-sw-accent"></i>Step 2: Enter Verification Code
+											</h3>
 											<div class="flex items-center gap-3">
-												<div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
-													<i class="fa-solid fa-mobile-screen text-sw-accent"></i>
+												<input
+													type="text"
+													bind:value={mfaVerifyCode}
+													placeholder="000000"
+													maxlength="6"
+													pattern="[0-9]*"
+													inputmode="numeric"
+													class="w-32 px-4 py-2 rounded-lg text-center font-mono text-lg tracking-widest"
+													style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+												/>
+												<button
+													onclick={verifyMfaCode}
+													disabled={mfaVerifying || mfaVerifyCode.length !== 6}
+													class="btn btn-primary disabled:opacity-50"
+												>
+													{#if mfaVerifying}
+														<i class="fa-solid fa-spinner fa-spin mr-1"></i>
+													{/if}
+													Verify
+												</button>
+											</div>
+										</div>
+
+										<button
+											onclick={cancelMfaEnrollment}
+											class="text-sm font-medium transition-colors"
+											style="color: {isDark ? '#a3a3a3' : '#737373'}"
+										>
+											<i class="fa-solid fa-arrow-left mr-1"></i>Cancel setup
+										</button>
+									</div>
+								{:else}
+									<div class="space-y-4">
+										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+											Add an extra layer of security to your account by enabling two-factor authentication.
+										</p>
+										
+										<div class="rounded-xl p-4" style="background: rgba(56,142,60,0.08); border: 1px solid rgba(56,142,60,0.2)">
+											<div class="flex items-start gap-3">
+												<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+													<i class="fa-solid fa-lock text-sw-accent text-sm"></i>
 												</div>
 												<div>
-													<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">{factor.friendlyName || 'Authenticator App'}</p>
-													<p class="text-xs" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-														Added {new Date(factor.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+													<p class="font-medium text-sm mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Why enable MFA?</p>
+													<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+														Even if someone gets your password, they can't access your account without your phone.
 													</p>
 												</div>
 											</div>
-											<button
-												onclick={() => showDisableMfaModal = true}
-												class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-red-500 hover:bg-red-500/10"
-											>
-												Remove
-											</button>
 										</div>
-									{/each}
-								</div>
-							{:else if mfaQrCode}
-								<!-- Enrollment in progress - show QR code -->
-								<div class="space-y-4">
-									<div class="rounded-xl p-4" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
-										<h3 class="font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
-											<i class="fa-solid fa-qrcode mr-2 text-sw-accent"></i>Step 1: Scan QR Code
-										</h3>
-										<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-											Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan this QR code:
-										</p>
-										<div class="flex justify-center p-4 rounded-lg" style="background: white">
-											<img src={mfaQrCode} alt="MFA QR Code" class="w-48 h-48" />
-										</div>
-										
-										<details class="mt-4">
-											<summary class="text-sm cursor-pointer" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-												Can't scan? Enter code manually
-											</summary>
-											<div class="mt-2 p-3 rounded-lg font-mono text-sm break-all" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#ffffff' : '#171717'}">
-												{mfaSecret}
-											</div>
-										</details>
-									</div>
 
-									<div class="rounded-xl p-4" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
-										<h3 class="font-semibold mb-3" style="color: {isDark ? '#ffffff' : '#171717'}">
-											<i class="fa-solid fa-keyboard mr-2 text-sw-accent"></i>Step 2: Enter Verification Code
-										</h3>
-										<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-											Enter the 6-digit code from your authenticator app to complete setup:
-										</p>
-										<div class="flex items-center gap-3">
-											<input
-												type="text"
-												bind:value={mfaVerifyCode}
-												placeholder="000000"
-												maxlength="6"
-												pattern="[0-9]*"
-												inputmode="numeric"
-												class="w-32 px-4 py-2 rounded-lg text-center font-mono text-lg tracking-widest"
-												style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-											/>
-											<button
-												onclick={verifyMfaCode}
-												disabled={mfaVerifying || mfaVerifyCode.length !== 6}
-												class="btn btn-primary disabled:opacity-50"
-											>
-												{#if mfaVerifying}
-													<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-												{/if}
-												Verify
-											</button>
+										<button
+											onclick={startMfaEnrollment}
+											disabled={mfaEnrolling}
+											class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-sw-accent text-white hover:bg-sw-accent/90 disabled:opacity-50"
+										>
+											{#if mfaEnrolling}
+												<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>
+												Setting up...
+											{:else}
+												<i class="fa-solid fa-shield-halved mr-1.5"></i>
+												Enable Two-Factor Authentication
+											{/if}
+										</button>
+									</div>
+								{/if}
+							</div>
+						{/if}
+					</section>
+
+					<!-- Philosophy Section -->
+					<section id="philosophy" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<h2 class="font-display text-lg font-semibold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+							<i class="fa-solid fa-compass text-sw-accent mr-2"></i>Financial Philosophy
+						</h2>
+						<p class="text-sm mb-5" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							Choose how you'd like SpentWorth to communicate with you. This affects the tone of insights, emails, and recommendations.
+						</p>
+						
+						<div class="grid sm:grid-cols-2 gap-3">
+							{#each Object.values(PHILOSOPHY_PRESETS) as preset}
+								{@const isSelected = philosophyPreset === preset.id}
+								<button
+									onclick={() => philosophyPreset = preset.id}
+									class="relative p-4 rounded-xl text-left transition-all hover:scale-[1.01]"
+									style="background: {isSelected ? `${preset.color}15` : (isDark ? '#0f0f0f' : '#f9fafb')}; 
+										   border: 2px solid {isSelected ? preset.color : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+								>
+									{#if isSelected}
+										<div class="absolute top-3 right-3">
+											<i class="fa-solid fa-circle-check" style="color: {preset.color}"></i>
+										</div>
+									{/if}
+									<div class="flex items-center gap-3 mb-2">
+										<div 
+											class="w-10 h-10 rounded-lg flex items-center justify-center"
+											style="background: {preset.color}20"
+										>
+											<i class="fa-solid {preset.icon}" style="color: {preset.color}"></i>
+										</div>
+										<div>
+											<p class="font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{preset.name}</p>
 										</div>
 									</div>
-
-									<button
-										onclick={cancelMfaEnrollment}
-										class="text-sm font-medium transition-colors"
-										style="color: {isDark ? '#a3a3a3' : '#737373'}"
-									>
-										<i class="fa-solid fa-arrow-left mr-1"></i>Cancel setup
-									</button>
-								</div>
-							{:else}
-								<!-- MFA not enabled - show enable button -->
-								<div class="space-y-4">
 									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-										Add an extra layer of security to your account by enabling two-factor authentication with an authenticator app like Google Authenticator, Authy, or 1Password.
+										{preset.description}
 									</p>
 									
-									<div class="rounded-xl p-4" style="background: rgba(56,142,60,0.08); border: 1px solid rgba(56,142,60,0.2)">
-										<div class="flex items-start gap-3">
-											<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-												<i class="fa-solid fa-lock text-sw-accent text-sm"></i>
-											</div>
-											<div>
-												<p class="font-medium text-sm mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Why enable MFA?</p>
-												<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-													Even if someone gets your password, they can't access your account without your phone.
-												</p>
-											</div>
-										</div>
-									</div>
-
-									<button
-										onclick={startMfaEnrollment}
-										disabled={mfaEnrolling}
-										class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-sw-accent text-white hover:bg-sw-accent/90 disabled:opacity-50"
+									<!-- Example message preview -->
+									<div 
+										class="mt-3 p-2.5 rounded-lg text-xs italic"
+										style="background: {isDark ? '#1a1a1a' : '#ffffff'}; color: {isDark ? '#737373' : '#9ca3af'}"
 									>
-										{#if mfaEnrolling}
-											<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>
-											Setting up...
-										{:else}
-											<i class="fa-solid fa-shield-halved mr-1.5"></i>
-											Enable Two-Factor Authentication
-										{/if}
+										"{preset.tone.underBudgetMessage}"
+									</div>
+								</button>
+							{/each}
+						</div>
+					</section>
+
+					<!-- Notifications Section -->
+					<section id="notifications" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+							<i class="fa-solid fa-bell text-sw-accent mr-2"></i>Notifications & Engagement
+						</h2>
+						
+						<div class="space-y-5">
+							<!-- Daily Brief -->
+							<div class="space-y-3">
+								<div class="flex items-center justify-between">
+									<div>
+										<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Daily Brief Email</p>
+										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+											Morning summary of your spending pace
+										</p>
+									</div>
+									<button
+										onclick={() => notifPrefs.dailyBriefEnabled = !notifPrefs.dailyBriefEnabled}
+										class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
+										style="background: {notifPrefs.dailyBriefEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+									>
+										<span 
+											class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
+											style="left: {notifPrefs.dailyBriefEnabled ? '1.375rem' : '0.125rem'}"
+										></span>
 									</button>
 								</div>
-							{/if}
-						</div>
-					{/if}
-				</div>
-
-				<!-- Notification Settings -->
-				<div id="notifications" class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
-						<i class="fa-solid fa-bell text-sw-accent mr-2"></i>Notifications & Engagement
-					</h2>
-					
-					<div class="space-y-6">
-						<!-- Daily Brief -->
-						<div class="space-y-3">
-							<div class="flex items-center justify-between">
-								<div>
-									<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Daily Brief Email</p>
-									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-										Get a morning summary of your spending pace and insights
-									</p>
-								</div>
-								<button
-									onclick={() => notifPrefs.dailyBriefEnabled = !notifPrefs.dailyBriefEnabled}
-									class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
-									style="background: {notifPrefs.dailyBriefEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
-								>
-									<span 
-										class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
-										style="left: {notifPrefs.dailyBriefEnabled ? '1.375rem' : '0.125rem'}"
-									></span>
-								</button>
-							</div>
-							{#if notifPrefs.dailyBriefEnabled}
-								<div class="flex flex-wrap items-center gap-3 pl-4">
-									<div class="flex items-center gap-2">
-										<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Send at:</label>
+								{#if notifPrefs.dailyBriefEnabled}
+									<div class="flex flex-wrap items-center gap-3 pl-4">
 										<select
 											bind:value={notifPrefs.dailyBriefTime}
 											class="px-3 py-1.5 rounded-lg text-sm"
@@ -718,16 +853,7 @@
 											<option value="08:00">8:00 AM</option>
 											<option value="09:00">9:00 AM</option>
 											<option value="10:00">10:00 AM</option>
-											<option value="11:00">11:00 AM</option>
-											<option value="12:00">12:00 PM</option>
-											<option value="18:00">6:00 PM</option>
-											<option value="19:00">7:00 PM</option>
-											<option value="20:00">8:00 PM</option>
-											<option value="21:00">9:00 PM</option>
 										</select>
-									</div>
-									<div class="flex items-center gap-2">
-										<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">in</label>
 										<select
 											bind:value={notifPrefs.dailyBriefTimezone}
 											class="px-3 py-1.5 rounded-lg text-sm"
@@ -738,462 +864,368 @@
 											{/each}
 										</select>
 									</div>
+								{/if}
+							</div>
+
+							<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"></div>
+
+							<!-- Weekly Pulse -->
+							<div class="space-y-3">
+								<div class="flex items-center justify-between">
+									<div>
+										<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Weekly Pulse Email</p>
+										<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+											Weekly trends and opportunity cost insights
+										</p>
+									</div>
+									<button
+										onclick={() => notifPrefs.weeklyPulseEnabled = !notifPrefs.weeklyPulseEnabled}
+										class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
+										style="background: {notifPrefs.weeklyPulseEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+									>
+										<span 
+											class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
+											style="left: {notifPrefs.weeklyPulseEnabled ? '1.375rem' : '0.125rem'}"
+										></span>
+									</button>
 								</div>
-							{/if}
-						</div>
+								{#if notifPrefs.weeklyPulseEnabled}
+									<div class="flex items-center gap-3 pl-4">
+										<select
+											bind:value={notifPrefs.weeklyPulseDay}
+											class="px-3 py-1.5 rounded-lg text-sm"
+											style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+										>
+											<option value={0}>Sunday</option>
+											<option value={1}>Monday</option>
+											<option value={5}>Friday</option>
+											<option value={6}>Saturday</option>
+										</select>
+									</div>
+								{/if}
+							</div>
 
-						<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"></div>
+							<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"></div>
 
-						<!-- Weekly Pulse -->
-						<div class="space-y-3">
+							<!-- Upload Reminders -->
 							<div class="flex items-center justify-between">
 								<div>
-									<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Weekly Pulse Email</p>
+									<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Upload Reminders</p>
 									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-										Weekly summary with trends and opportunity cost insights
+										Nudges when it's time to upload fresh data
 									</p>
 								</div>
 								<button
-									onclick={() => notifPrefs.weeklyPulseEnabled = !notifPrefs.weeklyPulseEnabled}
+									onclick={() => notifPrefs.showUploadNudges = !notifPrefs.showUploadNudges}
 									class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
-									style="background: {notifPrefs.weeklyPulseEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+									style="background: {notifPrefs.showUploadNudges ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
 								>
 									<span 
 										class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
-										style="left: {notifPrefs.weeklyPulseEnabled ? '1.375rem' : '0.125rem'}"
+										style="left: {notifPrefs.showUploadNudges ? '1.375rem' : '0.125rem'}"
 									></span>
 								</button>
 							</div>
-							{#if notifPrefs.weeklyPulseEnabled}
-								<div class="flex items-center gap-3 pl-4">
-									<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Send on:</label>
-									<select
-										bind:value={notifPrefs.weeklyPulseDay}
-										class="px-3 py-1.5 rounded-lg text-sm"
-										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-									>
-										<option value={0}>Sunday</option>
-										<option value={1}>Monday</option>
-										<option value={2}>Tuesday</option>
-										<option value={3}>Wednesday</option>
-										<option value={4}>Thursday</option>
-										<option value={5}>Friday</option>
-										<option value={6}>Saturday</option>
-									</select>
-								</div>
-							{/if}
-						</div>
 
-						<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"></div>
-
-						<!-- Upload Reminders -->
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Upload Reminders</p>
-								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-									Show nudges when it's time to upload fresh data
-								</p>
-							</div>
-							<button
-								onclick={() => notifPrefs.showUploadNudges = !notifPrefs.showUploadNudges}
-								class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
-								style="background: {notifPrefs.showUploadNudges ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
-							>
-								<span 
-									class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
-									style="left: {notifPrefs.showUploadNudges ? '1.375rem' : '0.125rem'}"
-								></span>
-							</button>
-						</div>
-
-						<!-- Review Inbox -->
-						<div class="space-y-3">
+							<!-- Achievement Badges -->
 							<div class="flex items-center justify-between">
 								<div>
-									<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Review Inbox</p>
+									<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Achievement Badges</p>
 									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-										Daily items to categorize and improve your data
+										Show streaks and progress celebrations
 									</p>
 								</div>
 								<button
-									onclick={() => notifPrefs.reviewInboxEnabled = !notifPrefs.reviewInboxEnabled}
+									onclick={() => notifPrefs.showAchievementBadges = !notifPrefs.showAchievementBadges}
 									class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
-									style="background: {notifPrefs.reviewInboxEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+									style="background: {notifPrefs.showAchievementBadges ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
 								>
 									<span 
 										class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
-										style="left: {notifPrefs.reviewInboxEnabled ? '1.375rem' : '0.125rem'}"
+										style="left: {notifPrefs.showAchievementBadges ? '1.375rem' : '0.125rem'}"
 									></span>
 								</button>
 							</div>
-							{#if notifPrefs.reviewInboxEnabled}
-								<div class="flex items-center gap-3 pl-4">
-									<label class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">Daily goal:</label>
-									<select
-										bind:value={notifPrefs.reviewInboxDailyGoal}
-										class="px-3 py-1.5 rounded-lg text-sm"
+
+							<!-- Save Button -->
+							<div class="flex items-center gap-4 pt-2">
+								<button
+									onclick={saveNotificationPrefs}
+									disabled={notifSaving}
+									class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-sw-accent text-white hover:bg-sw-accent/90 disabled:opacity-50"
+								>
+									{notifSaving ? 'Saving...' : 'Save Notifications'}
+								</button>
+								{#if notifSaved}
+									<span class="text-sw-accent text-sm animate-fade-in">Saved!</span>
+								{/if}
+							</div>
+						</div>
+					</section>
+
+					<!-- Income Section -->
+					<section id="income" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+							<i class="fa-solid fa-wallet text-sw-accent mr-2"></i>Monthly Income
+						</h2>
+						
+						<div class="space-y-4">
+							<div>
+								<label for="income" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Your monthly take-home pay</label>
+								<div class="flex items-center gap-2 max-w-xs">
+									<span class="text-lg" style="color: {isDark ? '#a3a3a3' : '#737373'}">$</span>
+									<input
+										id="income"
+										type="number"
+										bind:value={monthlyIncome}
+										placeholder="5000"
+										class="flex-1 px-3 py-2 rounded-lg text-sm"
 										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-									>
-										<option value={3}>3 items</option>
-										<option value={5}>5 items</option>
-										<option value={10}>10 items</option>
-										<option value={15}>15 items</option>
-									</select>
+									/>
+								</div>
+								<p class="text-sm mt-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									Used to calculate your savings rate and projections.
+								</p>
+							</div>
+
+							{#if monthlyIncome && monthlyIncome > 0}
+								<div class="rounded-xl p-4" style="background: rgba(56,142,60,0.1); border: 1px solid rgba(56,142,60,0.2)">
+									<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
+										<i class="fa-solid fa-chart-line text-sw-accent mr-2"></i>
+										Saving 20% (${Math.round(monthlyIncome * 0.2).toLocaleString()}/mo) at {fallbackPercentage}% could grow to <span class="font-semibold text-sw-accent">${calculateFutureValue(monthlyIncome * 0.2).toLocaleString()}</span> in 10 years.
+									</p>
 								</div>
 							{/if}
 						</div>
+					</section>
 
-						<div style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"></div>
-
-						<!-- Achievement Badges -->
-						<div class="flex items-center justify-between">
+					<!-- Investments Section -->
+					<section id="investments" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+							<i class="fa-solid fa-chart-line text-sw-accent mr-2"></i>Investment Settings
+						</h2>
+						
+						<div class="space-y-6">
+							<!-- Ticker Selection -->
 							<div>
-								<p class="font-medium" style="color: {isDark ? '#ffffff' : '#171717'}">Achievement Badges</p>
-								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-									Show streaks and progress celebrations
-								</p>
-							</div>
-							<button
-								onclick={() => notifPrefs.showAchievementBadges = !notifPrefs.showAchievementBadges}
-								class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
-								style="background: {notifPrefs.showAchievementBadges ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
-							>
-								<span 
-									class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
-									style="left: {notifPrefs.showAchievementBadges ? '1.375rem' : '0.125rem'}"
-								></span>
-							</button>
-						</div>
+								<label for="ticker" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Benchmark Ticker</label>
+								
+								<div class="flex items-center gap-4 mb-3">
+									<label class="flex items-center gap-2 cursor-pointer">
+										<input
+											type="radio"
+											name="tickerMode"
+											checked={!useCustomTicker}
+											onchange={() => useCustomTicker = false}
+											class="w-4 h-4 accent-sw-accent"
+										/>
+										<span class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Preset</span>
+									</label>
+									<label class="flex items-center gap-2 cursor-pointer">
+										<input
+											type="radio"
+											name="tickerMode"
+											checked={useCustomTicker}
+											onchange={() => useCustomTicker = true}
+											class="w-4 h-4 accent-sw-accent"
+										/>
+										<span class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Custom</span>
+									</label>
+								</div>
 
-						<!-- Save Button -->
-						<div class="flex items-center gap-4 pt-2">
-							<button
-								onclick={saveNotificationPrefs}
-								disabled={notifSaving}
-								class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-sw-accent text-white hover:bg-sw-accent/90 disabled:opacity-50"
-							>
-								{notifSaving ? 'Saving...' : 'Save Notification Settings'}
-							</button>
-							{#if notifSaved}
-								<span class="text-sw-accent text-sm animate-fade-in">Saved!</span>
-							{/if}
-						</div>
-					</div>
-				</div>
-
-				<!-- Income Settings -->
-				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
-						<i class="fa-solid fa-wallet text-sw-accent mr-2"></i>Monthly Income
-					</h2>
-					
-					<div class="space-y-4">
-						<div>
-							<label for="income" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Your monthly take-home pay</label>
-							<div class="flex items-center gap-2 max-w-xs">
-								<span class="text-lg" style="color: {isDark ? '#a3a3a3' : '#737373'}">$</span>
-								<input
-									id="income"
-									type="number"
-									bind:value={monthlyIncome}
-									placeholder="5000"
-									class="flex-1 px-3 py-2 rounded-lg text-sm"
-									style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-								/>
-							</div>
-							<p class="text-sm mt-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-								Optional. Used to calculate your savings rate and show what your savings could grow into.
-							</p>
-						</div>
-
-						{#if monthlyIncome && monthlyIncome > 0}
-							<div class="rounded-xl p-4" style="background: rgba(56,142,60,0.1); border: 1px solid rgba(56,142,60,0.2)">
-								<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
-									<i class="fa-solid fa-chart-line text-sw-accent mr-2"></i>
-									If you save <span class="font-semibold">20%</span> of your income (${Math.round(monthlyIncome * 0.2).toLocaleString()}/month) at <span class="font-semibold">{fallbackPercentage}%</span> annual return, 
-									that could grow to <span class="font-semibold text-sw-accent">${calculateFutureValue(monthlyIncome * 0.2).toLocaleString()}</span> in 10 years.
-								</p>
-							</div>
-						{/if}
-					</div>
-				</div>
-
-				<!-- Investment Settings -->
-				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
-						<i class="fa-solid fa-chart-line text-sw-accent mr-2"></i>Investment Settings
-					</h2>
-					
-					<div class="space-y-6">
-						<!-- Ticker Selection -->
-						<div>
-							<label for="ticker" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Benchmark Ticker</label>
-							
-							<!-- Toggle between preset and custom -->
-							<div class="flex items-center gap-4 mb-3">
-								<label class="flex items-center gap-2 cursor-pointer">
+								{#if useCustomTicker}
 									<input
-										type="radio"
-										name="tickerMode"
-										checked={!useCustomTicker}
-										onchange={() => useCustomTicker = false}
-										class="w-4 h-4 accent-sw-accent"
-									/>
-									<span class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Preset</span>
-								</label>
-								<label class="flex items-center gap-2 cursor-pointer">
-									<input
-										type="radio"
-										name="tickerMode"
-										checked={useCustomTicker}
-										onchange={() => useCustomTicker = true}
-										class="w-4 h-4 accent-sw-accent"
-									/>
-									<span class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Custom Ticker</span>
-								</label>
-							</div>
-
-							{#if useCustomTicker}
-								<div class="max-w-xs">
-									<input
-										id="customTicker"
 										type="text"
 										bind:value={customTicker}
-										placeholder="e.g., AAPL, MSFT, VXUS"
+										placeholder="e.g., AAPL, MSFT"
 										maxlength="5"
-										class="w-full px-3 py-2 rounded-lg text-sm uppercase"
+										class="max-w-xs px-3 py-2 rounded-lg text-sm uppercase"
 										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 									/>
-									<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-										Enter any stock or ETF ticker symbol (powered by Alpha Vantage Premium)
-									</p>
-								</div>
-							{:else}
+								{:else}
+									<select
+										bind:value={defaultTicker}
+										class="max-w-xs px-3 py-2 rounded-lg text-sm w-full"
+										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+									>
+										<option value="SPY">SPY (S&P 500)</option>
+										<option value="VTI">VTI (Total Market)</option>
+										<option value="VOO">VOO (S&P 500)</option>
+										<option value="QQQ">QQQ (Nasdaq 100)</option>
+									</select>
+								{/if}
+							</div>
+
+							<div>
+								<label for="delay" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Investment Delay</label>
 								<select
-									id="ticker"
-									bind:value={defaultTicker}
+									bind:value={investDelayTradingDays}
 									class="max-w-xs px-3 py-2 rounded-lg text-sm w-full"
 									style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
 								>
-									<option value="SPY">SPY (S&P 500)</option>
-									<option value="VTI">VTI (Total Market)</option>
-									<option value="VOO">VOO (S&P 500)</option>
-									<option value="QQQ">QQQ (Nasdaq 100)</option>
+									<option value={0}>Same day</option>
+									<option value={1}>Next trading day</option>
+									<option value={3}>3 trading days</option>
 								</select>
-								<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Popular index funds for opportunity cost calculations</p>
-							{/if}
-						</div>
+								<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">When you'd realistically invest after a purchase</p>
+							</div>
 
-						<div>
-							<label for="delay" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Investment Delay (Trading Days)</label>
-							<select
-								id="delay"
-								bind:value={investDelayTradingDays}
-								class="max-w-xs px-3 py-2 rounded-lg text-sm w-full"
-								style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-							>
-								<option value={0}>Same day (0 days)</option>
-								<option value={1}>Next trading day (1 day)</option>
-								<option value={3}>3 trading days</option>
-								<option value={7}>7 trading days</option>
-							</select>
-							<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">Simulates when you'd realistically invest after a purchase</p>
-						</div>
-
-						<!-- Fallback Settings -->
-						<div class="space-y-4 pt-4" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
-							<h3 class="text-sm font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">Fallback Calculation</h3>
-							
-							<div>
+							<!-- Fallback Settings -->
+							<div class="space-y-4 pt-4" style="border-top: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 								<label class="flex items-center gap-3 cursor-pointer">
 									<input
 										type="checkbox"
 										bind:checked={allowFallbackForAllTickers}
-										class="w-5 h-5 rounded focus:ring-sw-accent focus:ring-2 accent-sw-accent"
-										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}"
+										class="w-5 h-5 rounded accent-sw-accent"
 									/>
 									<span style="color: {isDark ? '#ffffff' : '#171717'}">Use fallback when price data unavailable</span>
 								</label>
-								<p class="text-sm mt-1 ml-8" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-									Some tickers may not have enough history. Enable this to still calculate opportunity cost.
-								</p>
-							</div>
 
-							<div>
-								<label for="fallbackRate" class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Fallback Annual Return</label>
-								<div class="flex items-center gap-2 max-w-xs">
-									<input
-										id="fallbackRate"
-										type="number"
-										min="0"
-										max="50"
-										step="0.5"
-										value={fallbackPercentage}
-										onchange={handleFallbackChange}
-										class="w-20 px-3 py-2 rounded-lg text-sm text-center"
-										style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
-									/>
-									<span style="color: {isDark ? '#a3a3a3' : '#737373'}">%</span>
+								<div>
+									<label class="block text-sm font-medium mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">Fallback Annual Return</label>
+									<div class="flex items-center gap-2 max-w-xs">
+										<input
+											type="number"
+											min="0"
+											max="50"
+											step="0.5"
+											value={fallbackPercentage}
+											onchange={handleFallbackChange}
+											class="w-20 px-3 py-2 rounded-lg text-sm text-center"
+											style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+										/>
+										<span style="color: {isDark ? '#a3a3a3' : '#737373'}">%</span>
+									</div>
 								</div>
-								<p class="text-sm mt-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-									Annual return rate used when historical prices aren't available (default: 7%)
-								</p>
 							</div>
 						</div>
-					</div>
-				</div>
+					</section>
 
-				<!-- Appearance Settings (Pro Feature) -->
-				<div class="rounded-2xl p-6 relative overflow-hidden" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<div class="flex items-center justify-between mb-4">
-						<h2 class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
-							<i class="fa-solid fa-palette text-sw-accent mr-2"></i>Appearance
-						</h2>
-						{#if !isPro}
-							<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 border border-amber-500/30">
-								<i class="fa-solid fa-crown mr-1"></i>Pro
-							</span>
-						{/if}
-					</div>
-					
-					<div class="space-y-4">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Dark Mode</p>
-								<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-									{isPro ? 'Switch between light and dark themes' : 'Upgrade to Pro to unlock dark mode'}
-								</p>
-							</div>
-							<button
-								onclick={handleThemeToggle}
-								disabled={!isPro}
-								class="relative w-14 h-8 rounded-full transition-all duration-300 {isPro ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}"
-								style="background: {isDark ? 'linear-gradient(135deg, #0d9488, #4CAF50)' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
-							>
-								<span 
-									class="absolute top-1 w-6 h-6 rounded-full transition-all duration-300 flex items-center justify-center shadow-md"
-									style="left: {isDark ? '1.75rem' : '0.25rem'}; background: {isDark ? '#0a0a0a' : '#ffffff'}"
-								>
-									{#if isDark}
-										<i class="fa-solid fa-moon text-xs text-green-400"></i>
-									{:else}
-										<i class="fa-solid fa-sun text-xs" style="color: {isDark ? '#a3a3a3' : '#f59e0b'}"></i>
-									{/if}
+					<!-- Appearance Section -->
+					<section id="appearance" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<div class="flex items-center justify-between mb-4">
+							<h2 class="font-display text-lg font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">
+								<i class="fa-solid fa-palette text-sw-accent mr-2"></i>Appearance
+							</h2>
+							{#if !isPro}
+								<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 border border-amber-500/30">
+									<i class="fa-solid fa-crown mr-1"></i>Pro
 								</span>
-							</button>
+							{/if}
 						</div>
 						
-						{#if !isPro}
-							<a 
-								href="/pricing" 
-								class="block mt-4 p-4 rounded-xl text-center transition-all hover:scale-[1.01]"
-								style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.1)); border: 1px solid rgba(245,158,11,0.2)"
-							>
-								<p class="text-sm font-medium" style="color: {isDark ? '#fbbf24' : '#d97706'}">
-									<i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i>
-									Upgrade to Pro for dark mode and more
-								</p>
-							</a>
+						<div class="space-y-4">
+							<div class="flex items-center justify-between">
+								<div>
+									<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Dark Mode</p>
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+										{isPro ? 'Switch between light and dark themes' : 'Upgrade to Pro to unlock'}
+									</p>
+								</div>
+								<button
+									onclick={handleThemeToggle}
+									disabled={!isPro}
+									class="relative w-14 h-8 rounded-full transition-all duration-300 {isPro ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}"
+									style="background: {isDark ? 'linear-gradient(135deg, #0d9488, #4CAF50)' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+								>
+									<span 
+										class="absolute top-1 w-6 h-6 rounded-full transition-all duration-300 flex items-center justify-center shadow-md"
+										style="left: {isDark ? '1.75rem' : '0.25rem'}; background: {isDark ? '#0a0a0a' : '#ffffff'}"
+									>
+										{#if isDark}
+											<i class="fa-solid fa-moon text-xs text-green-400"></i>
+										{:else}
+											<i class="fa-solid fa-sun text-xs text-amber-500"></i>
+										{/if}
+									</span>
+								</button>
+							</div>
+							
+							{#if !isPro}
+								<a 
+									href="/pricing" 
+									class="block p-4 rounded-xl text-center transition-all hover:scale-[1.01]"
+									style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.1)); border: 1px solid rgba(245,158,11,0.2)"
+								>
+									<p class="text-sm font-medium" style="color: {isDark ? '#fbbf24' : '#d97706'}">
+										<i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i>
+										Upgrade to Pro for dark mode and more
+									</p>
+								</a>
+							{/if}
+						</div>
+					</section>
+
+					<!-- Save Settings Button -->
+					<div class="flex items-center gap-4">
+						<button
+							onclick={saveSettings}
+							disabled={saving}
+							class="btn btn-primary"
+						>
+							{saving ? 'Saving...' : 'Save All Settings'}
+						</button>
+						{#if saved}
+							<span class="text-sw-accent text-sm animate-fade-in">Settings saved!</span>
 						{/if}
 					</div>
-				</div>
 
-				<!-- Method explanation -->
-				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
-						<i class="fa-solid fa-calculator text-sw-accent mr-2"></i>How We Calculate
-					</h2>
-					<div class="space-y-4 text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						<p>
-							<strong style="color: {isDark ? '#ffffff' : '#171717'}">Real-Time Price Data:</strong> We use Alpha Vantage Premium API to fetch adjusted close prices, which account for dividends and stock splits for accurate total return calculations.
-						</p>
-						<p>
-							<strong style="color: {isDark ? '#ffffff' : '#171717'}">Custom Tickers:</strong> You can use any stock or ETF ticker symbol. For newer tickers or IPOs with limited price history, we fall back to your configured annual return rate (default {fallbackPercentage}%) to estimate opportunity cost.
-						</p>
-						<p>
-							<strong style="color: {isDark ? '#ffffff' : '#171717'}">Investment Delay:</strong> To simulate realistic investing, we assume you'd invest on the next trading day after a purchase (configurable above).
-						</p>
-						<p>
-							<strong style="color: {isDark ? '#ffffff' : '#171717'}">Excluded by Default:</strong> Transfers, credit card payments, ATM withdrawals, and refunds are excluded to avoid double-counting your spending.
-						</p>
-					</div>
-				</div>
-
-				<div class="flex items-center gap-4">
-					<button
-						onclick={saveSettings}
-						disabled={saving}
-						class="btn btn-primary"
-					>
-						{saving ? 'Saving...' : 'Save Settings'}
-					</button>
-					{#if saved}
-						<span class="text-sw-accent text-sm animate-fade-in">Settings saved!</span>
-					{/if}
-				</div>
-
-				<!-- Data Export -->
-				<div class="rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
-					<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
-						<i class="fa-solid fa-download text-sw-accent mr-2"></i>Export Your Data
-					</h2>
-					
-					<div class="space-y-4">
-						<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-							Download a copy of all your SpentWorth data including transactions, budgets, goals, rules, and settings.
-						</p>
+					<!-- Data Export Section -->
+					<section id="data" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; box-shadow: {isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.06)'}">
+						<h2 class="font-display text-lg font-semibold mb-4" style="color: {isDark ? '#ffffff' : '#171717'}">
+							<i class="fa-solid fa-download text-sw-accent mr-2"></i>Export Your Data
+						</h2>
 						
-						<div class="flex flex-wrap items-center gap-3">
-							<a 
-								href="/api/account/export?format=json" 
-								download
-								class="px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
-								style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
-							>
-								<i class="fa-solid fa-file-code"></i>
-								Export All Data (JSON)
-							</a>
-							<a 
-								href="/api/account/export?format=csv" 
-								download
-								class="px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
-								style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
-							>
-								<i class="fa-solid fa-file-csv"></i>
-								Export Transactions (CSV)
-							</a>
-						</div>
-						
-						<p class="text-xs" style="color: {isDark ? '#737373' : '#a3a3a3'}">
-							JSON includes all data (transactions, budgets, goals, rules, settings). CSV includes transactions only.
-						</p>
-					</div>
-				</div>
-
-				<!-- Danger Zone -->
-				<div class="rounded-2xl p-6 mt-8" style="background: {isDark ? 'rgba(239,68,68,0.05)' : 'rgba(239,68,68,0.03)'}; border: 1px solid rgba(239,68,68,0.2)">
-					<h2 class="font-display text-lg font-semibold mb-4 text-red-600">
-						<i class="fa-solid fa-triangle-exclamation mr-2"></i>Danger Zone
-					</h2>
-					
-					<div class="space-y-4">
-						<div>
-							<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Delete Account</p>
-							<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-								Permanently delete your account and all associated data. This action cannot be undone.
-								{#if isPro}
-									Your Pro subscription will also be canceled.
-								{/if}
+						<div class="space-y-4">
+							<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+								Download all your SpentWorth data including transactions, budgets, goals, and settings.
 							</p>
-							<button
-								onclick={() => showDeleteModal = true}
-								class="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-600 hover:bg-red-700 text-white"
-							>
-								<i class="fa-solid fa-trash mr-1.5"></i>
-								Delete My Account
-							</button>
+							
+							<div class="flex flex-wrap items-center gap-3">
+								<a 
+									href="/api/account/export?format=json" 
+									download
+									class="px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
+									style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+								>
+									<i class="fa-solid fa-file-code"></i>
+									Export All (JSON)
+								</a>
+								<a 
+									href="/api/account/export?format=csv" 
+									download
+									class="px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
+									style="background: {isDark ? '#2a2a2a' : '#f5f0e8'}; color: {isDark ? '#ffffff' : '#171717'}"
+								>
+									<i class="fa-solid fa-file-csv"></i>
+									Transactions (CSV)
+								</a>
+							</div>
 						</div>
-					</div>
+					</section>
+
+					<!-- Danger Zone Section -->
+					<section id="danger" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? 'rgba(239,68,68,0.05)' : 'rgba(239,68,68,0.03)'}; border: 1px solid rgba(239,68,68,0.2)">
+						<h2 class="font-display text-lg font-semibold mb-4 text-red-600">
+							<i class="fa-solid fa-triangle-exclamation mr-2"></i>Danger Zone
+						</h2>
+						
+						<div class="space-y-4">
+							<div>
+								<p class="font-medium mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Delete Account</p>
+								<p class="text-sm mb-4" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+									Permanently delete your account and all data. This cannot be undone.
+								</p>
+								<button
+									onclick={() => showDeleteModal = true}
+									class="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-600 hover:bg-red-700 text-white"
+								>
+									<i class="fa-solid fa-trash mr-1.5"></i>
+									Delete My Account
+								</button>
+							</div>
+						</div>
+					</section>
 				</div>
 			</div>
 		{/if}
@@ -1217,15 +1249,8 @@
 
 				<div class="space-y-4">
 					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						Are you sure you want to disable two-factor authentication? Your account will be less secure.
+						Are you sure? Your account will be less secure.
 					</p>
-
-					<div class="rounded-xl p-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2)">
-						<p class="text-sm font-medium" style="color: {isDark ? '#fbbf24' : '#d97706'}">
-							<i class="fa-solid fa-exclamation-triangle mr-2"></i>
-							This will remove the extra security layer from your account.
-						</p>
-					</div>
 
 					<div class="flex gap-3 pt-2">
 						<button
@@ -1243,10 +1268,8 @@
 						>
 							{#if disablingMfa}
 								<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-								Disabling...
-							{:else}
-								Disable MFA
 							{/if}
+							Disable MFA
 						</button>
 					</div>
 				</div>
@@ -1272,16 +1295,8 @@
 
 				<div class="space-y-4">
 					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						This will permanently delete:
+						This will permanently delete all your data.
 					</p>
-					<ul class="text-sm space-y-1" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-						<li><i class="fa-solid fa-xmark text-red-500 mr-2"></i>All your transactions and imports</li>
-						<li><i class="fa-solid fa-xmark text-red-500 mr-2"></i>Your budgets, goals, and rules</li>
-						<li><i class="fa-solid fa-xmark text-red-500 mr-2"></i>Your account and all settings</li>
-						{#if isPro}
-							<li><i class="fa-solid fa-xmark text-red-500 mr-2"></i>Your Pro subscription (will be canceled)</li>
-						{/if}
-					</ul>
 
 					<div class="rounded-xl p-4" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2)">
 						<p class="text-sm font-medium text-red-600 mb-2">
@@ -1315,14 +1330,12 @@
 						<button
 							onclick={deleteAccount}
 							disabled={deleteConfirmText !== 'DELETE' || deleting}
-							class="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700"
+							class="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-600 text-white disabled:opacity-50 hover:bg-red-700"
 						>
 							{#if deleting}
 								<i class="fa-solid fa-spinner fa-spin mr-1"></i>
-								Deleting...
-							{:else}
-								Delete Forever
 							{/if}
+							Delete Forever
 						</button>
 					</div>
 				</div>

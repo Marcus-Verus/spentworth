@@ -6,6 +6,7 @@
 	// (Svelte transitions don't work well with table rows)
 	import { CATEGORIES, type BatchSummary, type RawRowEffective, type PreviewTab, type TransactionKind, type Category } from '$lib/types';
 	import { initTheme, getTheme } from '$lib/stores/theme';
+	import RuleSuggestions from '$lib/components/RuleSuggestions.svelte';
 
 	let { data } = $props();
 	let isDark = $state(false);
@@ -30,6 +31,7 @@
 	let selected = $state<Set<string>>(new Set());
 	let committing = $state(false);
 	let commitError = $state<string | null>(null);
+	let commitSuccess = $state(false); // Show rule suggestions after commit
 	
 	// Track rows that are animating out (for smooth departure)
 	let departingRows = $state<Set<string>>(new Set());
@@ -380,7 +382,8 @@
 			const json = await res.json();
 
 			if (json.ok) {
-				goto('/dashboard');
+				// Show rule suggestions before redirecting
+				commitSuccess = true;
 			} else {
 				commitError = json.error || 'Commit failed';
 			}
@@ -389,6 +392,10 @@
 		}
 
 		committing = false;
+	}
+	
+	function handleRulesComplete() {
+		goto('/dashboard');
 	}
 
 	function toggleSelect(rowId: string) {
@@ -826,6 +833,46 @@
 					No, Just This One
 				</button>
 			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Commit Success + Rule Suggestions Modal -->
+{#if commitSuccess}
+	<div class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 safe-area-top safe-area-bottom">
+		<div class="w-full max-w-lg animate-slide-up">
+			<!-- Success Banner -->
+			<div 
+				class="rounded-2xl mb-4 p-6 text-center"
+				style="background: {isDark ? 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))' : 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(34,197,94,0.02))'}; border: 1px solid rgba(34,197,94,0.2)"
+			>
+				<div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-4">
+					<i class="fa-solid fa-check text-2xl text-white"></i>
+				</div>
+				<h2 class="font-display text-2xl font-bold mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+					Import Complete! 🎉
+				</h2>
+				<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+					{summary?.rowsIncluded || 0} transactions committed successfully
+				</p>
+			</div>
+			
+			<!-- Rule Suggestions -->
+			<RuleSuggestions 
+				{batchId} 
+				{isDark} 
+				onComplete={handleRulesComplete} 
+			/>
+			
+			<!-- Skip to dashboard (if no suggestions or user wants to skip) -->
+			<button
+				onclick={handleRulesComplete}
+				class="w-full mt-4 px-4 py-3 rounded-xl text-sm font-medium transition-all"
+				style="background: {isDark ? 'rgba(38,38,38,0.8)' : 'rgba(255,255,255,0.9)'}; color: {isDark ? '#a3a3a3' : '#737373'}; border: 1px solid {isDark ? '#3a3a3a' : '#e5e5e5'}"
+			>
+				<i class="fa-solid fa-arrow-right mr-1"></i>
+				Continue to Dashboard
+			</button>
 		</div>
 	</div>
 {/if}

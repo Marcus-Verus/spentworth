@@ -50,9 +50,9 @@
 				'Unlimited categories + category rules (auto-categorise & auto-exclude)',
 				'Unlimited transaction history',
 				'Monthly trend analysis + time range filters',
-				'CSV & PDF export',
-				'Priority support',
-				'Email digest (coming soon)'
+			'CSV export (all data)',
+			'Priority support',
+			'Daily & weekly email digests'
 			],
 			cta: 'Upgrade to Pro',
 			ctaHref: '/signup?plan=pro',
@@ -120,7 +120,7 @@
 			<div class="flex items-center justify-between h-16">
 				<!-- Logo -->
 				<a href="/" class="flex items-center gap-3 group">
-					<div class="rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white p-2 shadow-md shadow-green-500/15 group-hover:shadow-lg group-hover:shadow-green-500/20 transition-all group-hover:scale-[1.02]">
+					<div class="rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white p-2 shadow-md shadow-green-500/15 group-hover:shadow-lg group-hover:shadow-green-500/20 transition-all group-hover:scale-[1.02]">
 						<Logo size="md" class="text-white" />
 					</div>
 					<span class="font-display text-xl font-bold text-stone-800 tracking-tight">SpentWorth</span>
@@ -130,18 +130,18 @@
 				<div class="hidden md:flex items-center">
 					<!-- Nav Links -->
 					<div class="flex items-center gap-1 mr-4">
-						<a href="/#features" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors rounded-lg hover:bg-stone-100/70">Features</a>
-						<a href="/#how-it-works" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors rounded-lg hover:bg-stone-100/70">How it Works</a>
-						<a href="/pricing" class="px-4 py-2 text-sm font-medium text-teal-600 transition-colors rounded-lg bg-stone-100/70">Pricing</a>
+						<a href="/#features" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-green-600 transition-colors rounded-lg hover:bg-stone-100/70">Features</a>
+						<a href="/#how-it-works" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-green-600 transition-colors rounded-lg hover:bg-stone-100/70">How it Works</a>
+						<a href="/pricing" class="px-4 py-2 text-sm font-medium text-green-600 transition-colors rounded-lg bg-stone-100/70">Pricing</a>
 					</div>
 					
 					<!-- Auth -->
 					<div class="flex items-center gap-2 pl-4 border-l border-stone-200">
 						{#if data.session}
-							<a href="/dashboard" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-green-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-green-500/25">Dashboard</a>
+							<a href="/dashboard" class="px-5 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-xl hover:bg-green-500 transition-all shadow-md shadow-green-600/20 hover:shadow-lg hover:shadow-green-500/25">Dashboard</a>
 						{:else}
-							<a href="/login" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-teal-600 transition-colors">Log in</a>
-							<a href="/signup" class="px-5 py-2.5 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-green-500 transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-green-500/25">Get Started</a>
+							<a href="/login" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-green-600 transition-colors">Log in</a>
+							<a href="/signup" class="px-5 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-xl hover:bg-green-500 transition-all shadow-md shadow-green-600/20 hover:shadow-lg hover:shadow-green-500/25">Get Started</a>
 						{/if}
 					</div>
 				</div>
@@ -167,15 +167,15 @@
 		<!-- Mobile dropdown -->
 		{#if mobileMenuOpen}
 			<div class="md:hidden bg-white/95 backdrop-blur-xl border-t border-stone-200/60 px-4 py-4 space-y-1">
-				<a href="/#features" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Features</a>
-				<a href="/#how-it-works" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">How it Works</a>
-				<a href="/pricing" class="block px-3 py-2.5 text-teal-600 bg-stone-100/70 rounded-lg font-medium">Pricing</a>
+				<a href="/#features" class="block px-3 py-2.5 text-stone-700 hover:text-green-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Features</a>
+				<a href="/#how-it-works" class="block px-3 py-2.5 text-stone-700 hover:text-green-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">How it Works</a>
+				<a href="/pricing" class="block px-3 py-2.5 text-green-600 bg-stone-100/70 rounded-lg font-medium">Pricing</a>
 				<div class="pt-3 mt-3 border-t border-stone-200/60 space-y-2">
 					{#if data.session}
-						<a href="/dashboard" class="block px-4 py-2.5 text-center font-semibold text-white bg-teal-600 rounded-xl shadow-md">Dashboard</a>
+						<a href="/dashboard" class="block px-4 py-2.5 text-center font-semibold text-white bg-green-600 rounded-xl shadow-md">Dashboard</a>
 					{:else}
-						<a href="/login" class="block px-3 py-2.5 text-stone-700 hover:text-teal-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Log in</a>
-						<a href="/signup" class="block px-4 py-2.5 text-center font-semibold text-white bg-teal-600 rounded-xl shadow-md">Get Started</a>
+						<a href="/login" class="block px-3 py-2.5 text-stone-700 hover:text-green-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Log in</a>
+						<a href="/signup" class="block px-4 py-2.5 text-center font-semibold text-white bg-green-600 rounded-xl shadow-md">Get Started</a>
 					{/if}
 				</div>
 			</div>
@@ -212,7 +212,7 @@
 		<button
 			onclick={() => billingCycle = billingCycle === 'monthly' ? 'yearly' : 'monthly'}
 			class="relative w-14 h-8 rounded-full transition-colors"
-			class:bg-teal-600={billingCycle === 'yearly'}
+			class:bg-green-600={billingCycle === 'yearly'}
 			class:bg-stone-300={billingCycle === 'monthly'}
 			aria-label="Toggle billing cycle between monthly and yearly"
 		>
@@ -229,7 +229,7 @@
 				Yearly
 			</span>
 			{#if billingCycle === 'yearly'}
-				<span class="text-xs px-2.5 py-1 rounded-full bg-teal-600 text-white font-semibold">
+				<span class="text-xs px-2.5 py-1 rounded-full bg-green-600 text-white font-semibold">
 					🎉 2 months free
 				</span>
 			{/if}
@@ -269,7 +269,7 @@
 				<ul class="space-y-3">
 					{#each plans.free.features as feature}
 						<li class="flex items-start gap-3 text-sm">
-							<i class="fa-solid fa-check text-teal-600 mt-0.5"></i>
+							<i class="fa-solid fa-check text-green-600 mt-0.5"></i>
 							<span class="text-stone-700">{feature}</span>
 						</li>
 					{/each}
@@ -278,9 +278,9 @@
 
 			<!-- Pro Plan -->
 			<div 
-				class="rounded-2xl p-6 sm:p-8 relative bg-white border-2 border-teal-600"
+				class="rounded-2xl p-6 sm:p-8 relative bg-white border-2 border-green-600"
 			>
-				<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-teal-600 text-white text-xs font-medium">
+				<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-green-600 text-white text-xs font-medium">
 					Most Popular
 				</div>
 
@@ -301,8 +301,8 @@
 						/month
 					</span>
 					{#if billingCycle === 'yearly'}
-						<div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-50 border border-green-200">
-							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-50 border border-green-200">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 							</svg>
 							<span class="text-xs font-semibold text-green-700">2 months free • $49.99/year</span>
@@ -317,7 +317,7 @@
 				<button 
 					onclick={handleProCheckout}
 					disabled={isLoading}
-					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed bg-teal-600 text-white hover:bg-green-500"
+					class="block w-full text-center py-3 rounded-xl font-display font-semibold transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed bg-green-600 text-white hover:bg-green-500"
 				>
 					{#if isLoading}
 						<i class="fa-solid fa-spinner fa-spin mr-2"></i>
@@ -335,7 +335,7 @@
 				<ul class="space-y-3">
 					{#each plans.pro.features as feature}
 						<li class="flex items-start gap-3 text-sm">
-							<i class="fa-solid fa-check text-teal-600 mt-0.5"></i>
+							<i class="fa-solid fa-check text-green-600 mt-0.5"></i>
 							<span class="text-stone-700">{feature}</span>
 						</li>
 					{/each}
@@ -378,7 +378,7 @@
 	</main>
 
 	<!-- Footer -->
-	<footer class="border-t border-stone-200 bg-stone-50">
+	<footer class="border-t border-stone-200" style="background: #faf7f2">
 		<div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
 			<!-- Main Footer Content -->
 			<div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
@@ -402,9 +402,6 @@
 					</a>
 					<a href="https://reddit.com/r/SpentWorth" target="_blank" rel="noopener" aria-label="Join us on Reddit" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-white text-stone-600 hover:text-sw-accent">
 						<i class="fa-brands fa-reddit"></i>
-					</a>
-					<a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="Follow us on LinkedIn" class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors bg-white text-stone-600 hover:text-sw-accent">
-						<i class="fa-brands fa-linkedin"></i>
 					</a>
 				</div>
 				</div>

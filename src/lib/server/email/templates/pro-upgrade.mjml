@@ -90,9 +90,9 @@
     <mj-section background-color="#ffffff" padding="0 32px 16px 32px">
       <mj-column background-color="#f5f0e8" border-radius="12px" padding="16px 20px">
         <mj-text padding="0">
-          <span style="font-size: 20px; margin-right: 12px;">📄</span>
-          <strong style="color: #171717;">PDF Reports</strong><br/>
-          <span style="font-size: 14px; color: #737373;">Export beautiful, shareable reports of your financial insights.</span>
+          <span style="font-size: 20px; margin-right: 12px;">📧</span>
+          <strong style="color: #171717;">Daily & Weekly Email Digests</strong><br/>
+          <span style="font-size: 14px; color: #737373;">Stay on top of your spending with personalized email summaries.</span>
         </mj-text>
       </mj-column>
     </mj-section>

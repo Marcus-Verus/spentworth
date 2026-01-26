@@ -413,10 +413,17 @@
 		initTheme();
 		isDark = getTheme() === 'dark';
 		
+		// Parallelize ALL initial API calls for faster loading
+		const [subRes] = await Promise.all([
+			fetch('/api/stripe/subscription').catch(() => null),
+			loadInsights(),
+			loadSubscriptions(),
+			loadCancelledSubscriptions()
+		]);
+		
 		// Check Pro status for dark mode
 		try {
-			const subRes = await fetch('/api/stripe/subscription');
-			if (subRes.ok) {
+			if (subRes?.ok) {
 				const subData = await subRes.json();
 				isPro = subData.plan === 'pro' && ['active', 'trialing'].includes(subData.status);
 			}
@@ -429,9 +436,6 @@
 			setTheme('light');
 			isDark = false;
 		}
-		
-		loadCancelledSubscriptions();
-		await Promise.all([loadInsights(), loadSubscriptions()]);
 	});
 </script>
 

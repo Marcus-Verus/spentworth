@@ -649,3 +649,265 @@ export interface UploadNudgeData {
 	}>;
 	message: string;
 }
+
+// ============================================
+// Subscription Tracking Types
+// ============================================
+
+export type SubscriptionStatus = 'active' | 'trial' | 'canceling' | 'canceled' | 'paused';
+export type BillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+
+export interface TrackedSubscription {
+	id: string;
+	userId: string;
+	merchantName: string;
+	merchantNorm: string;
+	amount: number;
+	currency: string;
+	billingCycle: BillingCycle;
+	nextChargeDate: string | null;
+	lastChargeDate: string | null;
+	status: SubscriptionStatus;
+	isEssential: boolean;
+	trialEndsAt: string | null;
+	cancelRequestedAt: string | null;
+	detectedAt: string;
+	detectionConfidence: number;
+	occurrenceCount: number;
+	category: string | null;
+	notes: string | null;
+	enabled: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface UpcomingCharge {
+	subscription: TrackedSubscription;
+	daysUntil: number;
+	futureValue10yr: number;
+	futureValue20yr: number;
+}
+
+export interface SubscriptionSummary {
+	totalMonthly: number;
+	totalYearly: number;
+	essentialMonthly: number;
+	nonEssentialMonthly: number;
+	trialCount: number;
+	cancelingCount: number;
+	upcomingCharges: UpcomingCharge[];
+	potentialSavings10yr: number;
+	potentialSavings20yr: number;
+}
+
+// ============================================
+// Financial Score Types
+// ============================================
+
+export type ScoreTrend = 'improving' | 'stable' | 'declining';
+
+export interface FinancialScore {
+	userId: string;
+	overallScore: number;
+	budgetAdherenceScore: number;
+	spendingConsistencyScore: number;
+	subscriptionHealthScore: number;
+	savingsRateScore: number;
+	goalProgressScore: number;
+	monthlyInvestableDelta: number;
+	annualInvestableDelta: number;
+	leakScore: number;
+	monthlyLeakAmount: number;
+	scoreTrend: ScoreTrend;
+	scoreChange30d: number;
+	lastCalculatedAt: string;
+	calculationPeriodStart: string | null;
+	calculationPeriodEnd: string | null;
+}
+
+export interface ScoreBreakdown {
+	score: FinancialScore;
+	insights: ScoreInsight[];
+	improvements: ScoreImprovement[];
+}
+
+export interface ScoreInsight {
+	type: 'positive' | 'neutral' | 'negative';
+	title: string;
+	description: string;
+	impact: number; // Points impact on score
+}
+
+export interface ScoreImprovement {
+	title: string;
+	description: string;
+	potentialPoints: number;
+	difficulty: 'easy' | 'medium' | 'hard';
+	category: string;
+}
+
+// ============================================
+// Suggested Rules Types (Post-Import)
+// ============================================
+
+export type SuggestedRuleStatus = 'pending' | 'accepted' | 'rejected' | 'expired';
+
+export interface SuggestedRule {
+	id: string;
+	userId: string;
+	batchId: string | null;
+	matchType: MatchType;
+	matchValue: string;
+	matchField: MatchField;
+	suggestedCategory: string | null;
+	suggestedKind: TransactionKind | null;
+	suggestedExclude: boolean;
+	confidence: number;
+	affectedCount: number;
+	affectedAmount: number;
+	sampleMerchants: string[];
+	status: SuggestedRuleStatus;
+	createdAt: string;
+	respondedAt: string | null;
+}
+
+// ============================================
+// Enhanced Streaks Types
+// ============================================
+
+export interface CategoryStreak {
+	current: number;
+	best: number;
+	lastUnderAt: string | null;
+}
+
+export interface EnhancedStreaks extends UserStreaks {
+	budgetStreakCurrent: number;
+	budgetStreakBest: number;
+	budgetLastUnderAt: string | null;
+	categoryStreaks: Record<string, CategoryStreak>;
+	totalTransactionsReviewed: number;
+	perfectWeeks: number;
+}
+
+export interface StreakDisplay {
+	type: 'review' | 'budget' | 'category' | 'upload';
+	label: string;
+	current: number;
+	best: number;
+	icon: string;
+	color: string;
+	sublabel?: string;
+}
+
+// ============================================
+// Philosophy Presets
+// ============================================
+
+export type PhilosophyPreset = 
+	| 'comfortable_saver'   // Gentle encouragement, focus on small wins
+	| 'aggressive_builder'  // Bold projections, wealth-building focus
+	| 'debt_first'          // Prioritizes debt payoff insights
+	| 'family_budget';      // Practical, household-oriented messaging
+
+export interface PhilosophyConfig {
+	id: PhilosophyPreset;
+	name: string;
+	description: string;
+	icon: string;
+	color: string;
+	tone: {
+		overBudgetMessage: string;
+		underBudgetMessage: string;
+		savingsMessage: string;
+		projectionEmphasis: 'subtle' | 'moderate' | 'bold';
+		emoji: boolean;
+	};
+}
+
+export const PHILOSOPHY_PRESETS: Record<PhilosophyPreset, PhilosophyConfig> = {
+	comfortable_saver: {
+		id: 'comfortable_saver',
+		name: 'Comfortable Saver',
+		description: 'Gentle encouragement with focus on sustainable habits',
+		icon: 'fa-couch',
+		color: '#22c55e',
+		tone: {
+			overBudgetMessage: "You've gone a bit over — no worries, tomorrow's a fresh start.",
+			underBudgetMessage: 'Nice work staying on track!',
+			savingsMessage: 'Every little bit counts toward your goals.',
+			projectionEmphasis: 'subtle',
+			emoji: true
+		}
+	},
+	aggressive_builder: {
+		id: 'aggressive_builder',
+		name: 'Aggressive Builder',
+		description: 'Bold projections and wealth-building focus',
+		icon: 'fa-rocket',
+		color: '#f59e0b',
+		tone: {
+			overBudgetMessage: 'This overspend is costing you compound growth. Course correct now.',
+			underBudgetMessage: "Crushing it! That's more fuel for your investment engine.",
+			savingsMessage: "This money compounds. In 20 years, you'll thank yourself.",
+			projectionEmphasis: 'bold',
+			emoji: false
+		}
+	},
+	debt_first: {
+		id: 'debt_first',
+		name: 'Debt First',
+		description: 'Prioritizes debt payoff with practical strategies',
+		icon: 'fa-link-slash',
+		color: '#ef4444',
+		tone: {
+			overBudgetMessage: 'Extra spending slows your debt payoff timeline.',
+			underBudgetMessage: 'Great restraint — put the savings toward your debt!',
+			savingsMessage: 'Every dollar saved is a dollar off your debt.',
+			projectionEmphasis: 'moderate',
+			emoji: false
+		}
+	},
+	family_budget: {
+		id: 'family_budget',
+		name: 'Family Budget',
+		description: 'Practical household-oriented financial guidance',
+		icon: 'fa-house-chimney',
+		color: '#8b5cf6',
+		tone: {
+			overBudgetMessage: "The family budget's a bit stretched this month. Let's review together.",
+			underBudgetMessage: 'Great job managing the household budget!',
+			savingsMessage: "Building security for your family's future.",
+			projectionEmphasis: 'moderate',
+			emoji: true
+		}
+	}
+};
+
+// ============================================
+// Share Reports
+// ============================================
+
+export interface ShareReportData {
+	id?: string;
+	reportType: 'year_projection' | 'category_breakdown' | 'subscription_savings';
+	reportYear: number;
+	projectionYear: number;
+	totalSpent: number;
+	projectedFutureValue: number;
+	topCategory: string | null;
+	topCategorySpent: number | null;
+	shareToken?: string;
+	createdAt?: string;
+}
+
+export interface ShareCardData {
+	headline: string;
+	subheadline: string;
+	spentAmount: number;
+	futureValue: number;
+	years: number;
+	topCategories: Array<{ name: string; spent: number; percentage: number }>;
+	philosophy: PhilosophyPreset;
+	generatedAt: string;
+}

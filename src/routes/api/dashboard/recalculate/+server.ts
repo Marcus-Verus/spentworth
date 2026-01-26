@@ -25,14 +25,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	// Pre-load all prices for the ticker (single API call!)
 	console.log(`Loading prices for ${ticker}...`);
-	const pricesLoaded = await priceService.ensurePricesLoaded(ticker);
+	const priceLoadResult = await priceService.ensurePricesLoaded(ticker);
 
-	if (!pricesLoaded) {
+	if (!priceLoadResult.loaded) {
 		return json({
 			ok: false,
 			error: `Failed to fetch ${ticker} price data. Make sure ALPHA_VANTAGE_API_KEY is set in Netlify environment variables. If it is, the API may be rate limited - try again in a minute.`
 		});
 	}
+	
+	// Track if we're using stale data for messaging
+	const usingStaleData = priceLoadResult.isStale;
+	const staleDays = priceLoadResult.staleDays;
 
 	// Fetch all committed transactions
 	const { data: transactions, error: fetchError } = await locals.supabase
@@ -110,6 +114,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 	}
 
+	// Build message with stale data warning if applicable
+	let message: string;
+	if (usingRealPrices > 0) {
+		message = `Recalculated ${updated} transactions using ${ticker} prices`;
+		if (usingStaleData && staleDays) {
+			message += ` (using cached data ${staleDays} days old - API temporarily unavailable)`;
+		}
+	} else {
+		message = `Recalculated ${updated} transactions (using 7% fallback - price data unavailable)`;
+	}
+
 	return json({
 		ok: true,
 		data: {
@@ -117,9 +132,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			usingRealPrices,
 			usingFallback,
 			ticker,
-			message: usingRealPrices > 0
-				? `Recalculated ${updated} transactions using ${ticker} prices`
-				: `Recalculated ${updated} transactions (using 7% fallback - price data unavailable)`
+			usingStaleData,
+			staleDays,
+			message
 		}
 	});
 };

@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import type { DashboardSummary, HiddenDataInfo, UploadNudgeData } from '$lib/types';
+	import type { DashboardSummary, HiddenDataInfo, UploadNudgeData, PhilosophyPreset } from '$lib/types';
 	import Header from '$lib/components/Header.svelte';
 	import Onboarding from '$lib/components/Onboarding.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
+	import FinancialScore from '$lib/components/FinancialScore.svelte';
+	import UpcomingCharges from '$lib/components/UpcomingCharges.svelte';
+	import StreakBadge from '$lib/components/StreakBadge.svelte';
+	import ShareCard from '$lib/components/ShareCard.svelte';
 	import { initTheme, getTheme, setTheme } from '$lib/stores/theme';
 
 	let isDark = $state(false);
@@ -32,6 +36,41 @@
 	
 	// Onboarding
 	let showOnboarding = $state(false);
+	
+	// Share Report
+	let showShareCard = $state(false);
+	let shareData = $state<{
+		year: number;
+		projectionYear: number;
+		totalSpent: number;
+		projectedFutureValue: number;
+		topCategories: Array<{ name: string; spent: number; percentage: number }>;
+		philosophy: PhilosophyPreset;
+	} | null>(null);
+	let loadingShare = $state(false);
+
+	async function openShareCard() {
+		loadingShare = true;
+		try {
+			const currentYear = new Date().getFullYear();
+			const res = await fetch(`/api/share?year=${currentYear}&projectionYears=20`);
+			const json = await res.json();
+			if (json.ok && json.data.hasData) {
+				shareData = {
+					year: json.data.year,
+					projectionYear: json.data.projectionYear,
+					totalSpent: json.data.totalSpent,
+					projectedFutureValue: json.data.projectedFutureValue,
+					topCategories: json.data.topCategories || [],
+					philosophy: json.data.philosophy || 'comfortable_saver'
+				};
+				showShareCard = true;
+			}
+		} catch (e) {
+			console.error('Failed to load share data:', e);
+		}
+		loadingShare = false;
+	}
 	
 	// Date range selector
 	type DateRangeOption = 'last_month' | 'last_3_months' | 'last_6_months' | 'ytd' | 'last_year' | 'all_time';
@@ -136,10 +175,19 @@
 		initTheme();
 		isDark = getTheme() === 'dark';
 		
+		// Parallelize ALL initial API calls for faster loading
+		const [subRes, settingsRes] = await Promise.all([
+			fetch('/api/stripe/subscription').catch(() => null),
+			fetch('/api/settings').catch(() => null),
+			// Start loading main data immediately in parallel
+			loadSummary(),
+			loadTrends(),
+			loadUploadNudge()
+		]);
+		
 		// Check Pro status
 		try {
-			const subRes = await fetch('/api/stripe/subscription');
-			if (subRes.ok) {
+			if (subRes?.ok) {
 				const subData = await subRes.json();
 				isPro = subData.plan === 'pro' && ['active', 'trialing'].includes(subData.status);
 			}
@@ -152,8 +200,7 @@
 		
 		// Check onboarding from database
 		try {
-			const settingsRes = await fetch('/api/settings');
-			if (settingsRes.ok) {
+			if (settingsRes?.ok) {
 				const settingsData = await settingsRes.json();
 				const onboardingCompleted = settingsData.data?.onboardingCompleted ?? false;
 				if (!onboardingCompleted) {
@@ -161,8 +208,6 @@
 				}
 			}
 		} catch { /* ignore */ }
-		
-		await Promise.all([loadSummary(), loadTrends(), loadUploadNudge()]);
 	});
 
 	async function loadUploadNudge() {
@@ -382,17 +427,37 @@
 				</div>
 			{/if}
 
-			<!-- Page Header -->
-			<div class="mb-6 sm:mb-8">
-				<h1 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
-					Welcome back
-				</h1>
-				<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
-					Here's your spending overview
-					{#if summary.dateMin && summary.dateMax}
-						 • {formatDate(summary.dateMin)} – {formatDate(summary.dateMax)}
-					{/if}
-				</p>
+			<!-- Page Header with Streaks -->
+			<div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+				<div>
+					<h1 class="font-display text-2xl sm:text-3xl font-semibold tracking-tight mb-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+						Welcome back
+					</h1>
+					<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Here's your spending overview
+						{#if summary.dateMin && summary.dateMax}
+							 • {formatDate(summary.dateMin)} – {formatDate(summary.dateMax)}
+						{/if}
+					</p>
+				</div>
+				<!-- Actions: Streak badges + Share button -->
+				<div class="flex items-center gap-3">
+					<StreakBadge {isDark} compact={true} />
+					<button
+						onclick={openShareCard}
+						disabled={loadingShare}
+						class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"
+						style="background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.08)); border: 1px solid rgba(139,92,246,0.2); color: #8b5cf6"
+						title="Share your spending report"
+					>
+						{#if loadingShare}
+							<i class="fa-solid fa-spinner fa-spin"></i>
+						{:else}
+							<i class="fa-solid fa-share-nodes"></i>
+						{/if}
+						<span class="hidden sm:inline">Share</span>
+					</button>
+				</div>
 			</div>
 
 			<!-- Date Range Pills -->
@@ -479,6 +544,32 @@
 				</div>
 			</div>
 
+			<!-- Price Data Source Indicator -->
+			{#if summary.usingFallback > 0}
+				{@const fallbackPercent = Math.round((summary.usingFallback / summary.transactionCount) * 100)}
+				{@const allFallback = summary.usingRealPrices === 0}
+				<div 
+					class="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg text-xs"
+					style="background: {isDark ? 'rgba(251,191,36,0.1)' : 'rgba(251,191,36,0.08)'}; border: 1px solid {isDark ? 'rgba(251,191,36,0.3)' : 'rgba(251,191,36,0.2)'}; color: {isDark ? '#fbbf24' : '#b45309'}"
+				>
+					<i class="fa-solid fa-info-circle"></i>
+					<span>
+						{#if allFallback}
+							Using estimated 7% annual return (price data unavailable for {summary.ticker})
+						{:else}
+							{fallbackPercent}% of transactions use estimated returns (older dates without price data)
+						{/if}
+					</span>
+					<a 
+						href="/settings#investments" 
+						class="ml-auto underline hover:no-underline"
+						style="color: inherit"
+					>
+						Settings
+					</a>
+				</div>
+			{/if}
+
 			<!-- Monthly Trend Alert -->
 			{#if trends && trends.change !== 0}
 				<div class="rounded-xl p-4 mb-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
@@ -502,6 +593,12 @@
 					</div>
 				</div>
 			{/if}
+
+			<!-- Financial Score & Upcoming Charges Row -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+				<FinancialScore {isDark} />
+				<UpcomingCharges {isDark} />
+			</div>
 
 			<!-- Two Column Layout -->
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -641,4 +738,18 @@
 <!-- Onboarding Modal -->
 {#if showOnboarding}
 	<Onboarding onComplete={() => showOnboarding = false} />
+{/if}
+
+<!-- Share Card Modal -->
+{#if showShareCard && shareData}
+	<ShareCard
+		year={shareData.year}
+		projectionYear={shareData.projectionYear}
+		totalSpent={shareData.totalSpent}
+		projectedFutureValue={shareData.projectedFutureValue}
+		topCategories={shareData.topCategories}
+		philosophy={shareData.philosophy}
+		{isDark}
+		onClose={() => showShareCard = false}
+	/>
 {/if}

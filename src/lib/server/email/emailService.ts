@@ -343,3 +343,80 @@ export async function sendDailyBriefEmail({
 	});
 }
 
+// Weekly Pulse Email (conditional engagement email)
+export interface WeeklyPulseEmailData {
+	to: string;
+	name: string;
+	daysSinceUpload: number | null;
+	pendingItems: number;
+	uploadThreshold?: number; // Days before nudging (default 7)
+	inboxThreshold?: number; // Items before nudging (default 3)
+}
+
+export async function sendWeeklyPulseEmail({
+	to,
+	name,
+	daysSinceUpload,
+	pendingItems,
+	uploadThreshold = 7,
+	inboxThreshold = 3
+}: WeeklyPulseEmailData) {
+	const template = loadTemplate('weekly-pulse');
+
+	const needsUpload = daysSinceUpload !== null && daysSinceUpload >= uploadThreshold;
+	const hasPendingItems = pendingItems >= inboxThreshold;
+
+	// Determine main message based on what's actionable
+	let mainMessage: string;
+	let previewText: string;
+	let ctaUrl: string;
+	let ctaText: string;
+
+	if (needsUpload && hasPendingItems) {
+		mainMessage = `Your spending data is getting stale and you've got items piling up. A quick refresh will get you back on track.`;
+		previewText = `${daysSinceUpload} days since import + ${pendingItems} inbox items`;
+		ctaUrl = 'https://spentworth.com/imports';
+		ctaText = 'Upload Fresh Data →';
+	} else if (needsUpload) {
+		mainMessage = `It's been a little while since you uploaded spending data. Your insights work best with fresh numbers.`;
+		previewText = `${daysSinceUpload} days since your last import`;
+		ctaUrl = 'https://spentworth.com/imports';
+		ctaText = 'Upload Now →';
+	} else {
+		mainMessage = `You've got some items waiting for your attention. A few quick decisions and you're all caught up.`;
+		previewText = `${pendingItems} items waiting in your inbox`;
+		ctaUrl = 'https://spentworth.com/review';
+		ctaText = 'Review Inbox →';
+	}
+
+	// Generate inbox description
+	let inboxDescription = 'Quick categorizations and rule suggestions';
+	if (pendingItems >= 10) {
+		inboxDescription = 'Clearing these keeps your data accurate';
+	} else if (pendingItems >= 5) {
+		inboxDescription = 'Just a few minutes to clear the queue';
+	}
+
+	const html = interpolate(template, {
+		preview_text: previewText,
+		name: name || 'there',
+		main_message: mainMessage,
+		needs_upload: String(needsUpload),
+		days_since_upload: String(daysSinceUpload || 0),
+		has_pending_items: String(hasPendingItems),
+		pending_items: String(pendingItems),
+		inbox_description: inboxDescription,
+		cta_url: ctaUrl,
+		cta_text: ctaText
+	});
+
+	return sendEmail({
+		to,
+		subject: needsUpload
+			? `📬 Quick pulse: ${daysSinceUpload} days since your last upload`
+			: `📬 Quick pulse: ${pendingItems} items waiting`,
+		html,
+		tags: [{ name: 'email_type', value: 'weekly_pulse' }]
+	});
+}
+
