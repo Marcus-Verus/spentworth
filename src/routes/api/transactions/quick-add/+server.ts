@@ -86,7 +86,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const body = await request.json();
-	const { amount, category, merchant, description, date } = body;
+	const { amount, category, merchant, description, date, isCash } = body;
 
 	if (!amount || amount <= 0) {
 		throw error(400, 'Amount must be greater than 0');
@@ -97,6 +97,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const transactionDate = date || new Date().toISOString().slice(0, 10);
+	const merchantName = merchant || category;
+	const calcMethod = isCash ? 'cash_entry' : 'manual_entry';
+	const defaultDescription = isCash 
+		? `Cash: ${merchantName}` 
+		: `Manual entry: ${category}`;
 
 	// Insert the transaction
 	const { data: transaction, error: insertError } = await locals.supabase
@@ -107,14 +112,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			invest_date: transactionDate,
 			amount: -Math.abs(amount), // Negative for spending
 			direction: 'debit',
-			merchant: merchant || category,
-			merchant_norm: (merchant || category).toUpperCase().replace(/[^A-Z0-9\s]/g, ''),
-			description: description || `Manual entry: ${category}`,
+			merchant: merchantName,
+			merchant_norm: merchantName.toUpperCase().replace(/[^A-Z0-9\s]/g, ''),
+			description: description || defaultDescription,
 			kind: 'purchase',
 			category: category,
 			included_in_spend: true,
 			ticker_symbol: 'SPY',
-			calc_method: 'manual_entry'
+			calc_method: calcMethod
 		})
 		.select()
 		.single();

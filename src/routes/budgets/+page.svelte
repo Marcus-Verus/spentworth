@@ -52,6 +52,8 @@
 	let quickAddCategory = $state('');
 	let quickAddMerchant = $state('');
 	let quickAddDate = $state(new Date().toISOString().slice(0, 10));
+	let quickAddIsCash = $state(false);
+	let quickAddDescription = $state('');
 
 	// Get categories that don't have budgets yet
 	let availableCategories = $derived(
@@ -434,6 +436,10 @@
 		
 		saving = true;
 		try {
+			const description = quickAddIsCash 
+				? `Cash: ${quickAddDescription || quickAddMerchant || quickAddCategory}`
+				: quickAddDescription || `Manual entry: ${quickAddCategory}`;
+			
 			const res = await fetch('/api/transactions/quick-add', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -441,7 +447,9 @@
 					amount: quickAddAmount,
 					category: quickAddCategory,
 					merchant: quickAddMerchant || quickAddCategory,
-					date: quickAddDate
+					date: quickAddDate,
+					description,
+					isCash: quickAddIsCash
 				})
 			});
 			
@@ -449,7 +457,9 @@
 				showQuickAdd = false;
 				quickAddAmount = 0;
 				quickAddMerchant = '';
+				quickAddDescription = '';
 				quickAddDate = new Date().toISOString().slice(0, 10);
+				quickAddIsCash = false;
 				await loadBudgets(); // Refresh to show updated spending
 			}
 		} catch (e) {
@@ -462,16 +472,14 @@
 		initTheme();
 		isDark = getTheme() === 'dark';
 		
-		// Check Pro status for dark mode (tier usage also tells us if Pro)
-		await loadTierUsage();
+		// Parallelize API calls for faster loading
+		await Promise.all([loadTierUsage(), loadBudgets()]);
 		
 		// If not Pro and dark mode is on, reset to light
 		if (tierUsage && !tierUsage.isProActive && isDark) {
 			setTheme('light');
 			isDark = false;
 		}
-		
-		loadBudgets();
 	});
 
 	async function loadTierUsage() {
@@ -540,15 +548,29 @@
 				</div>
 				
 				<!-- Quick Actions -->
-				{#if !loading && availableCategories.length > 0 && (!tierUsage || tierUsage.budgets.limit === null || tierUsage.budgets.used < tierUsage.budgets.limit)}
-					<button 
-						onclick={() => { showAddModal = true; newCategory = availableCategories[0]; saveError = null; }}
-						class="btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
-					>
-						<i class="fa-solid fa-plus"></i>
-						Add Budget
-					</button>
-				{/if}
+				<div class="flex items-center gap-2">
+					<!-- Quick Add Transaction Button -->
+					{#if !loading && budgets.length > 0}
+						<button 
+							onclick={() => { showQuickAdd = true; quickAddCategory = budgets[0]?.category || ''; }}
+							class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+							style="background: {isDark ? '#2a2a2a' : '#ffffff'}; color: {isDark ? '#ffffff' : '#171717'}; border: 1px solid {isDark ? '#404040' : '#d4cfc5'}"
+						>
+							<i class="fa-solid fa-bolt text-amber-500"></i>
+							Quick Add
+						</button>
+					{/if}
+					
+					{#if !loading && availableCategories.length > 0 && (!tierUsage || tierUsage.budgets.limit === null || tierUsage.budgets.used < tierUsage.budgets.limit)}
+						<button 
+							onclick={() => { showAddModal = true; newCategory = availableCategories[0]; saveError = null; }}
+							class="btn-primary flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+						>
+							<i class="fa-solid fa-plus"></i>
+							Add Budget
+						</button>
+					{/if}
+				</div>
 			</div>
 		</div>
 
@@ -1174,6 +1196,157 @@
 						Create {Object.values(quickSetupBudgets).filter(v => v > 0).length} Budgets
 					</button>
 				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Quick Add Transaction Modal -->
+{#if showQuickAdd}
+	<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+		<div class="rounded-2xl max-w-md w-full p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}">
+			<div class="flex items-center justify-between mb-6">
+				<h2 class="font-display text-xl font-semibold flex items-center gap-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+					<i class="fa-solid fa-bolt text-amber-500"></i>
+					Quick Add Spend
+				</h2>
+				<button 
+					onclick={() => showQuickAdd = false}
+					class="p-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+				>
+					<i class="fa-solid fa-times" style="color: {isDark ? '#737373' : '#9ca3af'}"></i>
+				</button>
+			</div>
+			
+			<div class="space-y-4">
+				<!-- Amount (Large, Primary Input) -->
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Amount</label>
+					<div class="flex items-center rounded-xl overflow-hidden" style="background: {isDark ? '#0a0a0a' : '#f5f0e8'}; border: 2px solid {isDark ? '#2a2a2a' : '#d4cfc5'}">
+						<span class="px-4 text-2xl font-semibold" style="color: {isDark ? '#737373' : '#9ca3af'}">$</span>
+						<input 
+							type="number" 
+							bind:value={quickAddAmount}
+							min="0.01"
+							step="0.01"
+							placeholder="0.00"
+							class="flex-1 px-2 py-4 text-2xl font-semibold bg-transparent outline-none"
+							style="color: {isDark ? '#ffffff' : '#171717'}"
+						/>
+					</div>
+				</div>
+
+				<!-- Category -->
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Category</label>
+					<select
+						bind:value={quickAddCategory}
+						class="w-full px-4 py-3 rounded-xl text-sm"
+						style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					>
+						{#each budgets as budget}
+							<option value={budget.category}>{budget.category}</option>
+						{/each}
+						{#each CATEGORIES.filter(c => c !== 'Uncategorized' && !budgets.some(b => b.category === c)) as cat}
+							<option value={cat}>{cat}</option>
+						{/each}
+					</select>
+				</div>
+
+				<!-- Merchant (Optional) -->
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+						Merchant <span class="opacity-50">(optional)</span>
+					</label>
+					<input 
+						type="text" 
+						bind:value={quickAddMerchant}
+						placeholder="e.g., Starbucks, Target..."
+						class="w-full px-4 py-3 rounded-xl text-sm"
+						style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					/>
+				</div>
+
+				<!-- Date -->
+				<div>
+					<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">Date</label>
+					<input 
+						type="date" 
+						bind:value={quickAddDate}
+						class="w-full px-4 py-3 rounded-xl text-sm"
+						style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+					/>
+				</div>
+
+				<!-- Cash Toggle -->
+				<div 
+					class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all"
+					style="background: {quickAddIsCash ? 'rgba(245,158,11,0.1)' : (isDark ? '#0a0a0a' : '#f9f6f1')}; border: 1px solid {quickAddIsCash ? 'rgba(245,158,11,0.3)' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+					onclick={() => quickAddIsCash = !quickAddIsCash}
+					role="button"
+					tabindex="0"
+					onkeydown={(e) => e.key === 'Enter' && (quickAddIsCash = !quickAddIsCash)}
+				>
+					<div class="flex items-center gap-3">
+						<div 
+							class="w-10 h-10 rounded-full flex items-center justify-center"
+							style="background: {quickAddIsCash ? 'rgba(245,158,11,0.2)' : (isDark ? '#1a1a1a' : '#ffffff')}"
+						>
+							<i class="fa-solid fa-money-bill-wave" style="color: {quickAddIsCash ? '#f59e0b' : (isDark ? '#525252' : '#9ca3af')}"></i>
+						</div>
+						<div>
+							<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">Cash / Off-the-books</p>
+							<p class="text-xs" style="color: {isDark ? '#737373' : '#9ca3af'}">Won't appear in bank imports</p>
+						</div>
+					</div>
+					<div 
+						class="w-12 h-7 rounded-full p-1 transition-all"
+						style="background: {quickAddIsCash ? '#f59e0b' : (isDark ? '#2a2a2a' : '#d4d4d4')}"
+					>
+						<div 
+							class="w-5 h-5 rounded-full transition-all"
+							style="background: white; transform: translateX({quickAddIsCash ? '20px' : '0'})"
+						></div>
+					</div>
+				</div>
+
+				<!-- Note (Optional, shown when cash is toggled) -->
+				{#if quickAddIsCash}
+					<div>
+						<label class="block text-sm mb-2" style="color: {isDark ? '#a3a3a3' : '#737373'}">
+							Note <span class="opacity-50">(optional)</span>
+						</label>
+						<input 
+							type="text" 
+							bind:value={quickAddDescription}
+							placeholder="e.g., Farmer's market, street food..."
+							class="w-full px-4 py-3 rounded-xl text-sm"
+							style="background: {isDark ? '#0a0a0a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#d4cfc5'}; color: {isDark ? '#ffffff' : '#171717'}"
+						/>
+					</div>
+				{/if}
+			</div>
+
+			<div class="flex gap-3 mt-6">
+				<button 
+					onclick={() => showQuickAdd = false}
+					class="flex-1 px-4 py-3 rounded-xl font-display font-semibold transition-colors"
+					style="background: {isDark ? '#2a2a2a' : '#e5e5e5'}; color: {isDark ? '#ffffff' : '#171717'}"
+				>
+					Cancel
+				</button>
+				<button 
+					onclick={saveQuickAdd}
+					disabled={saving || !quickAddAmount || quickAddAmount <= 0 || !quickAddCategory}
+					class="flex-1 btn-primary py-3 flex items-center justify-center gap-2"
+				>
+					{#if saving}
+						<i class="fa-solid fa-spinner fa-spin"></i>
+					{:else}
+						<i class="fa-solid fa-plus"></i>
+					{/if}
+					Add {quickAddAmount > 0 ? `$${quickAddAmount.toFixed(2)}` : 'Spend'}
+				</button>
 			</div>
 		</div>
 	</div>
