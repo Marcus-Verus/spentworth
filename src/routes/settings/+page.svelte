@@ -478,22 +478,20 @@
 			<div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
 				<!-- Sidebar Navigation -->
 				<nav class="lg:w-56 flex-shrink-0">
-					<!-- Mobile: Horizontal scrolling tabs -->
-					<div class="lg:hidden overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
-						<div class="flex gap-2">
-							{#each sections as section}
-								<button
-									onclick={() => scrollToSection(section.id)}
-									class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
-									style="background: {activeSection === section.id ? (isDark ? '#2a2a2a' : '#ffffff') : 'transparent'}; 
-										   color: {activeSection === section.id ? 'var(--sw-accent)' : (isDark ? '#a3a3a3' : '#737373')};
-										   {activeSection === section.id ? `border: 1px solid ${isDark ? '#3a3a3a' : '#e5e5e5'}; box-shadow: 0 1px 3px rgba(0,0,0,0.05);` : ''}"
-								>
-									<i class="fa-solid {section.icon} text-xs"></i>
-									{section.label}
-								</button>
-							{/each}
-						</div>
+					<!-- Mobile: Grid layout -->
+					<div class="lg:hidden grid grid-cols-3 gap-2 pb-4">
+						{#each sections as section}
+							<button
+								onclick={() => scrollToSection(section.id)}
+								class="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-xs font-medium transition-all"
+								style="background: {activeSection === section.id ? (isDark ? '#2a2a2a' : '#ffffff') : (isDark ? '#1a1a1a' : '#f5f5f5')}; 
+									   color: {activeSection === section.id ? 'var(--sw-accent)' : (isDark ? '#a3a3a3' : '#737373')};
+									   border: 1px solid {activeSection === section.id ? (isDark ? '#3a3a3a' : '#e5e5e5') : 'transparent'}"
+							>
+								<i class="fa-solid {section.icon} text-base"></i>
+								<span class="leading-tight text-center">{section.label}</span>
+							</button>
+						{/each}
 					</div>
 					
 					<!-- Desktop: Sticky sidebar -->
