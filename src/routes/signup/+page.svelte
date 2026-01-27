@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Logo from '$lib/components/Logo.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let { data } = $props();
 
@@ -67,6 +68,14 @@
 		}
 	}
 </script>
+
+<SEO 
+	title="Sign Up Free — Start Tracking Your Spending Today"
+	description="Create your free SpentWorth account. Track spending, see opportunity costs, find hidden subscriptions. No bank linking required. Start in 2 minutes."
+	keywords="SpentWorth signup, free budget app, Mint alternative signup, YNAB alternative free, privacy budget app, spending tracker no Plaid, finance app no bank connection"
+	canonical="/signup"
+	structuredData="WebPage"
+/>
 
 <div class="min-h-screen flex items-center justify-center p-6">
 	<div class="w-full max-w-md">

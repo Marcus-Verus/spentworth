@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { initTheme, getTheme, setTheme } from '$lib/stores/theme';
 	import Logo from '$lib/components/Logo.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let { data } = $props();
 	
@@ -40,6 +41,14 @@
 		{ icon: 'fa-box', category: 'Storage Unit', amount: '$85/mo', opportunity: '$5,950', period: '5 years' }
 	];
 </script>
+
+<SEO 
+	title="Spending Opportunity Cost Calculator — Free Tool"
+	description="Track spending & see what it could become if invested. Calculate opportunity cost of daily habits like coffee & subscriptions. Free, no bank login needed."
+	keywords="spending opportunity cost calculator, what if I invested this money calculator, latte factor calculator, money spent vs invested, Mint alternative without bank linking, YNAB alternative, subscription tracker app, spending tracker no Plaid"
+	canonical="/"
+	structuredData="SoftwareApplication"
+/>
 
 <div class="min-h-screen flex flex-col">
 	<!-- Navigation - Warm, cohesive header -->

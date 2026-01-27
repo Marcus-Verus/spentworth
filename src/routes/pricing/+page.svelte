@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Logo from '$lib/components/Logo.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let { data } = $props();
 	
@@ -109,9 +110,13 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Pricing | SpentWorth</title>
-</svelte:head>
+<SEO 
+	title="Pricing — Free Spending Tracker & Pro Features"
+	description="Start free forever with SpentWorth. Track spending, see opportunity costs, auto-categorize transactions. Pro: $4.99/mo for unlimited imports & exports."
+	keywords="spending tracker pricing, free budget app, YNAB alternative price, Mint alternative pricing, Monarch Money alternative, Copilot Money alternative, best budget app 2026, cheap finance app"
+	canonical="/pricing"
+	structuredData="WebPage"
+/>
 
 <div class="min-h-screen" style="background: #f5f0e8">
 	<!-- Navigation - Consistent with home page -->

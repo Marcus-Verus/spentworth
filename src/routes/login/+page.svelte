@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import Logo from '$lib/components/Logo.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let { data } = $props();
 
@@ -176,6 +177,14 @@
 		}
 	}
 </script>
+
+<SEO 
+	title="Log In to SpentWorth — Track Your Spending"
+	description="Log in to your SpentWorth account to track spending, see opportunity costs, and manage your financial insights. Secure login with MFA support."
+	keywords="SpentWorth login, budget app login, spending tracker sign in"
+	canonical="/login"
+	structuredData="WebPage"
+/>
 
 <div class="min-h-screen flex items-center justify-center p-6">
 	<div class="w-full max-w-md">

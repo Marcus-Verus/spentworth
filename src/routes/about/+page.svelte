@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
+	import SEO from '$lib/components/SEO.svelte';
 
 	// Public pages always use light mode (dark mode is Pro-only)
 	const isDark = false;
@@ -132,9 +133,13 @@
 	}
 </script>
 
-<svelte:head>
-	<title>About | SpentWorth</title>
-</svelte:head>
+<SEO 
+	title="About SpentWorth — Our Mission to Show True Spending Costs"
+	description="SpentWorth was built to answer one question: what is your spending really costing you? See opportunity costs, not just expenses. Privacy-first finance app."
+	keywords="about SpentWorth, spending tracker mission, opportunity cost app, privacy budget app, personal finance startup"
+	canonical="/about"
+	structuredData="Organization"
+/>
 
 <div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
 	<!-- Header -->

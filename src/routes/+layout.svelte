@@ -18,8 +18,17 @@
 </script>
 
 <svelte:head>
-	<title>SpentWorth — See What Your Spending Could Be Worth</title>
-	<meta name="description" content="Track your spending and discover the opportunity cost of your purchases. What if you had invested instead?" />
+	<!-- Default fallback meta tags - individual pages override these -->
+	<title>SpentWorth — Spending Opportunity Cost Calculator</title>
+	<meta name="description" content="Track spending & see what it could become if invested. Calculate opportunity cost of daily habits. Free, no bank login required." />
+	
+	<!-- Core meta tags for all pages -->
+	<meta name="author" content="SpentWorth" />
+	<meta name="theme-color" content="#388E3C" />
+	<link rel="apple-touch-icon" href="/logo-512.png" />
+	
+	<!-- Prevent AI/LLM scraping -->
+	<meta name="robots" content="max-image-preview:large" />
 </svelte:head>
 
 {@render children()}

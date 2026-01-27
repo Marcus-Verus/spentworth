@@ -1,0 +1,232 @@
+# SpentWorth robots.txt
+# https://spentworth.com
+# Last updated: 2026-01-27
+
+# ===========================================
+# SEARCH ENGINE CRAWLERS (Allowed)
+# ===========================================
+
+# Google
+User-agent: Googlebot
+Allow: /
+Disallow: /dashboard
+Disallow: /transactions
+Disallow: /imports
+Disallow: /insights
+Disallow: /budgets
+Disallow: /review
+Disallow: /sources
+Disallow: /settings
+Disallow: /api/
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /dashboard
+Disallow: /transactions
+Disallow: /imports
+Disallow: /insights
+Disallow: /budgets
+Disallow: /review
+Disallow: /sources
+Disallow: /settings
+Disallow: /api/
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /dashboard
+Disallow: /transactions
+Disallow: /imports
+Disallow: /insights
+Disallow: /budgets
+Disallow: /review
+Disallow: /sources
+Disallow: /settings
+Disallow: /api/
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Yahoo (uses Bing's index but has its own crawler)
+User-agent: Slurp
+Allow: /
+Disallow: /dashboard
+Disallow: /transactions
+Disallow: /imports
+Disallow: /insights
+Disallow: /budgets
+Disallow: /review
+Disallow: /sources
+Disallow: /settings
+Disallow: /api/
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Yandex
+User-agent: Yandex
+Allow: /
+Disallow: /dashboard
+Disallow: /transactions
+Disallow: /imports
+Disallow: /insights
+Disallow: /budgets
+Disallow: /review
+Disallow: /sources
+Disallow: /settings
+Disallow: /api/
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Baidu
+User-agent: Baiduspider
+Allow: /
+Disallow: /dashboard
+Disallow: /transactions
+Disallow: /imports
+Disallow: /insights
+Disallow: /budgets
+Disallow: /review
+Disallow: /sources
+Disallow: /settings
+Disallow: /api/
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# ===========================================
+# AI/LLM CRAWLERS (BLOCKED)
+# These crawlers scrape content for AI training
+# ===========================================
+
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+# Google AI (Gemini training)
+User-agent: Google-Extended
+Disallow: /
+
+# Anthropic / Claude
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+# Meta / Facebook AI
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Meta-ExternalFetcher
+Disallow: /
+
+# Common Crawl (used by many AI companies)
+User-agent: CCBot
+Disallow: /
+
+# Perplexity AI
+User-agent: PerplexityBot
+Disallow: /
+
+# Cohere AI
+User-agent: cohere-ai
+Disallow: /
+
+# Amazon / AWS AI
+User-agent: Amazonbot
+Disallow: /
+
+# Apple (Applebot-Extended is for AI training)
+User-agent: Applebot-Extended
+Disallow: /
+
+# ByteDance / TikTok AI
+User-agent: Bytespider
+Disallow: /
+
+# AI training scrapers
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: Omgili
+Disallow: /
+
+# Scrapers commonly used for AI
+User-agent: img2dataset
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+# SemrushBot (SEO tool, not AI, but aggressive)
+User-agent: SemrushBot
+Disallow: /
+
+# AhrefsBot (SEO tool, aggressive crawler)
+User-agent: AhrefsBot
+Disallow: /
+
+# Catch-all for other AI bots that may emerge
+User-agent: AI2Bot
+Disallow: /
+
+User-agent: Ai2Bot-Dolma
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: webz.io
+Disallow: /
+
+User-agent: Webzio-Extended
+Disallow: /
+
+# ===========================================
+# DEFAULT (All other bots)
+# ===========================================
+
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /transactions
+Disallow: /imports
+Disallow: /insights
+Disallow: /budgets
+Disallow: /review
+Disallow: /sources
+Disallow: /settings
+Disallow: /api/
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# ===========================================
+# SITEMAP
+# ===========================================
+
+Sitemap: https://spentworth.com/sitemap.xml

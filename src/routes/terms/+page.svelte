@@ -1,14 +1,18 @@
 <script lang="ts">
 	import Logo from '$lib/components/Logo.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	// Public pages always use light mode (dark mode is Pro-only)
 	const isDark = false;
 </script>
 
-<svelte:head>
-	<title>Terms of Service | SpentWorth</title>
-	<meta name="description" content="SpentWorth Terms of Service - Rules and guidelines for using our service." />
-</svelte:head>
+<SEO 
+	title="Terms of Service — SpentWorth User Agreement"
+	description="SpentWorth terms of service. Read our user agreement covering account usage, subscriptions, data handling, and your rights as a user."
+	keywords="SpentWorth terms of service, budget app terms, spending tracker agreement, user agreement"
+	canonical="/terms"
+	structuredData="WebPage"
+/>
 
 <div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
 	<!-- Header -->

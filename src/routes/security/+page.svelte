@@ -1,14 +1,18 @@
 <script lang="ts">
 	import Logo from '$lib/components/Logo.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	// Public pages always use light mode (dark mode is Pro-only)
 	const isDark = false;
 </script>
 
-<svelte:head>
-	<title>Security | SpentWorth</title>
-	<meta name="description" content="How SpentWorth protects your financial data with encryption, access controls, and privacy-first design." />
-</svelte:head>
+<SEO 
+	title="Security — How We Protect Your Financial Data"
+	description="SpentWorth security: HTTPS encryption, no bank login required, AES-256 data encryption, MFA support. See how we keep your financial data safe."
+	keywords="SpentWorth security, budget app security, spending tracker encryption, finance app data protection, secure budget app"
+	canonical="/security"
+	structuredData="WebPage"
+/>
 
 <div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
 	<!-- Header -->

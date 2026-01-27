@@ -1,14 +1,18 @@
 <script lang="ts">
 	import Logo from '$lib/components/Logo.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	// Public pages always use light mode (dark mode is Pro-only)
 	const isDark = false;
 </script>
 
-<svelte:head>
-	<title>Privacy Policy | SpentWorth</title>
-	<meta name="description" content="SpentWorth Privacy Policy - How we collect, use, and protect your data." />
-</svelte:head>
+<SEO 
+	title="Privacy Policy — How SpentWorth Protects Your Data"
+	description="SpentWorth privacy policy: No bank linking required, no data selling, full data export & deletion. See how we protect your financial information."
+	keywords="SpentWorth privacy policy, budget app privacy, spending tracker data protection, personal finance app privacy"
+	canonical="/privacy"
+	structuredData="WebPage"
+/>
 
 <div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
 	<!-- Header -->

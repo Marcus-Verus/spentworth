@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import Logo from '$lib/components/Logo.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let isDark = $state(false);
 	
@@ -280,10 +281,13 @@
 	});
 </script>
 
-<svelte:head>
-	<title>SpentWorth Demo — See What Your Spending Could Be Worth</title>
-	<meta name="description" content="Try SpentWorth with sample data. See how we reveal your spending patterns, hidden subscriptions, and opportunity costs." />
-</svelte:head>
+<SEO 
+	title="Try the Demo — Free Spending Calculator"
+	description="Try SpentWorth free with sample data. See spending patterns, hidden subscriptions, and calculate what your money could become if invested instead."
+	keywords="spending calculator demo, opportunity cost calculator free, try budget app free, Mint alternative demo, latte factor calculator, coffee spending calculator, subscription cost calculator"
+	canonical="/demo"
+	structuredData="WebPage"
+/>
 
 <div class="min-h-screen bg-[#faf7f2]">
 	<!-- Demo Header -->

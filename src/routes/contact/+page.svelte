@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import { PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
+	import SEO from '$lib/components/SEO.svelte';
 
 	// Public pages always use light mode (dark mode is Pro-only)
 	const isDark = false;
@@ -132,10 +133,13 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Contact | SpentWorth</title>
-	<meta name="description" content="Get in touch with the SpentWorth team. Questions, feedback, or partnership inquiries - we'd love to hear from you." />
-</svelte:head>
+<SEO 
+	title="Contact Us — Get Help with SpentWorth"
+	description="Questions about SpentWorth? Contact our team for support, feedback, or partnership inquiries. We typically respond within 24 hours."
+	keywords="SpentWorth contact, budget app support, spending tracker help, customer service"
+	canonical="/contact"
+	structuredData="WebPage"
+/>
 
 <div class="min-h-screen" style="background: {isDark ? 'var(--sw-bg)' : '#f5f0e8'}">
 	<!-- Header -->

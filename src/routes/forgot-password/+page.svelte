@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Logo from '$lib/components/Logo.svelte';
+	import SEO from '$lib/components/SEO.svelte';
 
 	let { data } = $props();
 
@@ -26,6 +27,14 @@
 		}
 	}
 </script>
+
+<SEO 
+	title="Reset Password — SpentWorth Account Recovery"
+	description="Forgot your SpentWorth password? Enter your email to receive a secure password reset link. We'll have you back tracking spending in no time."
+	keywords="SpentWorth password reset, forgot password, account recovery"
+	canonical="/forgot-password"
+	noindex={true}
+/>
 
 <div class="min-h-screen flex items-center justify-center p-6">
 	<div class="w-full max-w-md">
