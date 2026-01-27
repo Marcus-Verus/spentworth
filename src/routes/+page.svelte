@@ -61,6 +61,9 @@
 						<a href="#features" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-green-600 transition-colors rounded-lg hover:bg-stone-100/70">Features</a>
 						<a href="#how-it-works" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-green-600 transition-colors rounded-lg hover:bg-stone-100/70">How it Works</a>
 						<a href="/pricing" class="px-4 py-2 text-sm font-medium text-stone-700 hover:text-green-600 transition-colors rounded-lg hover:bg-stone-100/70">Pricing</a>
+						<a href="/demo" class="px-4 py-2 text-sm font-medium text-stone-600 hover:text-green-600 transition-colors rounded-lg hover:bg-stone-100/70 border border-stone-300 hover:border-green-300">
+							<i class="fa-solid fa-play mr-1.5 text-[10px]"></i>Try Demo
+						</a>
 					</div>
 					
 					<!-- Auth -->
@@ -98,6 +101,9 @@
 				<a href="#features" class="block px-3 py-2.5 text-stone-700 hover:text-green-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Features</a>
 				<a href="#how-it-works" class="block px-3 py-2.5 text-stone-700 hover:text-green-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">How it Works</a>
 				<a href="/pricing" class="block px-3 py-2.5 text-stone-700 hover:text-green-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">Pricing</a>
+				<a href="/demo" class="block px-3 py-2.5 text-stone-700 hover:text-green-600 hover:bg-stone-100/70 rounded-lg transition-colors font-medium">
+					<i class="fa-solid fa-play mr-2 text-xs"></i>Try Demo
+				</a>
 				<div class="pt-3 mt-3 border-t border-stone-200/60 space-y-2">
 					{#if data.session}
 						<a href="/dashboard" class="block px-4 py-2.5 text-center font-semibold text-white bg-green-600 rounded-xl shadow-md">Dashboard</a>
@@ -268,8 +274,9 @@
 							<button onclick={() => goto('/signup')} class="btn btn-primary text-base px-8 py-3.5 glow font-semibold">
 								Get Started — It's Free
 							</button>
-							<button onclick={() => goto('/login')} class="bg-neutral-900 dark:bg-sw-surface text-white border border-neutral-800 dark:border-sw-border hover:bg-neutral-800 dark:hover:bg-sw-border px-5 py-3 rounded-lg font-medium text-sm transition-colors font-display">
-								I have an account
+							<button onclick={() => goto('/demo')} class="bg-neutral-900 dark:bg-sw-surface text-white border border-neutral-800 dark:border-sw-border hover:bg-neutral-800 dark:hover:bg-sw-border px-5 py-3 rounded-lg font-medium text-sm transition-colors font-display">
+								<i class="fa-solid fa-play mr-2"></i>
+								Try Demo
 							</button>
 						{/if}
 					</div>

@@ -317,10 +317,10 @@
 		<!-- Tips Card -->
 		<div 
 			class="mt-8 rounded-xl p-6"
-			style="background: {isDark ? 'rgba(13,148,136,0.1)' : 'rgba(13,148,136,0.05)'}; border: 1px solid {isDark ? 'rgba(13,148,136,0.2)' : 'rgba(13,148,136,0.15)'}"
+			style="background: {isDark ? '#1a1a1a' : '#f5f5f5'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
 		>
-			<h3 class="font-semibold mb-3 flex items-center gap-2" style="color: {isDark ? '#5eead4' : '#0d9488'}">
-				<i class="fa-solid fa-lightbulb"></i>Tips for Easy Uploads
+			<h3 class="font-semibold mb-3 flex items-center gap-2" style="color: {isDark ? '#ffffff' : '#171717'}">
+				<i class="fa-solid fa-lightbulb text-amber-500"></i>Tips for Easy Uploads
 			</h3>
 			<ul class="space-y-2 text-sm" style="color: {isDark ? '#a3a3a3' : '#737373'}">
 				<li><i class="fa-solid fa-check text-sw-accent mr-2"></i>Most banks let you download CSV from "Statements" or "Activity"</li>

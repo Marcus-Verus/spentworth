@@ -311,7 +311,7 @@
 						<circle
 							cx="18" cy="18" r="15.5"
 							fill="none"
-							stroke="#0d9488"
+							stroke="#16a34a"
 							stroke-width="3"
 							stroke-linecap="round"
 							stroke-dasharray={`${progressPercent} 100`}

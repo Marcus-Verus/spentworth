@@ -391,13 +391,13 @@
 			{#if uploadNudge?.show && !nudgeDismissed}
 				<div 
 					class="mb-6 rounded-xl p-4 flex items-center gap-4 animate-fade-in"
-					style="background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.08)); border: 1px solid rgba(245,158,11,0.2)"
+					style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}"
 				>
-					<div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-						<i class="fa-solid fa-upload text-amber-500"></i>
+					<div class="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center flex-shrink-0">
+						<i class="fa-solid fa-upload text-white"></i>
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-medium text-sm" style="color: {isDark ? '#fbbf24' : '#d97706'}">
+						<p class="font-medium text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
 							{uploadNudge.message}
 						</p>
 						{#if uploadNudge.sourcesNeedingUpload.length > 0}
@@ -412,16 +412,17 @@
 					<div class="flex items-center gap-2 flex-shrink-0">
 						<a
 							href="/imports"
-							class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-amber-500 text-white hover:bg-amber-600"
+							class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-green-600 text-white hover:bg-green-500"
 						>
 							Upload Now
 						</a>
 						<button
 							onclick={() => nudgeDismissed = true}
-							class="p-2 rounded-lg transition-colors hover:bg-amber-500/10"
+							class="p-2 rounded-lg transition-colors"
+							style="color: {isDark ? '#a3a3a3' : '#737373'}"
 							title="Dismiss"
 						>
-							<i class="fa-solid fa-xmark" style="color: {isDark ? '#a3a3a3' : '#737373'}"></i>
+							<i class="fa-solid fa-xmark"></i>
 						</button>
 					</div>
 				</div>
@@ -446,8 +447,8 @@
 					<button
 						onclick={openShareCard}
 						disabled={loadingShare}
-						class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"
-						style="background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.08)); border: 1px solid rgba(139,92,246,0.2); color: #8b5cf6"
+						class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-80"
+						style="background: {isDark ? '#262626' : '#f5f5f5'}; border: 1px solid {isDark ? '#3a3a3a' : '#e5e5e5'}; color: {isDark ? '#a3a3a3' : '#525252'}"
 						title="Share your spending report"
 					>
 						{#if loadingShare}
@@ -550,7 +551,7 @@
 				{@const allFallback = summary.usingRealPrices === 0}
 				<div 
 					class="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg text-xs"
-					style="background: {isDark ? 'rgba(251,191,36,0.1)' : 'rgba(251,191,36,0.08)'}; border: 1px solid {isDark ? 'rgba(251,191,36,0.3)' : 'rgba(251,191,36,0.2)'}; color: {isDark ? '#fbbf24' : '#b45309'}"
+					style="background: {isDark ? '#1a1a1a' : '#f5f5f5'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}; color: {isDark ? '#a3a3a3' : '#737373'}"
 				>
 					<i class="fa-solid fa-info-circle"></i>
 					<span>

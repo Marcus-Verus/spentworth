@@ -503,8 +503,8 @@
 								<button
 									onclick={() => scrollToSection(section.id)}
 									class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left"
-									style="background: {activeSection === section.id ? (isDark ? 'rgba(56,142,60,0.15)' : 'rgba(56,142,60,0.08)') : 'transparent'}; 
-										   color: {activeSection === section.id ? 'var(--sw-accent)' : (isDark ? '#a3a3a3' : '#525252')}"
+									style="background: {activeSection === section.id ? (isDark ? '#262626' : '#f5f5f5') : 'transparent'}; 
+										   color: {activeSection === section.id ? (isDark ? '#ffffff' : '#171717') : (isDark ? '#a3a3a3' : '#525252')}"
 								>
 									<i class="fa-solid {section.icon} w-4 text-center {activeSection === section.id ? '' : 'opacity-60'}"></i>
 									{section.label}
@@ -731,10 +731,10 @@
 											Add an extra layer of security to your account by enabling two-factor authentication.
 										</p>
 										
-										<div class="rounded-xl p-4" style="background: rgba(56,142,60,0.08); border: 1px solid rgba(56,142,60,0.2)">
+										<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#f5f5f5'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
 											<div class="flex items-start gap-3">
-												<div class="w-8 h-8 rounded-lg bg-sw-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-													<i class="fa-solid fa-lock text-sw-accent text-sm"></i>
+												<div class="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+													<i class="fa-solid fa-lock text-white text-sm"></i>
 												</div>
 												<div>
 													<p class="font-medium text-sm mb-1" style="color: {isDark ? '#ffffff' : '#171717'}">Why enable MFA?</p>
@@ -779,7 +779,7 @@
 								<button
 									onclick={() => philosophyPreset = preset.id}
 									class="relative p-4 rounded-xl text-left transition-all hover:scale-[1.01]"
-									style="background: {isSelected ? `${preset.color}15` : (isDark ? '#0f0f0f' : '#f9fafb')}; 
+									style="background: {isDark ? '#0f0f0f' : '#f9fafb'}; 
 										   border: 2px solid {isSelected ? preset.color : (isDark ? '#2a2a2a' : '#e5e5e5')}"
 								>
 									{#if isSelected}
@@ -790,9 +790,9 @@
 									<div class="flex items-center gap-3 mb-2">
 										<div 
 											class="w-10 h-10 rounded-lg flex items-center justify-center"
-											style="background: {preset.color}20"
+											style="background: {preset.color}"
 										>
-											<i class="fa-solid {preset.icon}" style="color: {preset.color}"></i>
+											<i class="fa-solid {preset.icon} text-white"></i>
 										</div>
 										<div>
 											<p class="font-semibold" style="color: {isDark ? '#ffffff' : '#171717'}">{preset.name}</p>
@@ -833,7 +833,7 @@
 									<button
 										onclick={() => notifPrefs.dailyBriefEnabled = !notifPrefs.dailyBriefEnabled}
 										class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
-										style="background: {notifPrefs.dailyBriefEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+										style="background: {notifPrefs.dailyBriefEnabled ? '#16a34a' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
 									>
 										<span 
 											class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
@@ -881,7 +881,7 @@
 									<button
 										onclick={() => notifPrefs.weeklyPulseEnabled = !notifPrefs.weeklyPulseEnabled}
 										class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
-										style="background: {notifPrefs.weeklyPulseEnabled ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+										style="background: {notifPrefs.weeklyPulseEnabled ? '#16a34a' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
 									>
 										<span 
 											class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
@@ -918,7 +918,7 @@
 								<button
 									onclick={() => notifPrefs.showUploadNudges = !notifPrefs.showUploadNudges}
 									class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
-									style="background: {notifPrefs.showUploadNudges ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+									style="background: {notifPrefs.showUploadNudges ? '#16a34a' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
 								>
 									<span 
 										class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
@@ -938,7 +938,7 @@
 								<button
 									onclick={() => notifPrefs.showAchievementBadges = !notifPrefs.showAchievementBadges}
 									class="relative w-12 h-7 rounded-full transition-all cursor-pointer"
-									style="background: {notifPrefs.showAchievementBadges ? '#0d9488' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+									style="background: {notifPrefs.showAchievementBadges ? '#16a34a' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
 								>
 									<span 
 										class="absolute top-0.5 w-6 h-6 rounded-full transition-all bg-white shadow-md"
@@ -989,10 +989,10 @@
 							</div>
 
 							{#if monthlyIncome && monthlyIncome > 0}
-								<div class="rounded-xl p-4" style="background: rgba(56,142,60,0.1); border: 1px solid rgba(56,142,60,0.2)">
-									<p class="text-sm" style="color: {isDark ? '#ffffff' : '#171717'}">
-										<i class="fa-solid fa-chart-line text-sw-accent mr-2"></i>
-										Saving 20% (${Math.round(monthlyIncome * 0.2).toLocaleString()}/mo) at {fallbackPercentage}% could grow to <span class="font-semibold text-sw-accent">${calculateFutureValue(monthlyIncome * 0.2).toLocaleString()}</span> in 10 years.
+								<div class="rounded-xl p-4" style="background: {isDark ? '#1a1a1a' : '#f5f5f5'}; border: 1px solid {isDark ? '#2a2a2a' : '#e5e5e5'}">
+									<p class="text-sm" style="color: {isDark ? '#a3a3a3' : '#525252'}">
+										<i class="fa-solid fa-chart-line text-green-600 mr-2"></i>
+										Saving 20% (${Math.round(monthlyIncome * 0.2).toLocaleString()}/mo) at {fallbackPercentage}% could grow to <span class="font-semibold text-green-600">${calculateFutureValue(monthlyIncome * 0.2).toLocaleString()}</span> in 10 years.
 									</p>
 								</div>
 							{/if}
@@ -1126,7 +1126,7 @@
 									onclick={handleThemeToggle}
 									disabled={!isPro}
 									class="relative w-14 h-8 rounded-full transition-all duration-300 {isPro ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}"
-									style="background: {isDark ? 'linear-gradient(135deg, #0d9488, #4CAF50)' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
+									style="background: {isDark ? '#16a34a' : (isDark ? '#2a2a2a' : '#e5e5e5')}"
 								>
 									<span 
 										class="absolute top-1 w-6 h-6 rounded-full transition-all duration-300 flex items-center justify-center shadow-md"
@@ -1205,7 +1205,7 @@
 					</section>
 
 					<!-- Danger Zone Section -->
-					<section id="danger" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? 'rgba(239,68,68,0.05)' : 'rgba(239,68,68,0.03)'}; border: 1px solid rgba(239,68,68,0.2)">
+					<section id="danger" class="scroll-mt-24 rounded-2xl p-6" style="background: {isDark ? '#1a1a1a' : '#ffffff'}; border: 1px solid {isDark ? '#7f1d1d' : '#fecaca'}">
 						<h2 class="font-display text-lg font-semibold mb-4 text-red-600">
 							<i class="fa-solid fa-triangle-exclamation mr-2"></i>Danger Zone
 						</h2>

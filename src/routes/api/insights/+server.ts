@@ -65,7 +65,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 					title: 'Import your transactions',
 					description: 'Upload your bank statements to get personalized insights about your spending habits.',
 					icon: 'fa-file-arrow-up',
-					color: '#0d9488',
+					color: '#16a34a',
 					actionText: 'Import Now',
 					actionHref: '/imports'
 				}],
@@ -248,7 +248,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			actionText: 'View Subscriptions',
 			actionHref: '/dashboard#subscriptions',
 			icon: 'fa-rotate',
-			color: '#0d9488'
+			color: '#16a34a'
 		});
 	}
 
@@ -261,7 +261,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			title: 'The 50/30/20 Rule',
 			description: '50% needs, 30% wants, 20% savings/investments. SpentWorth helps you see where your money actually goes and what that means for your future.',
 			icon: 'fa-lightbulb',
-			color: '#0d9488'
+			color: '#16a34a'
 		});
 	}
 

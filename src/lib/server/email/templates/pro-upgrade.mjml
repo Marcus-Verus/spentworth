@@ -5,7 +5,7 @@
     <mj-attributes>
       <mj-all font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" />
       <mj-text font-size="15px" line-height="1.7" color="#404040" />
-      <mj-button background-color="#0d9488" color="#ffffff" font-size="15px" font-weight="600" border-radius="10px" inner-padding="14px 32px" />
+      <mj-button background-color="#16a34a" color="#ffffff" font-size="15px" font-weight="600" border-radius="10px" inner-padding="14px 32px" />
       <mj-section background-color="#ffffff" padding="0" />
     </mj-attributes>
     <mj-style inline="inline">
@@ -18,7 +18,7 @@
     <mj-section background-color="#f5f0e8" padding="40px 0 0 0"></mj-section>
     
     <!-- Celebration Header with Gradient -->
-    <mj-section border-radius="20px 20px 0 0" padding="48px 32px 40px 32px" css-class="header-gradient" background-color="#0d9488">
+    <mj-section border-radius="20px 20px 0 0" padding="48px 32px 40px 32px" css-class="header-gradient" background-color="#16a34a">
       <mj-column>
         <mj-text align="center" font-size="56px" padding="0 0 8px 0">
           🎉

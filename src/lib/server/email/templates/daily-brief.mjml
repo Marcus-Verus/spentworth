@@ -5,14 +5,14 @@
     <mj-attributes>
       <mj-all font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" />
       <mj-text font-size="15px" line-height="1.7" color="#404040" />
-      <mj-button background-color="#0d9488" color="#ffffff" font-size="15px" font-weight="600" border-radius="10px" inner-padding="14px 32px" />
+      <mj-button background-color="#16a34a" color="#ffffff" font-size="15px" font-weight="600" border-radius="10px" inner-padding="14px 32px" />
       <mj-section background-color="#ffffff" padding="0" />
     </mj-attributes>
     <mj-style inline="inline">
       .stat-value { font-size: 24px; font-weight: 700; }
       .stat-label { font-size: 12px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px; }
       .pace-on-track { color: #10b981; }
-      .pace-ahead { color: #0d9488; }
+      .pace-ahead { color: #16a34a; }
       .pace-behind { color: #f59e0b; }
     </mj-style>
   </mj-head>
@@ -21,7 +21,7 @@
     <mj-section background-color="#f5f0e8" padding="40px 0 0 0"></mj-section>
     
     <!-- Header -->
-    <mj-section background-color="#0d9488" border-radius="20px 20px 0 0" padding="32px 24px 24px 24px">
+    <mj-section background-color="#16a34a" border-radius="20px 20px 0 0" padding="32px 24px 24px 24px">
       <mj-column>
         <mj-text align="center" font-size="14px" color="rgba(255,255,255,0.7)" padding="0 0 8px 0">
           {{date_display}}
@@ -168,7 +168,7 @@
       <mj-column background-color="#f5f0e8" border-radius="12px" padding="16px 20px">
         <mj-text font-size="14px" color="#171717" padding="0">
           <strong>📤 Time to upload?</strong> It's been {{days_since_upload}} days since your last import.
-          <br/><a href="{{upload_url}}" style="color: #0d9488; font-weight: 600;">Upload now</a> for fresh insights.
+          <br/><a href="{{upload_url}}" style="color: #16a34a; font-weight: 600;">Upload now</a> for fresh insights.
         </mj-text>
       </mj-column>
     </mj-section>
@@ -179,7 +179,7 @@
       <mj-column>
         <mj-divider border-color="#e5e5e5" border-width="1px" padding="0 0 24px 0" />
         <mj-text align="center" font-size="13px" color="#9ca3af">
-          <a href="{{dashboard_url}}" style="color: #0d9488; font-weight: 500;">View Dashboard</a> · 
+          <a href="{{dashboard_url}}" style="color: #16a34a; font-weight: 500;">View Dashboard</a> · 
           <a href="{{settings_url}}" style="color: #9ca3af;">Email Settings</a>
         </mj-text>
         <mj-text align="center" font-size="12px" color="#9ca3af" padding-top="16px">

@@ -274,7 +274,7 @@ export async function sendDailyBriefEmail({
 		},
 		ahead: {
 			bgColor: '#f0fdfa',
-			textColor: '#0d9488',
+			textColor: '#16a34a',
 			message: `Great job! You're under budget with ${daysRemaining} days to go.`
 		},
 		behind: {
