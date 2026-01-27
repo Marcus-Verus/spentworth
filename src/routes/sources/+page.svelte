@@ -40,7 +40,7 @@
 				sources = json.data;
 			}
 		} catch (e) {
-			console.error('Failed to load sources:', e);
+			// Error handling - load failed silently
 		}
 		loading = false;
 	}
@@ -97,7 +97,7 @@
 			showModal = false;
 			await loadSources();
 		} catch (e) {
-			console.error('Failed to save source:', e);
+			// Error handling - save failed silently
 		}
 		saving = false;
 	}
@@ -113,7 +113,7 @@
 			});
 			await loadSources();
 		} catch (e) {
-			console.error('Failed to delete source:', e);
+			// Error handling - delete failed silently
 		}
 	}
 
@@ -129,7 +129,7 @@
 			});
 			await loadSources();
 		} catch (e) {
-			console.error('Failed to mark as uploaded:', e);
+			// Error handling - mark uploaded failed silently
 		}
 	}
 

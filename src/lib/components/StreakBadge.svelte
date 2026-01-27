@@ -67,7 +67,7 @@
 				activeStreaks = displays;
 			}
 		} catch (e) {
-			console.error('Failed to load streaks:', e);
+			// Error handling - load failed silently
 		}
 		loading = false;
 	}

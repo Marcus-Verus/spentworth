@@ -13,12 +13,11 @@
 	let success = $state(false);
 
 	// Password validation
-	const hasMinLength = $derived(password.length >= 8);
+	const hasMinLength = $derived(password.length >= 10);
 	const hasLowercase = $derived(/[a-z]/.test(password));
 	const hasUppercase = $derived(/[A-Z]/.test(password));
 	const hasDigit = $derived(/[0-9]/.test(password));
-	const hasSymbol = $derived(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password));
-	const isPasswordValid = $derived(hasMinLength && hasLowercase && hasUppercase && hasDigit && hasSymbol);
+	const isPasswordValid = $derived(hasMinLength && hasLowercase && hasUppercase && hasDigit);
 
 	async function handleSignup(e: Event) {
 		e.preventDefault();
@@ -133,7 +132,7 @@
 						required
 						class="input"
 						placeholder="••••••••"
-						minlength="8"
+						minlength="10"
 					/>
 					{#if password.length > 0}
 						<div class="mt-3 space-y-1.5">
@@ -141,7 +140,7 @@
 								<span class={hasMinLength ? 'text-sw-accent' : 'text-sw-text-dim'}>
 									{#if hasMinLength}✓{:else}○{/if}
 								</span>
-								<span class={hasMinLength ? 'text-sw-text' : 'text-sw-text-dim'}>At least 8 characters</span>
+								<span class={hasMinLength ? 'text-sw-text' : 'text-sw-text-dim'}>At least 10 characters</span>
 							</div>
 							<div class="flex items-center gap-2 text-xs">
 								<span class={hasLowercase ? 'text-sw-accent' : 'text-sw-text-dim'}>
@@ -161,16 +160,10 @@
 								</span>
 								<span class={hasDigit ? 'text-sw-text' : 'text-sw-text-dim'}>Number (0-9)</span>
 							</div>
-							<div class="flex items-center gap-2 text-xs">
-								<span class={hasSymbol ? 'text-sw-accent' : 'text-sw-text-dim'}>
-									{#if hasSymbol}✓{:else}○{/if}
-								</span>
-								<span class={hasSymbol ? 'text-sw-text' : 'text-sw-text-dim'}>Symbol (!@#$%^&* etc.)</span>
-							</div>
 						</div>
 					{:else}
 						<p class="mt-2 text-xs text-sw-text-dim">
-							Must be 8+ characters with lowercase, uppercase, number, and symbol
+							Must be 10+ characters with lowercase, uppercase, and number
 						</p>
 					{/if}
 				</div>
@@ -184,7 +177,7 @@
 						required
 						class="input"
 						placeholder="••••••••"
-						minlength="8"
+						minlength="10"
 					/>
 					{#if confirmPassword.length > 0 && password !== confirmPassword}
 						<p class="mt-2 text-xs text-sw-danger">Passwords do not match</p>

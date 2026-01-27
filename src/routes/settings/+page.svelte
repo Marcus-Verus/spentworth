@@ -150,7 +150,7 @@
 				subscription = await subRes.json();
 			}
 		} catch (err) {
-			console.error('Failed to fetch subscription:', err);
+			// Error handling - subscription fetch failed silently
 		}
 		
 		// If not Pro and dark mode is on, reset to light
@@ -175,7 +175,7 @@
 				}
 			}
 		} catch (err) {
-			console.error('Failed to fetch settings:', err);
+			// Error handling - settings fetch failed silently
 		}
 		loading = false;
 		
@@ -205,7 +205,7 @@
 				};
 			}
 		} catch (e) {
-			console.error('Failed to load notification prefs:', e);
+			// Error handling - notification prefs load failed silently
 		}
 	}
 
@@ -234,7 +234,7 @@
 			notifSaved = true;
 			setTimeout(() => notifSaved = false, 2000);
 		} catch (e) {
-			console.error('Failed to save notification prefs:', e);
+			// Error handling - notification prefs save failed silently
 		}
 		
 		notifSaving = false;
@@ -284,11 +284,9 @@
 			if (res.ok) {
 				const { url } = await res.json();
 				window.location.href = url;
-			} else {
-				console.error('Failed to open billing portal');
 			}
 		} catch (err) {
-			console.error('Portal error:', err);
+			// Error handling - portal error silently handled
 		}
 		loadingPortal = false;
 	}
@@ -360,7 +358,7 @@
 				mfaFactors = data.factors || [];
 			}
 		} catch (err) {
-			console.error('Failed to load MFA status:', err);
+			// Error handling - MFA status load failed silently
 		}
 		mfaLoading = false;
 	}

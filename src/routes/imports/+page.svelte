@@ -45,7 +45,7 @@
 				tierUsage = json.data;
 			}
 		} catch (err) {
-			console.error('Failed to load tier usage:', err);
+			// Error handling - tier usage load failed silently
 		}
 	}
 

@@ -29,7 +29,7 @@
 				summary = json.data.summary;
 			}
 		} catch (e) {
-			console.error('Failed to load subscriptions:', e);
+			// Error handling - load failed silently
 		}
 		loading = false;
 	}
@@ -47,7 +47,7 @@
 			});
 			await loadSubscriptions();
 		} catch (e) {
-			console.error('Failed to update subscription:', e);
+			// Error handling - update failed silently
 		}
 		updatingId = null;
 	}
@@ -65,7 +65,7 @@
 			});
 			await loadSubscriptions();
 		} catch (e) {
-			console.error('Failed to update subscription:', e);
+			// Error handling - update failed silently
 		}
 		updatingId = null;
 	}

@@ -157,7 +157,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		daysRemaining,
 		topCategoryThisWeek,
 		unusualSpending,
-		subscriptionAlert: null, // TODO: Implement subscription tracking
+		subscriptionAlert: null
 		opportunityCostHighlight,
 		pendingReviewItems: pendingReviewItems || 0,
 		daysSinceLastUpload,

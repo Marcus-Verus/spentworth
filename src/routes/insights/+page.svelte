@@ -114,7 +114,7 @@
 				selectedWhatIf = allSubs[0];
 			}
 		} catch (e) {
-			console.error('Failed to load subscriptions:', e);
+			// Error handling - load failed silently
 		}
 	}
 	
@@ -153,7 +153,7 @@
 				newSubFrequency = 'monthly';
 			}
 		} catch (e) {
-			console.error('Failed to save subscription:', e);
+			// Error handling - save failed silently
 		}
 		savingSub = false;
 	}
@@ -168,7 +168,7 @@
 				selectedWhatIf = subscriptions[0] || null;
 			}
 		} catch (e) {
-			console.error('Failed to delete subscription:', e);
+			// Error handling - delete failed silently
 		}
 	}
 
@@ -404,7 +404,7 @@
 				}
 			}
 		} catch (e) {
-			console.error('Failed to load insights:', e);
+			// Error handling - load insights failed silently
 		}
 		loading = false;
 	}

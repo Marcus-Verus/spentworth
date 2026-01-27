@@ -24,7 +24,7 @@
 				breakdown = json.data;
 			}
 		} catch (e) {
-			console.error('Failed to load score:', e);
+			// Error handling - load failed silently
 		}
 		loading = false;
 	}

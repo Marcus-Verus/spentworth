@@ -21,12 +21,16 @@ export const POST: RequestHandler = async ({ request }) => {
 	const payload = await request.text();
 	const signature = request.headers.get('x-supabase-signature');
 
-	// Verify webhook signature if secret is configured
-	if (SUPABASE_WEBHOOK_SECRET && signature) {
-		if (!verifySignature(payload, signature, SUPABASE_WEBHOOK_SECRET)) {
-			console.error('Invalid webhook signature');
-			throw error(401, 'Invalid signature');
-		}
+	// Verify webhook signature - fail closed for security
+	if (!SUPABASE_WEBHOOK_SECRET) {
+		throw error(500, 'Webhook secret not configured');
+	}
+	if (!signature) {
+		throw error(401, 'Missing signature');
+	}
+	if (!verifySignature(payload, signature, SUPABASE_WEBHOOK_SECRET)) {
+		console.error('Invalid webhook signature');
+		throw error(401, 'Invalid signature');
 	}
 
 	try {

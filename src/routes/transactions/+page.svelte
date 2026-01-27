@@ -119,7 +119,7 @@
 				await loadTransactions();
 			}
 		} catch (e) {
-			console.error('Failed to bulk categorize:', e);
+			// Error handling - bulk categorize failed silently
 		}
 		bulkSaving = false;
 	}
@@ -187,7 +187,7 @@
 				total = json.data.pagination.total;
 			}
 		} catch (e) {
-			console.error('Failed to load transactions:', e);
+			// Error handling - load failed silently
 		}
 		loading = false;
 	}
@@ -302,7 +302,7 @@
 				await loadTransactions();
 			}
 		} catch (e) {
-			console.error('Failed to apply to all:', e);
+			// Error handling - apply to all failed silently
 		}
 		
 		applyingToAll = false;
@@ -325,7 +325,7 @@
 				await loadTransactions();
 			}
 		} catch (e) {
-			console.error('Failed to delete:', e);
+			// Error handling - delete failed silently
 		}
 		deletingId = null;
 	}

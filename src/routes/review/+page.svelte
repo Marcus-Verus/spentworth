@@ -44,7 +44,7 @@
 				completedToday = json.data.completedToday || 0;
 			}
 		} catch (e) {
-			console.error('Failed to load inbox:', e);
+			// Error handling - load failed silently
 		}
 		loading = false;
 	}
@@ -70,7 +70,7 @@
 				await loadItems();
 			}
 		} catch (e) {
-			console.error('Failed to generate items:', e);
+			// Error handling - generate failed silently
 		}
 		generating = false;
 	}
@@ -86,7 +86,7 @@
 			items = items.filter(i => i.id !== item.id);
 			total = Math.max(0, total - 1);
 		} catch (e) {
-			console.error('Failed to dismiss:', e);
+			// Error handling - dismiss failed silently
 		}
 		processingId = null;
 	}
@@ -106,7 +106,7 @@
 				streaks.totalItemsCleared++;
 			}
 		} catch (e) {
-			console.error('Failed to complete:', e);
+			// Error handling - complete failed silently
 		}
 		processingId = null;
 	}
@@ -139,7 +139,7 @@
 			// Mark item as complete
 			await completeItem(selectedItem);
 		} catch (e) {
-			console.error('Failed to apply category:', e);
+			// Error handling - apply category failed silently
 		}
 		
 		selectedItem = null;
@@ -175,7 +175,7 @@
 			showRuleModal = false;
 			await completeItem(ruleItem);
 		} catch (e) {
-			console.error('Failed to create rule:', e);
+			// Error handling - create rule failed silently
 		}
 		
 		creatingRule = false;
@@ -198,7 +198,7 @@
 			}
 			await completeItem(item);
 		} catch (e) {
-			console.error('Failed to mark as subscription:', e);
+			// Error handling - mark subscription failed silently
 		}
 		processingId = null;
 	}

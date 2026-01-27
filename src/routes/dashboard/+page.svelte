@@ -67,7 +67,7 @@
 				showShareCard = true;
 			}
 		} catch (e) {
-			console.error('Failed to load share data:', e);
+			// Error handling - share data load failed silently
 		}
 		loadingShare = false;
 	}
@@ -218,7 +218,7 @@
 				uploadNudge = json.data;
 			}
 		} catch (e) {
-			console.error('Failed to load upload nudge:', e);
+			// Error handling - load failed silently
 		}
 	}
 
@@ -248,7 +248,7 @@
 				trends = json.data;
 			}
 		} catch (e) {
-			console.error('Failed to load trends:', e);
+			// Error handling - trends load failed silently
 		}
 	}
 

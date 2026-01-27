@@ -306,7 +306,7 @@
 				}, 500);
 			}
 		} catch (e) {
-			console.error('Failed to load budgets:', e);
+			// Error handling - load failed silently
 		}
 		loading = false;
 	}
@@ -349,7 +349,6 @@
 				saveError = json.message || 'Failed to create budget';
 			}
 		} catch (e) {
-			console.error('Failed to save budget:', e);
 			saveError = 'Failed to create budget. Please try again.';
 		}
 		saving = false;
@@ -373,7 +372,7 @@
 				await loadBudgets();
 			}
 		} catch (e) {
-			console.error('Failed to update budget:', e);
+			// Error handling - update failed silently
 		}
 		saving = false;
 	}
@@ -385,7 +384,7 @@
 			await fetch(`/api/budgets/${id}`, { method: 'DELETE' });
 			await loadBudgets();
 		} catch (e) {
-			console.error('Failed to delete budget:', e);
+			// Error handling - delete failed silently
 		}
 	}
 
@@ -421,7 +420,7 @@
 					body: JSON.stringify({ category, monthlyLimit })
 				});
 			} catch (e) {
-				console.error(`Failed to save budget for ${category}:`, e);
+				// Error handling - save failed silently
 			}
 		}
 		
@@ -463,7 +462,7 @@
 				await loadBudgets(); // Refresh to show updated spending
 			}
 		} catch (e) {
-			console.error('Failed to add transaction:', e);
+			// Error handling - add transaction failed silently
 		}
 		saving = false;
 	}
@@ -490,7 +489,7 @@
 				tierUsage = json.data;
 			}
 		} catch (err) {
-			console.error('Failed to load tier usage:', err);
+			// Error handling - tier usage load failed silently
 		}
 	}
 

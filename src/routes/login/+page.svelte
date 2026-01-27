@@ -57,7 +57,6 @@
 						return;
 					}
 					
-					console.error('OAuth exchange error:', exchangeError);
 					error = exchangeError.message || 'Failed to complete sign in';
 					loading = false;
 					window.history.replaceState({}, '', '/login');
@@ -65,7 +64,6 @@
 					goto('/dashboard');
 				}
 			} catch (e) {
-				console.error('OAuth callback error:', e);
 				error = 'An unexpected error occurred during sign in';
 				loading = false;
 				window.history.replaceState({}, '', '/login');

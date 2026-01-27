@@ -51,11 +51,30 @@ const supabase: Handle = async ({ event, resolve }) => {
 		return { session, user };
 	};
 
-	return resolve(event, {
+	const response = await resolve(event, {
 		filterSerializedResponseHeaders(name) {
 			return name === 'content-range' || name === 'x-supabase-api-version';
 		}
 	});
+
+	// Security headers
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+	response.headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+	response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+	response.headers.set(
+		'Content-Security-Policy',
+		"default-src 'self'; " +
+		"script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://challenges.cloudflare.com; " +
+		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+		"font-src 'self' https://fonts.gstatic.com; " +
+		"img-src 'self' data: https:; " +
+		"connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://challenges.cloudflare.com https://www.google-analytics.com; " +
+		"frame-src https://js.stripe.com https://challenges.cloudflare.com;"
+	);
+
+	return response;
 };
 
 const authGuard: Handle = async ({ event, resolve }) => {

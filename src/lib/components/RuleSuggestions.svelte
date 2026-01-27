@@ -38,7 +38,7 @@
 				suggestions = json.data;
 			}
 		} catch (e) {
-			console.error('Failed to generate suggestions:', e);
+			// Error handling - generate failed silently
 		}
 		loading = false;
 	}
@@ -66,7 +66,7 @@
 				onComplete();
 			}
 		} catch (e) {
-			console.error('Failed to accept suggestion:', e);
+			// Error handling - accept failed silently
 		}
 		processingId = null;
 	}
@@ -92,7 +92,7 @@
 				onComplete();
 			}
 		} catch (e) {
-			console.error('Failed to reject suggestion:', e);
+			// Error handling - reject failed silently
 		}
 		processingId = null;
 	}

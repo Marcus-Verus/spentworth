@@ -68,7 +68,7 @@
 			copied = true;
 			setTimeout(() => copied = false, 2000);
 		} catch (e) {
-			console.error('Failed to copy:', e);
+			// Error handling - copy failed silently
 		}
 		copying = false;
 	}

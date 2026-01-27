@@ -60,7 +60,7 @@
 				body: JSON.stringify({ onboardingCompleted: true })
 			});
 		} catch (e) {
-			console.error('Failed to save onboarding status:', e);
+			// Error handling - save failed silently
 		}
 		
 		// Also save to localStorage as backup
