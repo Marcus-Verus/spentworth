@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { sendWelcomeEmail } from '$lib/server/email';
 
 export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }) => {
 	const code = url.searchParams.get('code');
@@ -20,13 +21,35 @@ export const GET: RequestHandler = async ({ url, cookies, locals: { supabase } }
 	}
 
 	try {
-		const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+		const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 		
 		if (exchangeError) {
 			console.error('OAuth exchange error:', exchangeError);
 			// Redirect to login with error message - don't pass the code back
 			const errorMessage = encodeURIComponent(exchangeError.message || 'Failed to complete sign in');
 			throw redirect(303, `/login?error=${errorMessage}`);
+		}
+
+		// Check if this is a new user (created within the last 60 seconds)
+		if (data?.user) {
+			const createdAt = new Date(data.user.created_at);
+			const now = new Date();
+			const secondsSinceCreation = (now.getTime() - createdAt.getTime()) / 1000;
+			
+			// If user was created in the last 60 seconds, send welcome email
+			if (secondsSinceCreation < 60) {
+				const email = data.user.email;
+				const name = data.user.user_metadata?.full_name || 
+				             data.user.user_metadata?.name || 
+				             email?.split('@')[0] || 'there';
+				
+				if (email) {
+					// Send welcome email asynchronously (don't block redirect)
+					sendWelcomeEmail({ to: email, name }).catch(err => {
+						console.error('Failed to send welcome email for OAuth user:', err);
+					});
+				}
+			}
 		}
 
 		// Success! Redirect to dashboard
